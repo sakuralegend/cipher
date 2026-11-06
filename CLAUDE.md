@@ -3,7 +3,7 @@
 Khởi tạo bằng skill `quy-trinh-lam-viec` v1.0 · Vai user: **HIỂU** · Mức: **NHẸ**
 
 ## Dự án trong 3 dòng
-- Làm gì, cho ai: bài tập lớn đề 69 — hệ thống quản lý chứng chỉ SSL/TLS cho quản trị viên trong tổ chức; sau khi nộp, web còn làm lớp ngụy trang self-SNI cho VPN (QD-08).
+- Làm gì, cho ai: bài tập lớn đề 69 "Xây dựng hệ thống quản lý chứng chỉ số và thời hạn sử dụng" (tên này dùng trong báo cáo và trên web; `cipher` là tên repo và tên miền), cho quản trị viên trong tổ chức; sau khi nộp, web còn làm lớp ngụy trang self-SNI cho VPN (QD-08).
 - Stack: PHP 8 thuần + PDO · MariaDB · HTML/CSS/JS, Bootstrap, Chart.js · Chạy: `C:\xampp\php\php.exe -S localhost:8000 -t public` (bật MySQL trong XAMPP) · Deploy: chưa có, dựng ở phiếu ngày 7/11 (user tự chạy, AI chỉ nhắc)
 - Hạn / mốc: cổng tối 11/11/2026 (đủ 19 chức năng, chạy trên VPS) · nộp 17/11/2026 · user sang Nga khoảng cuối 11/2026. Đề và lịch: `docs/BAN_GIAO.md` (ảnh chụp, không cập nhật).
 
@@ -51,4 +51,4 @@ Bộ test: chưa có; lệnh chạy test được thêm vào đây ở phiếu �
 Windows 11 · PHP 8.2.12, MariaDB 10.4.32 (XAMPP, `C:\xampp`, không nằm trong PATH) · Python 3.14. VPS: Ubuntu 24.04.
 `PYTHONIOENCODING=utf-8`; Bash tool là Git Bash; commit dài dùng `git commit -F - <<'EOF'`.
 Hook commit-msg nằm ngoài git, cài một lần trên mỗi máy: `cp scripts/hook-commit-msg .git/hooks/commit-msg && chmod +x .git/hooks/commit-msg`.
-Múi giờ `Asia/Ho_Chi_Minh` cho cả PHP và CSDL — lệch là sai số ngày còn lại.
+Múi giờ `Asia/Ho_Chi_Minh` cho cả PHP và CSDL — lệch là sai số ngày còn lại. Đặt trong code, không dựa máy: PHP XAMPP mặc định `Europe/Berlin`; CSDL XAMPP chưa nạp bảng tên múi giờ nên phải `SET time_zone='+07:00'` (đo 06/11/2026).

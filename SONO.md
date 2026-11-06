@@ -5,8 +5,6 @@
 
 | Nợ | Vì sao chưa trả | Hết hạn |
 |---|---|---|
-| User tắt bản skill trong tài khoản Claude (đang trùng với `~/.claude/skills/quy-trinh-lam-viec`, gốc ở repo private `sakuralegend/ai-workflow`) | User tự làm trên claude.ai | Phiên làm việc kế tiếp |
-| Tạo repo private `sakuralegend/cipher`, thêm remote, đẩy code để VPS kéo về | User chưa tạo repo trên GitHub | Trước phiếu deploy 7/11/2026 |
 | Đọc cert thật phải chặn IP nội bộ, kể cả với người đã đăng nhập: VPS có AnkiConnect `127.0.0.1:8765` không mật khẩu, không chặn thì thành công cụ dò cổng | Chức năng mở rộng, làm sau cổng 11/11 | Khi làm chức năng, 12/11/2026 |
 | Self-SNI: chạy Xray thử ở cổng khác, đo xem Caddy chết có kéo VPN chết không; bật PROXY protocol trên cổng nội bộ riêng để web thấy IP thật (không thì chặn dò mật khẩu khoá tất cả); đổi 443; nhập lại link Shadowrocket, v2rayN; sửa `VPS_CHUNG.md` | Không làm trước khi bảo vệ (QD-08) | 18–22/11/2026, hoặc ngay sau buổi bảo vệ nếu muộn hơn |
 | Đường vào quản trị VPS khi đang ở Nga, phòng VPN, SSH, Telegram cùng bị chặn | Đợi xong self-SNI (QD-08) | Trước ngày bay, cuối 11/2026 |
