@@ -223,7 +223,7 @@ function test_xoa_chung_chi_xoa_kem_canh_bao_va_lich_su(PDO $pdo): void
 // Luật: Dữ liệu mẫu có đủ mốc 30/15/7, mọi trạng thái, lịch sử gia hạn và tài khoản đăng nhập được.
 // Vì sao: Giảng viên kiểm thử bằng dữ liệu mẫu (yêu cầu j của đề); thiếu mốc thì cảnh báo không hiện ra.
 // Đỏ nghĩa là: seed.sql bị sửa làm mất một trường hợp demo.
-// Đừng: viết ngày cố định trong seed, vì các mốc sẽ trôi trước buổi bảo vệ.
+// Đừng: viết ngày cố định trong seed, vì các mốc sẽ trôi trước khi giảng viên chấm.
 function test_du_lieu_mau_co_du_moc_va_trang_thai(PDO $pdo): void
 {
     $trangThaiCo = $pdo->query('SELECT DISTINCT status FROM v_certificates')->fetchAll(PDO::FETCH_COLUMN);

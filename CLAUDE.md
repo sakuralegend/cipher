@@ -1,6 +1,6 @@
 # CLAUDE.md — luật làm việc trong repo này (đọc trước khi làm bất cứ gì)
 
-Khởi tạo bằng skill `quy-trinh-lam-viec` v1.0 · Vai user: **HIỂU** · Mức: **NHẸ**
+Khởi tạo bằng skill `quy-trinh-lam-viec` v1.0 · Vai user: **DUYỆT** (QD-17) · Mức: **NHẸ**
 
 ## Dự án trong 3 dòng
 - Làm gì, cho ai: bài tập lớn đề 69 "Xây dựng hệ thống quản lý chứng chỉ số và thời hạn sử dụng" (tên này dùng trong báo cáo và trên web; `cipher` là tên repo và tên miền), cho quản trị viên trong tổ chức; sau khi nộp, web còn làm lớp ngụy trang self-SNI cho VPN (QD-08).
@@ -8,8 +8,8 @@ Khởi tạo bằng skill `quy-trinh-lam-viec` v1.0 · Vai user: **HIỂU** · M
 - Hạn / mốc: cổng tối 11/11/2026 (đủ 19 chức năng, chạy trên VPS) · nộp 17/11/2026 · user sang Nga khoảng cuối 11/2026. Đề và lịch: `docs/BAN_GIAO.md` (ảnh chụp, không cập nhật).
 
 ## Người dùng
-User phải hiểu và bảo vệ được mọi dòng code khi vấn đáp. Ưu tiên code đơn giản, giải thích được.
-Kế hoạch nói rõ cách tiếp cận và vì sao chọn; nghiệm thu có mục "Hiểu để bảo vệ".
+Bài KHÔNG có vấn đáp (user chốt 06/11/2026, dòng "vấn đáp" trong `docs/BAN_GIAO.md` đã hết hiệu lực). Mục tiêu: sản phẩm đẹp nhất có thể, cùng bản SPEC và Use Case tốt. Câu hỏi kỹ thuật là việc của AI: đo rồi tự trả lời; không kết luận được thì trình hai phương án kèm đánh đổi.
+User duyệt theo 4 mục: làm gì · rủi ro · mất bao lâu · lùi lại thế nào. Việc liên quan đến giao diện phải chụp màn hình và tự xem trước khi báo xong.
 Phản biện trước khi tuân lệnh · thuật ngữ phải giải thích · đừng bắt user nhớ hộ.
 
 ## Nghe xong thì rẽ ngay — user không gõ lệnh
@@ -33,7 +33,7 @@ Phản biện trước khi tuân lệnh · thuật ngữ phải giải thích ·
 1. Xoá/ghi đè hàng loạt dữ liệu thật, đổi schema, migrate — việc đó đứng riêng, backup trước, kiểm sau.
 2. Thêm thư viện/framework mới.
 3. Đụng hạ tầng hay repo ngoài phạm vi việc được giao.
-4. 🔴 Bất cứ thay đổi nào trên VPS `161.248.146.56`: máy chạy chung VPN, bot Anki, slushai, bot Telegram. Đọc `D:\Desktop\slushai\VPS_CHUNG.md` trước; đo RAM trước và sau khi cài; chạy đủ lệnh kiểm trong đó sau mỗi lần đụng. Không đổi Xray hay cổng 443 trước khi bài đã nộp và bảo vệ xong (QD-08).
+4. 🔴 Bất cứ thay đổi nào trên VPS `161.248.146.56`: máy chạy chung VPN, bot Anki, slushai, bot Telegram. Đọc `D:\Desktop\slushai\VPS_CHUNG.md` trước; đo RAM trước và sau khi cài; chạy đủ lệnh kiểm trong đó sau mỗi lần đụng. Không đổi Xray hay cổng 443 trước khi bài đã nộp và chấm xong (QD-08).
 
 ## Lệnh nghiệm thu — chạy THẬT cuối mỗi việc
 Chạy trong Git Bash, từ thư mục gốc repo:

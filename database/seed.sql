@@ -1,5 +1,5 @@
 -- Dữ liệu mẫu tối thiểu. Nạp SAU schema.sql, vào CSDL vừa tạo lại. Chạy lần hai sẽ báo trùng khoá.
--- Ngày tính theo NOW(): nạp lại trước buổi bảo vệ là có lại đủ mốc 30/15/7.
+-- Ngày tính theo NOW(): nạp lại trước khi nộp hoặc demo là có lại đủ mốc 30/15/7.
 --
 -- Hai tài khoản đều có mật khẩu Cipher@2026. PHẢI đổi khi lên VPS.
 -- Tên miền dùng đuôi .example và IP dải 192.0.2.x, là các dải dành riêng cho ví dụ.
