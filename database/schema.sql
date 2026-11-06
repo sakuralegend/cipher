@@ -33,7 +33,10 @@ CREATE TABLE users (
     password_hash VARCHAR(255) NOT NULL,
     full_name VARCHAR(100) NOT NULL,
     role_id INT UNSIGNED NOT NULL,
-    is_locked TINYINT(1) NOT NULL DEFAULT 0,
+    is_locked TINYINT(1) NOT NULL DEFAULT 0, -- Admin khoá, tới khi Admin mở lại.
+    -- Chặn dò mật khẩu theo tài khoản, không theo IP: web sau proxy có thể chỉ thấy một IP.
+    failed_logins TINYINT UNSIGNED NOT NULL DEFAULT 0,
+    locked_until DATETIME NULL,
     CONSTRAINT fk_users_role FOREIGN KEY (role_id) REFERENCES roles (id) ON DELETE RESTRICT
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 

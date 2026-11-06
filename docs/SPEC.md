@@ -33,7 +33,7 @@ thời hạn, cảnh báo trước khi hết hạn, lưu lịch sử gia hạn, 
 
 | Mã | Chức năng | Cách đáp ứng |
 |---|---|---|
-| Na | Đăng nhập, đăng xuất | Mật khẩu băm bằng `password_hash`; tài khoản bị khoá không đăng nhập được; tạm chặn sau 5 lần sai; đổi mã phiên sau khi đăng nhập |
+| Na | Đăng nhập, đăng xuất | Mật khẩu băm bằng `password_hash`; tài khoản bị khoá không đăng nhập được; sai 5 lần thì tạm chặn tài khoản 15 phút; đổi mã phiên sau khi đăng nhập |
 | Nb | Quản lý người dùng | Admin thêm, sửa, khoá, mở khoá, xoá và gán vai trò; xem mục 3.3 |
 | Nc | CRUD đầy đủ | Chứng chỉ, tên miền, máy chủ, tổ chức cấp, người dùng |
 | Nd | Tìm kiếm, lọc | Từ khoá trong mã, tên, serial, fingerprint. Lọc theo trạng thái, tổ chức cấp, tên miền, máy chủ, thời hạn |

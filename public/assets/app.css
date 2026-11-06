@@ -1,0 +1,6 @@
+/* CSS riêng của hệ thống; phần còn lại dùng của Tabler. */
+
+/* Fingerprint, serial, tên miền đọc dễ hơn khi mỗi ký tự rộng bằng nhau. */
+.ma-so {
+    font-family: var(--tblr-font-monospace);
+}

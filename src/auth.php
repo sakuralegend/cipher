@@ -1,0 +1,153 @@
+<?php
+// Đăng nhập, phiên làm việc, phân quyền, mã CSRF.
+
+const SO_LAN_SAI_TOI_DA = 5;
+const PHUT_TAM_CHAN = 15;
+const VAI_TRO_ADMIN = 'Admin';
+
+// Dùng chung cho sai tên, sai mật khẩu và đang tạm chặn, để kẻ dò không phân biệt được.
+const LOI_DANG_NHAP = 'Sai tên đăng nhập hoặc mật khẩu. Sai quá 5 lần, tài khoản bị tạm chặn 15 phút.';
+
+// Khi không có người dùng vẫn chạy password_verify trên mã băm này, để thời gian trả lời
+// không tiết lộ tên đăng nhập nào tồn tại. Kết quả của lần so sánh này bị bỏ qua.
+const MA_BAM_GIA = '$2y$10$EHEJOeJC57qPKDb.wGU5b.SVbUx2J0vJdfshHa16aQ7c45PeH.XPu';
+
+// Chỉ kiểm tra và ghi số lần sai, chưa đụng phiên. Trả về ['id' => ...] hoặc ['loi' => ...].
+function dangNhap(PDO $pdo, string $ten, string $matKhau): array
+{
+    $cau = $pdo->prepare('SELECT id, password_hash, is_locked, locked_until > NOW() AS dang_tam_chan
+                          FROM users WHERE username = ?');
+    $cau->execute([$ten]);
+    $nguoi = $cau->fetch();
+
+    $dungMatKhau = password_verify($matKhau, $nguoi ? $nguoi['password_hash'] : MA_BAM_GIA);
+
+    // Đang tạm chặn thì bỏ qua kết quả mật khẩu; nếu báo khác đi, kẻ dò vẫn thử tiếp được.
+    if (!$nguoi || $nguoi['dang_tam_chan']) {
+        return ['loi' => LOI_DANG_NHAP];
+    }
+
+    if (!$dungMatKhau) {
+        ghiNhanSaiMatKhau($pdo, (int) $nguoi['id']);
+        return ['loi' => LOI_DANG_NHAP];
+    }
+
+    // Chỉ người nhập đúng mật khẩu mới biết tài khoản bị khoá.
+    if ($nguoi['is_locked']) {
+        return ['loi' => 'Tài khoản đã bị khoá. Hãy liên hệ Admin.'];
+    }
+
+    $pdo->prepare('UPDATE users SET failed_logins = 0, locked_until = NULL WHERE id = ?')
+        ->execute([$nguoi['id']]);
+
+    return ['id' => (int) $nguoi['id']];
+}
+
+function ghiNhanSaiMatKhau(PDO $pdo, int $id): void
+{
+    // Tính ngay trong một câu SQL để hai yêu cầu cùng lúc không đếm thiếu.
+    // Thứ tự có ý nghĩa: MariaDB gán từ trái sang phải, nên locked_until phải đứng trước
+    // khi failed_logins bị đổi.
+    $pdo->prepare('UPDATE users
+                   SET locked_until = IF(failed_logins + 1 >= ?, DATE_ADD(NOW(), INTERVAL ? MINUTE), locked_until),
+                       failed_logins = IF(failed_logins + 1 >= ?, 0, failed_logins + 1)
+                   WHERE id = ?')
+        ->execute([SO_LAN_SAI_TOI_DA, PHUT_TAM_CHAN, SO_LAN_SAI_TOI_DA, $id]);
+}
+
+function batDauPhien(): void
+{
+    session_name('cipher_sid');
+    session_set_cookie_params([
+        'lifetime' => 0,
+        'path' => '/',
+        'httponly' => true, // JavaScript không đọc được cookie, giảm thiệt hại khi bị XSS.
+        'samesite' => 'Lax',
+        'secure' => !empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off', // localhost không có HTTPS.
+    ]);
+    ini_set('session.use_strict_mode', '1'); // Từ chối mã phiên do trình duyệt tự đặt ra.
+    session_start();
+}
+
+function ghiNhanDangNhap(int $id): void
+{
+    // Đổi mã phiên, để mã bị lộ từ trước khi đăng nhập không dùng tiếp được.
+    session_regenerate_id(true);
+    $_SESSION['user_id'] = $id;
+    unset($_SESSION['csrf']);
+}
+
+function dangXuat(): void
+{
+    $_SESSION = [];
+    $cookie = session_get_cookie_params();
+    setcookie(session_name(), '', [
+        'expires' => time() - 3600,
+        'path' => $cookie['path'],
+        'httponly' => $cookie['httponly'],
+        'samesite' => $cookie['samesite'],
+        'secure' => $cookie['secure'],
+    ]);
+    session_destroy();
+}
+
+// Đọc lại từ CSDL ở mỗi yêu cầu, để người bị khoá giữa phiên bị đẩy ra ngay.
+function nguoiDungHienTai(PDO $pdo): ?array
+{
+    if (empty($_SESSION['user_id'])) {
+        return null;
+    }
+    $cau = $pdo->prepare('SELECT u.id, u.username, u.full_name, r.name AS role_name
+                          FROM users u JOIN roles r ON r.id = u.role_id
+                          WHERE u.id = ? AND u.is_locked = 0');
+    $cau->execute([$_SESSION['user_id']]);
+    return $cau->fetch() ?: null;
+}
+
+function laAdmin(array $nguoi): bool
+{
+    return $nguoi['role_name'] === VAI_TRO_ADMIN;
+}
+
+// Mọi trang trong public/admin/ phải gọi hàm này hoặc yeuCauAdmin() ngay đầu file.
+function yeuCauDangNhap(PDO $pdo): array
+{
+    $nguoi = nguoiDungHienTai($pdo);
+    if ($nguoi === null) {
+        chuyenHuong('login.php');
+    }
+    return $nguoi;
+}
+
+function yeuCauAdmin(PDO $pdo): array
+{
+    $nguoi = yeuCauDangNhap($pdo);
+    if (!laAdmin($nguoi)) {
+        http_response_code(403);
+        exit('Bạn không có quyền vào trang này.');
+    }
+    return $nguoi;
+}
+
+function maCsrf(): string
+{
+    if (empty($_SESSION['csrf'])) {
+        $_SESSION['csrf'] = bin2hex(random_bytes(32));
+    }
+    return $_SESSION['csrf'];
+}
+
+function csrfHopLe(mixed $ma): bool
+{
+    // hash_equals so sánh hết chuỗi, không để lộ mã qua thời gian trả lời.
+    return is_string($ma) && !empty($_SESSION['csrf']) && hash_equals($_SESSION['csrf'], $ma);
+}
+
+// Mọi yêu cầu POST phải gọi hàm này trước khi đổi dữ liệu.
+function yeuCauCsrf(): void
+{
+    if (!csrfHopLe($_POST['csrf'] ?? null)) {
+        http_response_code(403);
+        exit('Phiên làm việc đã hết hạn. Hãy tải lại trang rồi thử lại.');
+    }
+}

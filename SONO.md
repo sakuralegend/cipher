@@ -11,6 +11,7 @@
 | Đường dự phòng VPN: cổng khác với cấu hình kiểu cũ; quyết định có cần VPS thứ hai | Đợi xong self-SNI (QD-08) | Trước ngày bay, cuối 11/2026 |
 | Thử VPN từ mạng Nga thật; từ Việt Nam không đo được DPI Nga | Chưa ở Nga | Tuần đầu sau khi sang Nga |
 | Đổi mật khẩu mẫu `Cipher@2026` ngay khi nạp `seed.sql` lên VPS, vì web ra internet | Chưa lên VPS | Phiếu deploy 7/11/2026 |
+| Trên VPS: tắt `display_errors` để lỗi không lộ đường dẫn, kiểm cookie `cipher_sid` có `Secure` khi chạy HTTPS | Chưa lên VPS, `localhost` không có HTTPS | Phiếu deploy 7/11/2026 |
 | Đề đòi "file SQL tạo CSDL": hướng dẫn cài phải nói rõ tạo CSDL trước, hoặc thêm file cài một bước | `schema.sql` cố ý không `CREATE DATABASE` (QD-14) | Khi viết hướng dẫn cài, 14–15/11/2026 |
 | Đổi hoặc khoá tài khoản demo đã đưa giảng viên | Chưa chấm bài | Ngay sau khi chấm, trước khi bay |
 | Thử chạy web trong `htdocs` bằng Apache (cách giảng viên có thể cài) | Chưa có web | Ngày kiểm thử 14–15/11/2026 |

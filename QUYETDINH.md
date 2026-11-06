@@ -17,6 +17,8 @@
 ## 🗂️ Sổ
 | QD | Chọn | Thay vì | Vì | Hết hạn khi (trạng thái đo được, không dùng ngày tuyệt đối) |
 |---|---|---|---|---|
+| QD-16 | Mỗi trang một file PHP, địa chỉ có đuôi `.php` | Router + rewrite, MVC đầy đủ | Dễ giải thích từng trang; chạy được `php -S`, Caddy, Apache mà không cần `.htaccess` | Đã bảo vệ xong và muốn phát triển tiếp |
+| QD-15 | Web đặt ở `cert.cipher.id.vn` | Đặt ở `cipher.id.vn`, chuyển sau | Giữ domain chính cho định hướng sau này; link và HTTPS đưa giảng viên không phải đổi | Chuyển web sang tên miền khác |
 | QD-14 | `schema.sql` DROP rồi tạo lại, không `CREATE DATABASE`/`USE` | File tự tạo CSDL | Nạp được vào cả `cipher_dev`, `cipher_test`; chạy lại trước bảo vệ. Chạy nhầm trên VPS là mất dữ liệu | Có dữ liệu thật cần giữ trên VPS: khi đó phải đổi sang migrate |
 | QD-13 | Giao diện Tabler 1.7.3 (MIT), tải về repo, không CDN | AdminLTE 4, CoreUI | Hợp dark mode và phong cách user muốn; không CDN để demo không phụ thuộc mạng. Đổi lại CSS nặng gấp đôi AdminLTE | Đã bảo vệ xong và muốn đổi giao diện |
 | QD-12 | Test bằng script PHP thuần `tests/chay.php` | PHPUnit | Không thêm thư viện, giải thích được từng dòng khi vấn đáp | Bộ test quá lớn để script tự chạy còn dễ đọc |

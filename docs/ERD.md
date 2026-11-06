@@ -26,6 +26,8 @@ erDiagram
         varchar full_name
         int role_id FK
         tinyint is_locked
+        tinyint failed_logins
+        datetime locked_until
     }
     servers {
         int id PK
