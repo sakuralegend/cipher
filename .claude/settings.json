@@ -1,0 +1,7 @@
+{
+  "hooks": {
+    "UserPromptSubmit": [
+      { "hooks": [ { "type": "command", "command": "python .claude/hooks/nhac.py", "timeout": 5 } ] }
+    ]
+  }
+}

@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+# Chan commit dung file code ma khong khai VI SAO o phan than.
+MSG_FILE="$1"; [ -f "$MSG_FILE" ] || exit 0
+THAN=$(grep -v '^#' "$MSG_FILE" | tail -n +3 | tr -d '[:space:]')
+CODE=$(git diff --cached --name-only | grep -E '\.(py|php|js|ts|sql|sh|ps1)$' | grep -v '^_daxong/' | head -5)
+[ -z "$CODE" ] && exit 0
+if [ ${#THAN} -lt 40 ]; then
+  echo "❌ Commit dung code ma khong khai VI SAO. Tieu de noi DA LAM GI; phan than (sau 1 dong trong) noi VI SAO:" >&2
+  echo "$CODE" | sed 's/^/   /' >&2
+  exit 1
+fi

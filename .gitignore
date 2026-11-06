@@ -1,0 +1,8 @@
+# Bí mật và cấu hình riêng từng máy
+.env
+config.local.php
+.claude/settings.local.json
+
+# Sao lưu CSDL có thể chứa dữ liệu thật
+*.sql.gz
+backup/
