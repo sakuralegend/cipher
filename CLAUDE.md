@@ -24,7 +24,7 @@ Phản biện trước khi tuân lệnh · thuật ngữ phải giải thích ·
 2. Chống loãng: thêm phải cắt chỗ khác; file có sẵn chứa được thì cấm file mới; sổ có sức chứa
    cố định — chạm trần thì cho một mục chết, cấm nén chữ.
 3. Trước khi viết: liệt kê hàm/module có sẵn dùng lại được. Không hàm trùng vai. Tài nguyên ngoài
-   đi một cửa: CSDL → một file kết nối PDO duy nhất (tạo ở phiếu đăng nhập).
+   đi một cửa: CSDL → một file kết nối PDO duy nhất `config/db.php`, hàm `ketNoiCsdl()`.
 4. Quyết định hành vi ⇒ test 4 dòng (Luật · Vì sao · Đỏ nghĩa là · Đừng), thấy ĐỎ một lần, rồi
    xoá dòng QD. Sửa bug ⇒ thêm đúng một test cho bug đó.
 5. Trước khi "tối ưu": đọc bảng ĐÃ ĐO RỒI BÁC ở `QUYETDINH.md`. Con số phải có ngày đo.
@@ -40,8 +40,9 @@ Chạy trong Git Bash, từ thư mục gốc repo:
 ```
 find . -name '*.php' -not -path './.git/*' -print0 | xargs -0 -r -n1 /c/xampp/php/php.exe -l
 python ban_do_test.py --kiem
+/c/xampp/php/php.exe tests/chay.php
 ```
-Bộ test: chưa có; lệnh chạy test được thêm vào đây ở phiếu đầu tiên.
+Test cần MySQL đang bật và CSDL `cipher_test` đã tạo (xem đầu `database/schema.sql`); test tự nạp lại CSDL này trước mỗi lần chạy, không đụng `cipher_dev`.
 
 ## Sổ
 `VIECDANGLAM.md` việc đang làm (đúng 1 việc) · `QUYETDINH.md` quyết định còn sống + ĐÃ ĐO RỒI BÁC ·
