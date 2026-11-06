@@ -17,6 +17,7 @@
 ## 🗂️ Sổ
 | QD | Chọn | Thay vì | Vì | Hết hạn khi (trạng thái đo được, không dùng ngày tuyệt đối) |
 |---|---|---|---|---|
+| QD-19 | Code ở `/var/www/cipher`, PHP-FPM + MariaDB có trần RAM, nối khối vào `Caddyfile` chung | Caddy riêng, Docker | Ít đụng dịch vụ đang chạy nhất. Chạy lại `dungmoi.sh` của slushai sẽ xoá khối này (`deploy/dung_vps.sh caddy` thêm lại) | Chuyển VPS khác |
 | QD-18 | 12–13/11 ưu tiên giao diện và dữ liệu mẫu; nhật ký nếu còn giờ; đọc cert, chấm điểm có thể bỏ | Đủ 3 chức năng mở rộng | Đề không yêu cầu 3 mục đó; mục tiêu là sản phẩm đẹp (QD-17) | Bài đã nộp |
 | QD-17 | Vai DUYỆT, ưu tiên sản phẩm đẹp và SPEC, Use Case tốt | Vai HIỂU, ưu tiên code dễ giải thích | User chốt 06/11/2026: bài không có vấn đáp | Giảng viên yêu cầu vấn đáp |
 | QD-16 | Mỗi trang một file PHP, địa chỉ có đuôi `.php` | Router + rewrite, MVC đầy đủ | Chạy được `php -S`, Caddy, Apache mà không cần `.htaccess` | Đã nộp và muốn phát triển tiếp |
