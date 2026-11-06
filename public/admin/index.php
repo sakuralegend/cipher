@@ -5,6 +5,7 @@ $pdo = ketNoiCsdl();
 $nguoi = yeuCauDangNhap($pdo);
 
 $tieuDe = 'Dashboard';
+$trangHienTai = 'dashboard';
 require __DIR__ . '/../../views/dau_trang.php';
 ?>
 <div class="page-header d-print-none">

@@ -1,7 +1,11 @@
 <?php
 // Đầu trang dùng chung. Trang gọi file này phải có $tieuDe.
-// Có $nguoi thì hiện thanh menu; không có (trang đăng nhập) thì chỉ hiện nút đổi giao diện.
+// $nguoi:          có thì hiện thanh menu quản trị.
+// $trangHienTai:   tên mục menu đang mở, để tô đậm ('dashboard', 'nguoi_dung').
+// $coThanhRieng:   trang tự có thanh trên cùng (landing), nên không hiện nút giao diện nổi.
 $nguoi ??= null;
+$trangHienTai ??= '';
+$coThanhRieng ??= false;
 
 $nutGiaoDien = <<<'HTML'
 <button type="button" class="nav-link px-2 bg-transparent border-0" data-doi-giao-dien
@@ -23,13 +27,17 @@ HTML;
     <script src="<?= e(url('assets/tabler/tabler-theme.min.js')) ?>"></script>
 </head>
 <body>
-<?php if ($nguoi === null): ?>
+<?php if ($nguoi === null && !$coThanhRieng): ?>
     <div class="position-absolute top-0 end-0 p-3"><?= $nutGiaoDien ?></div>
-<?php else: ?>
+<?php elseif ($nguoi !== null): ?>
     <div class="page">
         <header class="navbar navbar-expand-md d-print-none">
             <div class="container-xl">
-                <a class="navbar-brand" href="<?= e(url('admin/index.php')) ?>">Quản lý chứng chỉ số</a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#menu-chinh"
+                        aria-controls="menu-chinh" aria-expanded="false" aria-label="Mở menu">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <a class="navbar-brand me-3" href="<?= e(url('admin/index.php')) ?>">Quản lý chứng chỉ số</a>
                 <div class="navbar-nav flex-row order-md-last align-items-center">
                     <?= $nutGiaoDien ?>
                     <div class="nav-item dropdown">
@@ -40,6 +48,8 @@ HTML;
                             </span>
                         </a>
                         <div class="dropdown-menu dropdown-menu-end">
+                            <a class="dropdown-item" href="<?= e(url('admin/tai_khoan.php')) ?>">Tài khoản của tôi</a>
+                            <div class="dropdown-divider"></div>
                             <form method="post" action="<?= e(url('logout.php')) ?>">
                                 <input type="hidden" name="csrf" value="<?= e(maCsrf()) ?>">
                                 <button type="submit" class="dropdown-item">Đăng xuất</button>
@@ -47,7 +57,25 @@ HTML;
                         </div>
                     </div>
                 </div>
+                <div class="collapse navbar-collapse" id="menu-chinh">
+                    <ul class="navbar-nav">
+                        <li class="nav-item <?= $trangHienTai === 'dashboard' ? 'active' : '' ?>">
+                            <a class="nav-link" href="<?= e(url('admin/index.php')) ?>">Dashboard</a>
+                        </li>
+                        <?php if (laAdmin($nguoi)): ?>
+                            <li class="nav-item <?= $trangHienTai === 'nguoi_dung' ? 'active' : '' ?>">
+                                <a class="nav-link" href="<?= e(url('admin/nguoi_dung.php')) ?>">Người dùng</a>
+                            </li>
+                        <?php endif; ?>
+                    </ul>
+                </div>
             </div>
         </header>
         <div class="page-wrapper">
+            <?php $thongBao = layThongBao(); ?>
+            <?php if ($thongBao !== null): ?>
+                <div class="container-xl pt-3">
+                    <div class="alert alert-<?= e($thongBao['loai']) ?> mb-0" role="alert"><?= e($thongBao['noi_dung']) ?></div>
+                </div>
+            <?php endif; ?>
 <?php endif; ?>

@@ -69,9 +69,11 @@ thời hạn, cảnh báo trước khi hết hạn, lưu lịch sử gia hạn, 
 
 ### 3.3. Người dùng
 
-- Tên đăng nhập bắt buộc và không trùng. Mật khẩu tối thiểu 8 ký tự.
+- Tên đăng nhập bắt buộc, 3–50 ký tự gồm chữ không dấu, số, dấu chấm, gạch dưới, gạch ngang; không trùng.
+- Mật khẩu 8–72 ký tự. Admin đặt lại được mật khẩu cho người khác mà không cần mật khẩu cũ, vì hệ thống không có chức năng quên mật khẩu.
+- Mở khoá thì xoá luôn trạng thái tạm chặn do nhập sai mật khẩu.
 - Người dùng đã có lịch sử thao tác không xoá được, chỉ khoá được; hệ thống báo rõ lý do. Người chưa có lịch sử thì xoá được.
-- Admin không tự khoá hay tự xoá tài khoản của mình, để hệ thống không bị mất quyền quản trị.
+- Admin không tự khoá, tự xoá, hay tự đổi vai trò của mình, để hệ thống luôn còn ít nhất một Admin.
 - Đổi mật khẩu phải nhập đúng mật khẩu cũ.
 
 ## 4. Trạng thái chứng chỉ

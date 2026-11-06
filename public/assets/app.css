@@ -4,3 +4,47 @@
 .ma-so {
     font-family: var(--tblr-font-monospace);
 }
+
+/* Landing: tên class bắt đầu bằng ld- để không ảnh hưởng tới trang quản trị. */
+.ld-hero {
+    padding: 4rem 0 3rem;
+}
+
+.ld-tieu-de {
+    font-size: clamp(2rem, 4vw, 3rem);
+    font-weight: 700;
+    line-height: 1.2;
+    margin-bottom: 1rem;
+}
+
+.ld-mo-ta {
+    color: var(--tblr-secondary);
+    font-size: 1.125rem;
+    margin-bottom: 1.5rem;
+}
+
+.ld-muc {
+    padding: 2rem 0;
+}
+
+.ld-tieu-de-muc {
+    font-size: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.ld-so-buoc {
+    align-items: center;
+    background: var(--tblr-primary);
+    border-radius: 50%;
+    color: #fff;
+    display: flex;
+    font-weight: 700;
+    height: 2.5rem;
+    justify-content: center;
+    margin-bottom: 0.75rem;
+    width: 2.5rem;
+}
+
+.ld-chan-trang {
+    padding: 2rem 0;
+}

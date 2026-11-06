@@ -8,7 +8,7 @@ Khởi tạo bằng skill `quy-trinh-lam-viec` v1.0 · Vai user: **DUYỆT** (QD
 - Hạn / mốc: cổng tối 11/11/2026 (đủ 19 chức năng, chạy trên VPS) · nộp 17/11/2026 · user sang Nga khoảng cuối 11/2026. Đề và lịch: `docs/BAN_GIAO.md` (ảnh chụp, không cập nhật).
 
 ## Người dùng
-Bài KHÔNG có vấn đáp (user chốt 06/11/2026, dòng "vấn đáp" trong `docs/BAN_GIAO.md` đã hết hiệu lực). Đề vẫn ghi "mỗi thành viên đều phải nắm rõ toàn bộ quy trình, chức năng và mã code", nhưng không ghi hình thức kiểm tra. Nhóm tối đa 3 người, user làm chính. Mục tiêu: sản phẩm đẹp nhất có thể, cùng bản SPEC và Use Case tốt. Câu hỏi kỹ thuật là việc của AI: đo rồi tự trả lời; không kết luận được thì trình hai phương án kèm đánh đổi.
+Bài KHÔNG có vấn đáp (user chốt 06/11/2026, dòng "vấn đáp" trong `docs/BAN_GIAO.md` đã hết hiệu lực). Đề vẫn ghi "mỗi thành viên đều phải nắm rõ toàn bộ quy trình, chức năng và mã code", nhưng user chốt không ai hỏi từng dòng: chỉ cần hiểu sơ bộ, nên code phải có chú thích giải thích và báo cáo cuối việc phải tóm tắt luồng chính. Nhóm tối đa 3 người, user làm hết. Mục tiêu: sản phẩm đẹp nhất có thể, cùng bản SPEC và Use Case tốt. Câu hỏi kỹ thuật là việc của AI: đo rồi tự trả lời; không kết luận được thì trình hai phương án kèm đánh đổi.
 User duyệt theo 4 mục: làm gì · rủi ro · mất bao lâu · lùi lại thế nào. Việc liên quan đến giao diện phải chụp màn hình và tự xem trước khi báo xong.
 Phản biện trước khi tuân lệnh · thuật ngữ phải giải thích · đừng bắt user nhớ hộ.
 

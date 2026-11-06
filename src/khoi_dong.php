@@ -26,6 +26,20 @@ function chuyenHuong(string $duongDan): never
     exit;
 }
 
+// Thông báo sau thao tác: lưu vào phiên trước khi chuyển hướng, trang sau hiện một lần rồi xoá.
+// $loai là 'success' hoặc 'danger', trùng tên class alert của Tabler.
+function datThongBao(string $loai, string $noiDung): void
+{
+    $_SESSION['thong_bao'] = ['loai' => $loai, 'noi_dung' => $noiDung];
+}
+
+function layThongBao(): ?array
+{
+    $thongBao = $_SESSION['thong_bao'] ?? null;
+    unset($_SESSION['thong_bao']);
+    return $thongBao;
+}
+
 // Form gửi lên có thể là mảng (username[]=x) nếu bị sửa tay, nên chỉ nhận chuỗi.
 function chuoiPost(string $khoa): string
 {

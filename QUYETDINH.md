@@ -17,6 +17,7 @@
 ## 🗂️ Sổ
 | QD | Chọn | Thay vì | Vì | Hết hạn khi (trạng thái đo được, không dùng ngày tuyệt đối) |
 |---|---|---|---|---|
+| QD-18 | 12–13/11 ưu tiên giao diện và dữ liệu mẫu; nhật ký nếu còn giờ; đọc cert, chấm điểm có thể bỏ | Đủ 3 chức năng mở rộng | Đề không yêu cầu 3 mục đó; mục tiêu là sản phẩm đẹp (QD-17) | Bài đã nộp |
 | QD-17 | Vai DUYỆT, ưu tiên sản phẩm đẹp và SPEC, Use Case tốt | Vai HIỂU, ưu tiên code dễ giải thích | User chốt 06/11/2026: bài không có vấn đáp | Giảng viên yêu cầu vấn đáp |
 | QD-16 | Mỗi trang một file PHP, địa chỉ có đuôi `.php` | Router + rewrite, MVC đầy đủ | Chạy được `php -S`, Caddy, Apache mà không cần `.htaccess` | Đã nộp và muốn phát triển tiếp |
 | QD-15 | Web đặt ở `cert.cipher.id.vn` | Đặt ở `cipher.id.vn`, chuyển sau | Giữ domain chính cho định hướng sau này; link và HTTPS đưa giảng viên không phải đổi | Chuyển web sang tên miền khác |

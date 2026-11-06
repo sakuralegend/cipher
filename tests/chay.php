@@ -11,6 +11,7 @@ if (PHP_SAPI !== 'cli') {
 
 require __DIR__ . '/../config/db.php';
 require __DIR__ . '/../src/auth.php';
+require __DIR__ . '/../src/nguoi_dung.php';
 
 function napLaiCsdl(PDO $pdo): void
 {
@@ -372,14 +373,183 @@ function test_moi_trang_quan_tri_deu_kiem_tra_dang_nhap(PDO $pdo): void
             continue;
         }
         $soTrang++;
-        // Bỏ chú thích trước khi tìm, để một dòng chú thích không qua mặt được test.
-        $code = implode('', array_map(
-            fn($manh) => is_array($manh) && in_array($manh[0], [T_COMMENT, T_DOC_COMMENT], true) ? '' : (is_array($manh) ? $manh[1] : $manh),
-            token_get_all(file_get_contents($file->getPathname()))
-        ));
-        kiem(preg_match('/\byeuCau(DangNhap|Admin)\(/', $code) === 1, $file->getFilename() . ' chưa kiểm tra đăng nhập');
+        kiem(preg_match('/\byeuCau(DangNhap|Admin)\(/', codeKhongChuThich($file->getPathname())) === 1, $file->getFilename() . ' chưa kiểm tra đăng nhập');
     }
     kiem($soTrang > 0, 'Không tìm thấy trang quản trị nào, đường dẫn trong test có thể đã sai');
+}
+
+// Bỏ chú thích trước khi tìm, để một dòng chú thích không qua mặt được test quét code.
+function codeKhongChuThich(string $duongDan): string
+{
+    return implode('', array_map(
+        fn($manh) => is_array($manh) && in_array($manh[0], [T_COMMENT, T_DOC_COMMENT], true) ? '' : (is_array($manh) ? $manh[1] : $manh),
+        token_get_all(file_get_contents($duongDan))
+    ));
+}
+
+function duLieuNguoiMoi(array $thayDoi = []): array
+{
+    return array_merge([
+        'username' => 'nguoi.moi',
+        'full_name' => 'Người Mới',
+        'role_id' => 2,
+        'password' => 'MatKhau@123',
+        'password2' => 'MatKhau@123',
+    ], $thayDoi);
+}
+
+// Luật: Dữ liệu người dùng sai bị từ chối đúng ô: tên, họ tên, vai trò, mật khẩu ngắn, dài, nhập lại lệch.
+// Vì sao: Đề yêu cầu kiểm tra bằng cả JavaScript và PHP; JavaScript có thể bị bỏ qua nên PHP là lớp thật.
+// Đỏ nghĩa là: một quy tắc trong kiemTraNguoiDung() đã mất hoặc báo sai ô.
+// Đừng: chỉ dựa vào thuộc tính required, pattern trên form.
+function test_du_lieu_nguoi_dung_sai_bi_tu_choi(PDO $pdo): void
+{
+    $truongHop = [
+        'username' => ['ab', 'có dấu', "hop.le\n", str_repeat('a', 51)],
+        'full_name' => ['', str_repeat('a', 101)],
+        'role_id' => [0, 99],
+        'password' => ['ngan', str_repeat('a', 73)],
+    ];
+    foreach ($truongHop as $o => $cacGiaTriSai) {
+        foreach ($cacGiaTriSai as $giaTri) {
+            $thayDoi = $o === 'password' ? ['password' => $giaTri, 'password2' => $giaTri] : [$o => $giaTri];
+            $loi = themNguoiDung($pdo, duLieuNguoiMoi($thayDoi));
+            kiem(isset($loi[$o]), "Ô $o phải báo lỗi với giá trị: " . json_encode($giaTri));
+        }
+    }
+    $lech = themNguoiDung($pdo, duLieuNguoiMoi(['password2' => 'KhacHan@123']));
+    kiem(isset($lech['password']), 'Nhập lại lệch phải báo lỗi');
+    kiem((int) $pdo->query('SELECT COUNT(*) FROM users')->fetchColumn() === 2, 'Dữ liệu sai không được lưu');
+}
+
+// Luật: Tên đăng nhập trùng được báo lỗi rõ ràng, không làm hỏng trang.
+// Vì sao: CSDL là nơi chặn trùng; nếu không bắt lỗi, người dùng thấy trang lỗi thay vì câu dễ hiểu.
+// Đỏ nghĩa là: loiTrungTenDangNhap() không còn nhận ra mã lỗi trùng khoá.
+// Đừng: bỏ UNIQUE và chỉ SELECT kiểm tra trước, vì hai yêu cầu cùng lúc vẫn tạo trùng được.
+function test_ten_dang_nhap_trung_bao_loi_ro_rang(PDO $pdo): void
+{
+    kiem(isset(themNguoiDung($pdo, duLieuNguoiMoi(['username' => 'admin']))['username']), 'Thêm trùng phải báo lỗi');
+    kiem(isset(suaNguoiDung($pdo, 2, duLieuNguoiMoi(['username' => 'admin', 'password' => '', 'password2' => '']), 1)['username']), 'Sửa trùng phải báo lỗi');
+}
+
+// Luật: Mật khẩu luôn được lưu dạng băm, cả khi thêm, Admin đặt lại, và tự đổi.
+// Vì sao: Đề yêu cầu mật khẩu được mã hoá; lộ CSDL cũng không lộ mật khẩu.
+// Đỏ nghĩa là: một đường ghi mật khẩu đang lưu bản gốc.
+// Đừng: viết thêm câu UPDATE password_hash ở trang; hãy gọi capNhatMatKhau().
+function test_mat_khau_luon_luu_dang_bam(PDO $pdo): void
+{
+    $doc = fn() => $pdo->query("SELECT password_hash FROM users WHERE username = 'nguoi.moi'")->fetchColumn();
+
+    kiem(themNguoiDung($pdo, duLieuNguoiMoi()) === [], 'Phải thêm được');
+    kiem(password_verify('MatKhau@123', $doc()), 'Thêm: phải lưu bản băm đúng');
+
+    $id = (int) $pdo->query("SELECT id FROM users WHERE username = 'nguoi.moi'")->fetchColumn();
+    suaNguoiDung($pdo, $id, duLieuNguoiMoi(['password' => 'DatLai@123', 'password2' => 'DatLai@123']), 1);
+    kiem(password_verify('DatLai@123', $doc()), 'Admin đặt lại: phải lưu bản băm đúng');
+
+    $truocKhiSua = $doc();
+    suaNguoiDung($pdo, $id, duLieuNguoiMoi(['password' => '', 'password2' => '']), 1);
+    kiem($doc() === $truocKhiSua, 'Để trống mật khẩu khi sửa phải giữ nguyên');
+
+    doiMatKhau($pdo, $id, 'DatLai@123', 'TuDoi@1234', 'TuDoi@1234');
+    kiem(password_verify('TuDoi@1234', $doc()), 'Tự đổi: phải lưu bản băm đúng');
+}
+
+// Luật: Admin không tự khoá, tự xoá, hay tự đổi vai trò của mình.
+// Vì sao: Nhờ ba quy tắc này, hệ thống luôn còn ít nhất một Admin; không có cách nào cứu nếu mất hết.
+// Đỏ nghĩa là: Admin có thể khoá mình khỏi hệ thống.
+// Đừng: chỉ ẩn nút trên giao diện; yêu cầu POST có thể gửi thẳng.
+function test_admin_khong_tu_khoa_tu_xoa_tu_doi_vai_tro(PDO $pdo): void
+{
+    kiem(khoaNguoiDung($pdo, 1, 1) !== null, 'Không được tự khoá');
+    // Dùng Admin chưa có lịch sử, để chắc quy tắc này chặn, không phải khoá ngoại chặn hộ.
+    themNguoiDung($pdo, duLieuNguoiMoi(['username' => 'admin2', 'role_id' => 1]));
+    $idAdmin2 = (int) $pdo->query("SELECT id FROM users WHERE username = 'admin2'")->fetchColumn();
+    kiem(xoaNguoiDung($pdo, $idAdmin2, $idAdmin2) !== null, 'Không được tự xoá');
+    kiem(timNguoiDung($pdo, $idAdmin2) !== null, 'Admin tự xoá thất bại thì tài khoản phải còn');
+    $doiVaiTro = suaNguoiDung($pdo, 1, duLieuNguoiMoi(['username' => 'admin', 'role_id' => 2, 'password' => '', 'password2' => '']), 1);
+    kiem(isset($doiVaiTro['role_id']), 'Không được tự đổi vai trò');
+
+    $dong = timNguoiDung($pdo, 1);
+    kiem((int) $dong['is_locked'] === 0 && (int) $dong['role_id'] === 1 && $dong['full_name'] !== 'Người Mới', 'Tài khoản Admin không được thay đổi');
+
+    kiem(khoaNguoiDung($pdo, 2, 1) === null, 'Khoá người khác phải được');
+    kiem((int) timNguoiDung($pdo, 2)['is_locked'] === 1, 'Người bị khoá phải có is_locked = 1');
+}
+
+// Luật: Xoá người có lịch sử thì báo "chỉ có thể khoá"; người chưa có lịch sử thì xoá được.
+// Vì sao: Đề đòi chức năng xoá, nhưng xoá người đã thao tác sẽ mất dấu vết.
+// Đỏ nghĩa là: xoaNguoiDung() không còn nhận ra lỗi khoá ngoại, trang sẽ báo lỗi hệ thống.
+// Đừng: đếm lịch sử bằng truy vấn riêng, vì thêm bảng mới là quên cập nhật.
+function test_xoa_nguoi_co_lich_su_bao_chi_co_the_khoa(PDO $pdo): void
+{
+    $loi = xoaNguoiDung($pdo, 2, 1);
+    kiem($loi !== null && str_contains($loi, 'chỉ có thể khoá'), 'Phải báo chỉ có thể khoá');
+    kiem(timNguoiDung($pdo, 2) !== null, 'Người có lịch sử phải còn');
+
+    themNguoiDung($pdo, duLieuNguoiMoi());
+    $id = (int) $pdo->query("SELECT id FROM users WHERE username = 'nguoi.moi'")->fetchColumn();
+    kiem(xoaNguoiDung($pdo, $id, 1) === null, 'Người chưa có lịch sử phải xoá được');
+    kiem(timNguoiDung($pdo, $id) === null, 'Đã xoá thì không còn');
+}
+
+// Luật: Mở khoá xoá luôn trạng thái tạm chặn, và người dùng vào được ngay.
+// Vì sao: Không có việc này, Admin bấm mở khoá mà người dùng vẫn phải đợi 15 phút.
+// Đỏ nghĩa là: moKhoaNguoiDung() chỉ đổi is_locked.
+// Đừng: bắt Admin chạy lệnh SQL để cứu tài khoản lúc demo.
+function test_mo_khoa_xoa_ca_trang_thai_tam_chan(PDO $pdo): void
+{
+    saiLienTiep($pdo, 'nhanvien', 5);
+    $pdo->exec('UPDATE users SET is_locked = 1 WHERE id = 2');
+    moKhoaNguoiDung($pdo, 2);
+    kiem(isset(dangNhap($pdo, 'nhanvien', 'Cipher@2026')['id']), 'Mở khoá xong phải đăng nhập được ngay');
+}
+
+// Luật: Đổi mật khẩu phải nhập đúng mật khẩu cũ, và mật khẩu mới phải hợp lệ.
+// Vì sao: Người khác ngồi vào máy đang đăng nhập không được chiếm luôn tài khoản.
+// Đỏ nghĩa là: doiMatKhau() đã bỏ bước kiểm tra mật khẩu cũ.
+// Đừng: dùng hàm này cho Admin đặt lại mật khẩu người khác; đó là việc của suaNguoiDung().
+function test_doi_mat_khau_phai_dung_mat_khau_cu(PDO $pdo): void
+{
+    kiem(isset(doiMatKhau($pdo, 2, 'sai', 'MoiHan@1234', 'MoiHan@1234')['password_cu']), 'Sai mật khẩu cũ phải báo lỗi');
+    kiem(isset(doiMatKhau($pdo, 2, 'Cipher@2026', 'ngan', 'ngan')['password']), 'Mật khẩu mới ngắn phải báo lỗi');
+    kiem(isset(dangNhap($pdo, 'nhanvien', 'Cipher@2026')['id']), 'Đổi thất bại thì mật khẩu cũ phải còn dùng được');
+    kiem(doiMatKhau($pdo, 2, 'Cipher@2026', 'MoiHan@1234', 'MoiHan@1234') === [], 'Đúng mật khẩu cũ phải đổi được');
+    kiem(isset(dangNhap($pdo, 'nhanvien', 'MoiHan@1234')['id']), 'Phải đăng nhập được bằng mật khẩu mới');
+}
+
+// Luật: Mọi trang quản lý người dùng đều gọi yeuCauAdmin(), không chỉ yeuCauDangNhap().
+// Vì sao: Quên một trang thì nhân viên có thể tự nâng quyền hay xoá người khác, và không có lỗi nào hiện ra.
+// Đỏ nghĩa là: có trang nguoi_dung*.php đang mở cho nhân viên.
+// Đừng: dựa vào việc menu đã ẩn mục Người dùng.
+function test_trang_quan_ly_nguoi_dung_chi_danh_cho_admin(PDO $pdo): void
+{
+    $cacTrang = glob(__DIR__ . '/../public/admin/nguoi_dung*.php');
+    kiem(count($cacTrang) === 3, 'Mong 3 trang, tìm thấy ' . count($cacTrang));
+    foreach ($cacTrang as $trang) {
+        kiem(preg_match('/\byeuCauAdmin\(/', codeKhongChuThich($trang)) === 1, basename($trang) . ' chưa gọi yeuCauAdmin()');
+    }
+}
+
+// Luật: Mọi trang xử lý yêu cầu POST đều gọi yeuCauCsrf().
+// Vì sao: Quên một trang thì trang web lạ có thể gửi lệnh thay người đang đăng nhập, và không có lỗi nào hiện ra.
+// Đỏ nghĩa là: có trang vừa thêm đọc POST mà chưa kiểm tra mã CSRF.
+// Đừng: bỏ qua cho trang "ít quan trọng"; đăng xuất cũng phải có mã.
+function test_moi_trang_nhan_post_deu_kiem_tra_csrf(PDO $pdo): void
+{
+    $soTrang = 0;
+    $cacFile = new RecursiveIteratorIterator(new RecursiveDirectoryIterator(__DIR__ . '/../public', FilesystemIterator::SKIP_DOTS));
+    foreach ($cacFile as $file) {
+        if ($file->getExtension() !== 'php') {
+            continue;
+        }
+        $code = codeKhongChuThich($file->getPathname());
+        if (preg_match('/\$_POST|chuoiPost\(|REQUEST_METHOD/', $code) === 1) {
+            $soTrang++;
+            kiem(str_contains($code, 'yeuCauCsrf('), $file->getFilename() . ' nhận POST nhưng chưa kiểm tra CSRF');
+        }
+    }
+    kiem($soTrang >= 5, "Mong ít nhất 5 trang nhận POST, tìm thấy $soTrang: đường dẫn trong test có thể đã sai");
 }
 
 $pdo = ketNoiCsdl('cipher_test');
