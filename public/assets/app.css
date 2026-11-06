@@ -5,6 +5,13 @@
     font-family: var(--tblr-font-monospace);
 }
 
+/* Ô ngày đã có biểu tượng lịch; biểu tượng đúng/sai của Bootstrap sẽ chồng lên nó. */
+.was-validated input[type="datetime-local"]:valid,
+.was-validated input[type="datetime-local"]:invalid,
+input[type="datetime-local"].is-invalid {
+    background-image: none;
+}
+
 /* Landing: tên class bắt đầu bằng ld- để không ảnh hưởng tới trang quản trị. */
 .ld-hero {
     padding: 4rem 0 3rem;

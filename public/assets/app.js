@@ -32,6 +32,12 @@ document.querySelectorAll('form[data-kiem-tra]').forEach(function (form) {
             var goc = document.getElementById(o.dataset.giong);
             o.setCustomValidity(o.value === goc.value ? '' : 'khong-giong');
         });
+        // Ô ngày phải sau ô khác: <input data-sau="id của ô ngày trước">.
+        // Dạng ngày của trình duyệt so sánh chuỗi đúng thứ tự thời gian.
+        form.querySelectorAll('[data-sau]').forEach(function (o) {
+            var truoc = document.getElementById(o.dataset.sau);
+            o.setCustomValidity(truoc.value && o.value && o.value <= truoc.value ? 'khong-sau' : '');
+        });
     }
 
     form.addEventListener('input', function (suKien) {

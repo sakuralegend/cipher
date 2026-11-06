@@ -13,6 +13,7 @@ require __DIR__ . '/../config/db.php';
 require __DIR__ . '/../src/auth.php';
 require __DIR__ . '/../src/nguoi_dung.php';
 require __DIR__ . '/../src/danh_muc.php';
+require __DIR__ . '/../src/chung_chi.php';
 
 function napLaiCsdl(PDO $pdo): void
 {
@@ -676,6 +677,182 @@ function test_danh_muc_khong_con_du_lieu_con_thi_xoa_duoc(PDO $pdo): void
     $id = (int) $pdo->query("SELECT id FROM certificate_authorities WHERE name = 'Tổ chức thử'")->fetchColumn();
     kiem(xoaToChuc($pdo, $id) === null, 'Tổ chức không có chứng chỉ phải xoá được');
     kiem(timToChuc($pdo, $id) === null, 'Đã xoá thì không còn');
+}
+
+function chungChiHopLe(array $thayDoi = []): array
+{
+    return array_merge([
+        'cert_code' => 'CERT-100',
+        'fingerprint_sha256' => '',
+        'serial' => '',
+        'subject_cn' => 'moi.congty.example',
+        'san' => '',
+        'ca_id' => '1',
+        'domain_id' => '1',
+        'valid_from' => '2026-01-01T00:00:00',
+        'valid_to' => '2027-01-01T00:00:00',
+        'key_algorithm' => 'RSA',
+        'key_size' => '2048',
+        'signature_algorithm' => 'sha256WithRSAEncryption',
+    ], $thayDoi);
+}
+
+// Luật: Chứng chỉ có dữ liệu sai bị từ chối đúng ô, và không được lưu.
+// Vì sao: Đề yêu cầu kiểm tra dữ liệu ở PHP; JavaScript có thể bị bỏ qua.
+// Đỏ nghĩa là: một quy tắc trong kiemTraChungChi() đã mất hoặc báo sai ô.
+// Đừng: chuyển việc kiểm tra về chỉ dựa vào thuộc tính HTML hay ràng buộc CSDL.
+function test_chung_chi_du_lieu_sai_bi_tu_choi_dung_o(PDO $pdo): void
+{
+    $truongHop = [
+        'cert_code' => ['', 'có dấu', str_repeat('A', 31), "A1\n"],
+        'fingerprint_sha256' => ['abc', str_repeat('z', 64), str_repeat('a', 63), str_repeat('a', 65)],
+        'serial' => ['xyz', str_repeat('A', 129)],
+        'subject_cn' => ['', str_repeat('a', 256)],
+        'san' => [str_repeat('a', 5001)],
+        'ca_id' => ['', '0', '999'],
+        'domain_id' => ['', '0', '999'],
+        'valid_from' => ['', 'abc', '2026-02-31T00:00:00', '0000-01-01T00:00:00'],
+        'valid_to' => ['', 'abc', '2026-13-01T00:00:00'],
+        'key_algorithm' => ['', 'DES'],
+        'key_size' => ['', '0', '-1', '65536', 'abc'],
+        'signature_algorithm' => ['', str_repeat('a', 51)],
+    ];
+    $truoc = demChungChi($pdo);
+    foreach ($truongHop as $o => $cacGiaTriSai) {
+        foreach ($cacGiaTriSai as $giaTri) {
+            $loi = luuChungChi($pdo, null, chungChiHopLe([$o => $giaTri]), 1);
+            kiem(isset($loi[$o]), "Ô $o phải báo lỗi với giá trị: " . json_encode(mb_substr($giaTri, 0, 20)));
+        }
+    }
+    kiem(demChungChi($pdo) === $truoc, 'Dữ liệu sai không được lưu');
+    kiem(luuChungChi($pdo, null, chungChiHopLe(), 1) === [], 'Dữ liệu đúng phải lưu được');
+}
+
+// Luật: Fingerprint và serial được chuẩn hoá trước khi lưu; ô trống lưu thành NULL.
+// Vì sao: EE:7A và ee7a là cùng một vân tay; không chuẩn hoá thì kiểm tra trùng không phát hiện được.
+// Đỏ nghĩa là: chuanHoaFingerprint(), chuanHoaSerial() đã đổi, hoặc lưu chuỗi rỗng thay vì NULL.
+// Đừng: lưu nguyên dạng người dùng dán vào.
+function test_fingerprint_va_serial_duoc_chuan_hoa_truoc_khi_luu(PDO $pdo): void
+{
+    $vanTay = 'EE:7A:1D:35:56:85:B8:8E:42:56:0A:57:53:0A:F5:72:A7:7D:D1:93:E2:7E:E7:BA:61:6C:22:58:69:C5:00:01';
+    kiem(luuChungChi($pdo, null, chungChiHopLe(['fingerprint_sha256' => $vanTay, 'serial' => '06:6a b8']), 1) === [], 'Dạng có dấu hai chấm phải được nhận');
+    $dong = $pdo->query("SELECT fingerprint_sha256, serial FROM certificates WHERE cert_code = 'CERT-100'")->fetch();
+    kiem($dong['fingerprint_sha256'] === 'ee7a1d355685b88e42560a57530af572a77dd193e27ee7ba616c225869c50001', 'Fingerprint phải chuẩn hoá');
+    kiem($dong['serial'] === '066AB8', 'Serial phải chuẩn hoá');
+
+    kiem(luuChungChi($pdo, null, chungChiHopLe(['cert_code' => 'CERT-101']), 1) === [], 'Không có fingerprint phải lưu được');
+    kiem(luuChungChi($pdo, null, chungChiHopLe(['cert_code' => 'CERT-102']), 1) === [], 'Nhiều chứng chỉ không có fingerprint phải lưu được');
+    $dong = $pdo->query("SELECT fingerprint_sha256, serial, san FROM certificates WHERE cert_code = 'CERT-102'")->fetch();
+    kiem($dong['fingerprint_sha256'] === null && $dong['serial'] === null && $dong['san'] === null, 'Ô trống phải lưu thành NULL');
+}
+
+// Luật: Mã quản lý trùng và fingerprint trùng được báo lỗi đúng ô, kể cả khi viết khác dạng.
+// Vì sao: Bảng có hai cột UNIQUE; báo nhầm ô thì người dùng không biết phải sửa gì.
+// Đỏ nghĩa là: phần phân biệt cột trong luuChungChi() đã hỏng.
+// Đừng: bỏ UNIQUE và chỉ SELECT kiểm tra trước, vì hai yêu cầu cùng lúc vẫn tạo trùng được.
+function test_ma_quan_ly_va_fingerprint_trung_bao_loi_ro_rang(PDO $pdo): void
+{
+    $loiMa = luuChungChi($pdo, null, chungChiHopLe(['cert_code' => 'CERT-001']), 1);
+    kiem(isset($loiMa['cert_code']), 'Mã trùng phải báo ở ô mã');
+
+    $vanTay = strtoupper(implode(':', str_split(hash('sha256', 'CERT-001'), 2)));
+    $loiVanTay = luuChungChi($pdo, null, chungChiHopLe(['fingerprint_sha256' => $vanTay]), 1);
+    kiem(isset($loiVanTay['fingerprint_sha256']), 'Fingerprint trùng khác dạng phải báo ở ô fingerprint');
+
+    $giuNguyen = chungChiHopLe(['cert_code' => 'CERT-001', 'fingerprint_sha256' => hash('sha256', 'CERT-001')]);
+    kiem(luuChungChi($pdo, 1, $giuNguyen, 1) === [], 'Sửa chứng chỉ, giữ nguyên mã của chính nó thì không tính là trùng');
+}
+
+// Luật: Ngày hết hạn phải sau ngày bắt đầu; bằng nhau cũng bị từ chối.
+// Vì sao: Đây là chức năng 4 của đề; nếu không kiểm tra, CSDL từ chối và người dùng thấy trang lỗi.
+// Đỏ nghĩa là: so sánh ngày trong kiemTraChungChi() đã đổi.
+// Đừng: so sánh chuỗi trước khi chuanHoaNgay() đưa về cùng một dạng.
+function test_ngay_het_han_phai_sau_ngay_bat_dau(PDO $pdo): void
+{
+    $truocDo = luuChungChi($pdo, null, chungChiHopLe(['valid_from' => '2027-01-02T00:00', 'valid_to' => '2027-01-01T00:00']), 1);
+    kiem(isset($truocDo['valid_to']), 'Hết hạn trước ngày bắt đầu phải báo lỗi');
+    $bangNhau = luuChungChi($pdo, null, chungChiHopLe(['valid_from' => '2027-01-01T00:00', 'valid_to' => '2027-01-01T00:00:00']), 1);
+    kiem(isset($bangNhau['valid_to']), 'Hai ngày bằng nhau phải báo lỗi, kể cả khi viết khác dạng');
+
+    // Giữ đúng giây của ngày thật khi sửa.
+    kiem(luuChungChi($pdo, null, chungChiHopLe(['valid_from' => '2026-11-06T10:18:41', 'valid_to' => '2027-02-04T10:18:40']), 1) === [], 'Phải lưu được');
+    $giay = $pdo->query("SELECT valid_to FROM certificates WHERE cert_code = 'CERT-100'")->fetchColumn();
+    kiem($giay === '2027-02-04 10:18:40', "Phải giữ nguyên giây, đang là $giay");
+}
+
+// Luật: Nhân viên không xoá được chứng chỉ; Admin thì được.
+// Vì sao: Xoá làm mất cả lịch sử gia hạn; nhân viên dùng Thu hồi. User chốt 06/11/2026.
+// Đỏ nghĩa là: xoaChungChi() đã bỏ kiểm tra quyền, nhân viên có thể xoá bằng lệnh gửi thẳng.
+// Đừng: chỉ ẩn nút Xoá trên giao diện.
+function test_nhan_vien_khong_xoa_duoc_chung_chi_admin_thi_duoc(PDO $pdo): void
+{
+    $_SESSION = ['user_id' => 2];
+    $nhanVien = nguoiDungHienTai($pdo);
+    kiem(xoaChungChi($pdo, 1, $nhanVien) !== null, 'Nhân viên phải bị từ chối');
+    kiem(timChungChi($pdo, 1) !== null, 'Chứng chỉ phải còn');
+
+    $_SESSION = ['user_id' => 1];
+    $admin = nguoiDungHienTai($pdo);
+    kiem(xoaChungChi($pdo, 1, $admin) === null, 'Admin phải xoá được');
+    kiem(timChungChi($pdo, 1) === null, 'Đã xoá thì không còn');
+    kiem(xoaChungChi($pdo, 1, $admin) !== null, 'Xoá lần hai phải báo không còn tồn tại');
+    $_SESSION = [];
+}
+
+// Luật: Thu hồi giữ nguyên dữ liệu, đổi trạng thái, và không hoàn tác được qua form sửa.
+// Vì sao: Chứng chỉ thật đã thu hồi thì không thể dùng lại; muốn dùng thì cấp chứng chỉ mới.
+// Đỏ nghĩa là: luuChungChi() đang ghi is_revoked, hoặc thuHoiChungChi() đã đổi.
+// Đừng: thêm nút bỏ thu hồi; nhập nhầm thì tạo chứng chỉ mới.
+function test_thu_hoi_giu_du_lieu_va_khong_hoan_tac_duoc(PDO $pdo): void
+{
+    kiem(thuHoiChungChi($pdo, 1) === null, 'Phải thu hồi được');
+    $sau = timChungChi($pdo, 1);
+    kiem($sau !== null && $sau['status'] === 'revoked' && $sau['cert_code'] === 'CERT-001', 'Dữ liệu phải còn và đổi trạng thái');
+    kiem(thuHoiChungChi($pdo, 1) !== null, 'Thu hồi lần hai phải báo lỗi');
+    kiem(thuHoiChungChi($pdo, 9999) !== null, 'Chứng chỉ không tồn tại phải báo lỗi');
+
+    luuChungChi($pdo, 1, chungChiHopLe(['cert_code' => 'CERT-001', 'is_revoked' => 0]), 1);
+    kiem(timChungChi($pdo, 1)['status'] === 'revoked', 'Form sửa không được hoàn tác thu hồi');
+    kiem(moTaSoNgay(timChungChi($pdo, 1)) === 'Không áp dụng', 'Đã thu hồi thì không đếm ngày');
+}
+
+// Luật: Danh sách chia trang 20 dòng, và chứng chỉ gần hết hạn nhất lên đầu xuyên suốt các trang.
+// Vì sao: Mục đích hệ thống là không để sót chứng chỉ sắp hết hạn; dữ liệu mẫu sẽ có 30–50 dòng.
+// Đỏ nghĩa là: ORDER BY hoặc LIMIT, OFFSET trong danhSachChungChi() đã đổi.
+// Đừng: lấy hết rồi cắt bằng PHP, vì dữ liệu lớn sẽ chậm.
+function test_danh_sach_phan_trang_va_chung_chi_gan_het_han_len_dau(PDO $pdo): void
+{
+    for ($i = 200; $i < 225; $i++) {
+        $loi = luuChungChi($pdo, null, chungChiHopLe(['cert_code' => "CERT-$i", 'valid_to' => sprintf('2030-01-01T00:00:%02d', $i - 200)]), 1);
+        kiem($loi === [], "Dữ liệu thử CERT-$i phải lưu được");
+    }
+    $trang1 = danhSachChungChi($pdo, 1);
+    $trang2 = danhSachChungChi($pdo, 2);
+    kiem(count($trang1) === SO_DONG_MOT_TRANG, 'Trang 1 phải đủ 20 dòng');
+    kiem(count($trang2) === demChungChi($pdo) - SO_DONG_MOT_TRANG, 'Trang 2 phải có phần còn lại');
+    kiem($trang1[0]['cert_code'] === 'CERT-005', 'Chứng chỉ đã hết hạn phải lên đầu');
+    kiem(array_intersect(array_column($trang1, 'id'), array_column($trang2, 'id')) === [], 'Hai trang không được trùng dòng');
+
+    $ngay = array_column([...$trang1, ...$trang2], 'valid_to');
+    $daSap = $ngay;
+    sort($daSap);
+    kiem($ngay === $daSap, 'Phải sắp theo ngày hết hạn tăng dần');
+    kiem(danhSachChungChi($pdo, 0) === $trang1, 'Số trang không hợp lệ phải về trang 1');
+}
+
+// Luật: Mã kế tiếp không trùng mã đã có, và không bị mã tự đặt làm hỏng.
+// Vì sao: Form điền sẵn mã này; trùng thì người dùng bị báo lỗi ngay khi chưa nhập gì sai.
+// Đỏ nghĩa là: maChungChiKeTiep() đã đổi.
+// Đừng: tính từ số dòng trong bảng, vì đã xoá dòng thì sẽ ra mã trùng.
+function test_ma_ke_tiep_khong_trung_ma_da_co(PDO $pdo): void
+{
+    kiem(maChungChiKeTiep($pdo) === 'CERT-010', 'Dữ liệu mẫu tới CERT-009 thì kế tiếp là CERT-010');
+    luuChungChi($pdo, null, chungChiHopLe(['cert_code' => 'WEB-999']), 1);
+    kiem(maChungChiKeTiep($pdo) === 'CERT-010', 'Mã tự đặt không được ảnh hưởng');
+    luuChungChi($pdo, null, chungChiHopLe(['cert_code' => 'CERT-099']), 1);
+    kiem(maChungChiKeTiep($pdo) === 'CERT-100', 'Qua hai chữ số phải vẫn đúng');
+    $pdo->exec("DELETE FROM certificates WHERE cert_code = 'CERT-001'");
+    kiem(maChungChiKeTiep($pdo) === 'CERT-100', 'Xoá dòng khác không được làm mã bị dùng lại');
 }
 
 // Luật: Mọi trang xử lý yêu cầu POST đều gọi yeuCauCsrf().
