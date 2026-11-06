@@ -7,12 +7,13 @@ const THUAT_TOAN_KHOA = ['RSA' => 'RSA', 'ECDSA' => 'ECDSA', 'Ed25519' => 'Ed255
 const SO_DONG_MOT_TRANG = 20;
 
 // Tên và màu hiển thị của từng trạng thái; màu là tên màu của Tabler.
+// Thứ tự ở đây là mức gấp: danh sách, hàng nút trạng thái đều xếp theo thứ tự này.
 const TRANG_THAI = [
-    'valid' => ['nhan' => 'Còn hiệu lực', 'mau' => 'green'],
-    'expiring' => ['nhan' => 'Sắp hết hạn', 'mau' => 'yellow'],
     'expired' => ['nhan' => 'Đã hết hạn', 'mau' => 'red'],
-    'revoked' => ['nhan' => 'Đã thu hồi', 'mau' => 'secondary'],
+    'expiring' => ['nhan' => 'Sắp hết hạn', 'mau' => 'yellow'],
+    'valid' => ['nhan' => 'Còn hiệu lực', 'mau' => 'green'],
     'not_yet_valid' => ['nhan' => 'Chưa hiệu lực', 'mau' => 'blue'],
+    'revoked' => ['nhan' => 'Đã thu hồi', 'mau' => 'secondary'],
 ];
 
 // Cùng một vân tay có thể viết EE:7A hay ee 7a. Đưa về một dạng trước khi lưu, nếu không
@@ -235,13 +236,76 @@ function demChungChi(PDO $pdo, array $loc = []): int
     return (int) $cau->fetchColumn();
 }
 
-// Sắp theo ngày hết hạn tăng dần, nên chứng chỉ đã hết hạn và sắp hết hạn nằm trên cùng.
-function danhSachChungChi(PDO $pdo, int $trang, array $loc = []): array
+// Số trên hàng nút trạng thái: đếm theo các bộ lọc khác, bỏ qua trạng thái đang chọn, để bấm sang
+// nút khác biết trước được bao nhiêu dòng. Trạng thái không có dòng nào vẫn có mặt với số 0.
+function demTheoTrangThai(PDO $pdo, array $loc = []): array
+{
+    [$where, $thamSo] = dieuKienLoc(['trang_thai' => ''] + $loc);
+    $cau = $pdo->prepare('SELECT c.status, COUNT(*) FROM ' . NGUON_CHUNG_CHI . " $where GROUP BY c.status");
+    $cau->execute($thamSo);
+    $dem = $cau->fetchAll(PDO::FETCH_KEY_PAIR);
+
+    $ketQua = [];
+    foreach (array_keys(TRANG_THAI) as $trangThai) {
+        $ketQua[$trangThai] = (int) ($dem[$trangThai] ?? 0);
+    }
+    return $ketQua;
+}
+
+// ---------- Sắp xếp ----------
+
+// Tên cột trên địa chỉ trang => biểu thức SQL. Tên cột không truyền được bằng dấu ?, nên chỉ những
+// khoá viết sẵn ở đây mới vào được câu SQL; giá trị người dùng gửi lên không bao giờ được ghép vào.
+const COT_SAP_XEP = [
+    'ma' => 'c.cert_code',
+    'ten' => 'c.subject_cn',
+    'to_chuc' => 'a.name',
+    'het_han' => 'c.valid_to',
+    'con_lai' => 'c.valid_to',
+    'trang_thai' => null, // Tính ở mucGapSql(), vì lấy từ thứ tự của TRANG_THAI.
+];
+
+// Giá trị sai bị coi như chưa chọn, giống docBoLoc(). Trả về ['sap_xep' => khoá hoặc '', 'chieu' => 'tang' | 'giam'].
+function docSapXep(array $nguon): array
+{
+    $cot = $nguon['sap_xep'] ?? '';
+    if (!is_string($cot) || !array_key_exists($cot, COT_SAP_XEP)) {
+        return ['sap_xep' => '', 'chieu' => 'tang'];
+    }
+    return ['sap_xep' => $cot, 'chieu' => ($nguon['chieu'] ?? '') === 'giam' ? 'giam' : 'tang'];
+}
+
+// Dãy trạng thái lấy từ khoá của TRANG_THAI viết trong code, không có dữ liệu người dùng.
+function mucGapSql(): string
+{
+    return "FIELD(c.status, '" . implode("', '", array_keys(TRANG_THAI)) . "')";
+}
+
+// Mặc định: việc gấp lên đầu, đã thu hồi xuống cuối; trong mỗi nhóm, hạn gần hơn đứng trước.
+// Mọi cách xếp đều kết thúc bằng id để các dòng bằng nhau không đổi chỗ giữa hai trang.
+function menhDeSapXep(array $sapXep): string
+{
+    $cot = $sapXep['sap_xep'] ?? '';
+    $chieu = ($sapXep['chieu'] ?? '') === 'giam' ? 'DESC' : 'ASC';
+    if ($cot === '') {
+        return mucGapSql() . ', c.valid_to, c.id';
+    }
+    if ($cot === 'trang_thai') {
+        return mucGapSql() . " $chieu, c.valid_to, c.id";
+    }
+    if ($cot === 'con_lai') {
+        // Chứng chỉ đã thu hồi không có số ngày còn lại, nên luôn nằm cuối dù xếp chiều nào.
+        return "c.is_revoked, c.valid_to $chieu, c.id";
+    }
+    return COT_SAP_XEP[$cot] . " $chieu, c.valid_to, c.id";
+}
+
+function danhSachChungChi(PDO $pdo, int $trang, array $loc = [], array $sapXep = []): array
 {
     [$where, $thamSo] = dieuKienLoc($loc);
     $cau = $pdo->prepare('SELECT c.*, a.name AS ca_name, d.domain_name FROM ' . NGUON_CHUNG_CHI . " $where
-                          ORDER BY c.valid_to, c.id
-                          LIMIT ? OFFSET ?");
+                          ORDER BY " . menhDeSapXep($sapXep) . '
+                          LIMIT ? OFFSET ?');
     $viTri = 1;
     foreach ($thamSo as $giaTri) {
         $cau->bindValue($viTri++, $giaTri);

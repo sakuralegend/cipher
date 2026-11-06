@@ -820,9 +820,9 @@ function test_thu_hoi_giu_du_lieu_va_khong_hoan_tac_duoc(PDO $pdo): void
     kiem(moTaSoNgay(timChungChi($pdo, 1)) === 'Không áp dụng', 'Đã thu hồi thì không đếm ngày');
 }
 
-// Luật: Danh sách chia trang 20 dòng, và chứng chỉ gần hết hạn nhất lên đầu xuyên suốt các trang.
-// Vì sao: Mục đích hệ thống là không để sót chứng chỉ sắp hết hạn; dữ liệu mẫu sẽ có 30–50 dòng.
-// Đỏ nghĩa là: ORDER BY hoặc LIMIT, OFFSET trong danhSachChungChi() đã đổi.
+// Luật: Danh sách chia trang 20 dòng, chứng chỉ gấp nhất lên đầu, và hai trang không trùng dòng.
+// Vì sao: Mục đích hệ thống là không để sót chứng chỉ sắp hết hạn; dữ liệu mẫu có 50 dòng.
+// Đỏ nghĩa là: LIMIT, OFFSET trong danhSachChungChi() đã đổi.
 // Đừng: lấy hết rồi cắt bằng PHP, vì dữ liệu lớn sẽ chậm.
 function test_danh_sach_phan_trang_va_chung_chi_gan_het_han_len_dau(PDO $pdo): void
 {
@@ -836,11 +836,6 @@ function test_danh_sach_phan_trang_va_chung_chi_gan_het_han_len_dau(PDO $pdo): v
     kiem(count($trang2) === demChungChi($pdo) - SO_DONG_MOT_TRANG, 'Trang 2 phải có phần còn lại');
     kiem($trang1[0]['cert_code'] === 'CERT-005', 'Chứng chỉ đã hết hạn phải lên đầu');
     kiem(array_intersect(array_column($trang1, 'id'), array_column($trang2, 'id')) === [], 'Hai trang không được trùng dòng');
-
-    $ngay = array_column([...$trang1, ...$trang2], 'valid_to');
-    $daSap = $ngay;
-    sort($daSap);
-    kiem($ngay === $daSap, 'Phải sắp theo ngày hết hạn tăng dần');
     kiem(danhSachChungChi($pdo, 0) === $trang1, 'Số trang không hợp lệ phải về trang 1');
 }
 
@@ -1156,6 +1151,98 @@ function test_cac_bo_loc_ket_hop_va_gia_tri_loc_sai_bi_bo_qua(PDO $pdo): void
                   'server_id' => '-1', 'het_han_tu' => '2031-02-31', 'het_han_den' => "2031-01-01' --"];
     kiem(array_filter(docBoLoc($giaTriSai), fn(string $g): bool => $g !== '') === [], 'Giá trị sai phải bị coi như chưa chọn');
     kiem(count(maKhopBoLoc($pdo, $giaTriSai)) === $tatCa, 'Giá trị sai không được làm mất dòng');
+}
+
+// Mã chứng chỉ theo đúng thứ tự trả về của một cách xếp.
+function maTheoCachXep(PDO $pdo, array $nguon): array
+{
+    return array_column(danhSachChungChi($pdo, 1, [], docSapXep($nguon)), 'cert_code');
+}
+
+// Luật: Danh sách mặc định xếp theo mức gấp, đã thu hồi xuống cuối; trong mỗi nhóm, hạn gần hơn đứng trước.
+// Vì sao: User chốt 07/11/2026: xếp thuần theo ngày làm chứng chỉ đã thu hồi nằm lẫn giữa chứng chỉ đang hoạt động.
+// Đỏ nghĩa là: thứ tự trong TRANG_THAI hoặc nhánh mặc định của menhDeSapXep() đã đổi.
+// Đừng: viết lại thứ tự mức gấp ở chỗ khác; hàng nút và danh sách cùng lấy từ TRANG_THAI.
+function test_danh_sach_mac_dinh_xep_theo_muc_gap_thu_hoi_cuoi_cung(PDO $pdo): void
+{
+    chayFileSql($pdo, 'seed_demo.sql');
+    $danhSach = [...danhSachChungChi($pdo, 1), ...danhSachChungChi($pdo, 2), ...danhSachChungChi($pdo, 3)];
+    kiem(count($danhSach) === 50, 'Ba trang phải đủ 50 dòng');
+
+    $thuTu = array_flip(array_keys(TRANG_THAI));
+    kiem($thuTu['expired'] === 0 && $thuTu['revoked'] === 4, 'Đã hết hạn phải gấp nhất, đã thu hồi phải cuối');
+    for ($i = 1; $i < count($danhSach); $i++) {
+        [$truoc, $sau] = [$danhSach[$i - 1], $danhSach[$i]];
+        $dungThuTu = $thuTu[$truoc['status']] < $thuTu[$sau['status']]
+            || ($truoc['status'] === $sau['status'] && $truoc['valid_to'] <= $sau['valid_to']);
+        kiem($dungThuTu, "{$truoc['cert_code']} không được đứng trước {$sau['cert_code']}");
+    }
+}
+
+// Luật: Bấm tiêu đề cột đổi được cách xếp cả hai chiều; cột Còn lại luôn để đã thu hồi ở cuối; giá trị lạ về mặc định.
+// Vì sao: Tên cột không truyền được bằng dấu ?, nên giá trị từ địa chỉ trang mà lọt vào câu SQL là bị chèn mã.
+// Đỏ nghĩa là: COT_SAP_XEP, docSapXep() hoặc menhDeSapXep() đã đổi; nặng nhất là giá trị người dùng đã vào được câu SQL.
+// Đừng: ghép $_GET vào ORDER BY, kể cả sau khi "lọc ký tự lạ".
+function test_sap_xep_theo_cot_va_gia_tri_la_ve_mac_dinh(PDO $pdo): void
+{
+    $maTang = maTheoCachXep($pdo, ['sap_xep' => 'ma']);
+    kiem($maTang[0] === 'CERT-001' && end($maTang) === 'CERT-009', 'Xếp theo mã tăng dần');
+    kiem(maTheoCachXep($pdo, ['sap_xep' => 'ma', 'chieu' => 'giam']) === array_reverse($maTang), 'Xếp theo mã giảm dần');
+    kiem(maTheoCachXep($pdo, ['sap_xep' => 'ten'])[0] === 'CERT-009', 'Xếp theo tên: cert.cipher.id.vn đứng đầu');
+    kiem(maTheoCachXep($pdo, ['sap_xep' => 'to_chuc'])[0] === 'CERT-005', 'Xếp theo tổ chức cấp: CA nội bộ đứng đầu');
+    kiem(maTheoCachXep($pdo, ['sap_xep' => 'het_han', 'chieu' => 'giam'])[0] === 'CERT-007', 'Xếp theo hạn giảm dần');
+    kiem(maTheoCachXep($pdo, ['sap_xep' => 'trang_thai', 'chieu' => 'giam'])[0] === 'CERT-006', 'Trạng thái giảm dần: đã thu hồi lên đầu');
+
+    foreach (['tang', 'giam'] as $chieu) {
+        $ma = maTheoCachXep($pdo, ['sap_xep' => 'con_lai', 'chieu' => $chieu]);
+        kiem(end($ma) === 'CERT-006', "Cột Còn lại, chiều $chieu: đã thu hồi phải ở cuối");
+    }
+    kiem(maTheoCachXep($pdo, ['sap_xep' => 'con_lai', 'chieu' => 'giam'])[0] === 'CERT-007', 'Cột Còn lại giảm dần: còn lâu nhất lên đầu');
+
+    $macDinh = array_column(danhSachChungChi($pdo, 1), 'cert_code');
+    foreach ([['sap_xep' => 'c.id; DROP TABLE users'], ['sap_xep' => ['ma']], ['sap_xep' => 'valid_to'], []] as $giaTriLa) {
+        kiem(docSapXep($giaTriLa) === ['sap_xep' => '', 'chieu' => 'tang'], 'Cột lạ phải về mặc định');
+        kiem(maTheoCachXep($pdo, $giaTriLa) === $macDinh, 'Cột lạ phải cho thứ tự mặc định');
+    }
+    kiem(docSapXep(['sap_xep' => 'ma', 'chieu' => 'DESC; --']) === ['sap_xep' => 'ma', 'chieu' => 'tang'], 'Chiều lạ phải về tăng dần');
+}
+
+// Luật: Số trên hàng nút trạng thái khớp số dòng thật, theo đúng thứ tự mức gấp, và tôn trọng các bộ lọc khác.
+// Vì sao: Số lệch danh sách làm người dùng tin sai về số chứng chỉ gấp, mà không có lỗi nào hiện ra.
+// Đỏ nghĩa là: demTheoTrangThai() đã đổi, hoặc không còn dùng chung dieuKienLoc() với danh sách.
+// Đừng: đếm bằng PHP từ trang đang hiện, vì danh sách đã bị chia trang.
+function test_so_tren_nut_trang_thai_khop_danh_sach_va_giu_bo_loc_khac(PDO $pdo): void
+{
+    chayFileSql($pdo, 'seed_demo.sql');
+    $so = demTheoTrangThai($pdo);
+    kiem(array_keys($so) === array_keys(TRANG_THAI), 'Phải đủ mọi trạng thái, đúng thứ tự mức gấp');
+    kiem(array_sum($so) === 50, 'Tổng các nút phải bằng tổng chứng chỉ');
+    foreach ($so as $trangThai => $soDong) {
+        kiem($soDong === demChungChi($pdo, ['trang_thai' => $trangThai]), "Số của $trangThai phải khớp danh sách");
+    }
+
+    // Đang chọn một trạng thái và lọc theo tổ chức cấp: số vẫn đếm mọi trạng thái, trong tổ chức đó.
+    $idToChuc = (int) $pdo->query("SELECT id FROM certificate_authorities WHERE name = 'CA nội bộ'")->fetchColumn();
+    $loc = docBoLoc(['ca_id' => (string) $idToChuc, 'trang_thai' => 'expired']);
+    $soLoc = demTheoTrangThai($pdo, $loc);
+    kiem(array_sum($soLoc) === demChungChi($pdo, ['ca_id' => (string) $idToChuc]), 'Số phải theo bộ lọc khác, bỏ qua trạng thái đang chọn');
+    kiem($soLoc['expired'] === demChungChi($pdo, $loc), 'Số của nút đang chọn phải khớp danh sách đang hiện');
+    kiem($soLoc['not_yet_valid'] === 0, 'Trạng thái không có dòng nào phải hiện số 0');
+}
+
+// Luật: Khi chưa có chứng chỉ nào, danh sách, số đếm, cảnh báo và mã kế tiếp vẫn đúng, không lỗi.
+// Vì sao: User chỉ ra 07/11/2026: web đi vào hoạt động thật bắt đầu từ 0 dòng, còn các test khác đều chạy trên dữ liệu mẫu.
+// Đỏ nghĩa là: một phép tính đang giả định có dữ liệu; người dùng đầu tiên sẽ gặp lỗi ngay khi vào web.
+// Đừng: chèn sẵn dữ liệu vào CSDL thật để né trường hợp này.
+function test_he_thong_chua_co_chung_chi_van_chay_dung(PDO $pdo): void
+{
+    $pdo->exec('DELETE FROM certificates');
+    kiem(demChungChi($pdo) === 0 && danhSachChungChi($pdo, 1) === [], 'Danh sách phải rỗng');
+    kiem(array_sum(demTheoTrangThai($pdo)) === 0 && array_keys(demTheoTrangThai($pdo)) === array_keys(TRANG_THAI), 'Mọi nút trạng thái phải có số 0');
+    taoCanhBao($pdo);
+    kiem(danhSachCanhBao($pdo) === [] && demCanhBaoMoi($pdo) === 0, 'Không được có cảnh báo');
+    kiem(maChungChiKeTiep($pdo) === 'CERT-001', 'Chứng chỉ đầu tiên phải có mã CERT-001');
+    kiem(danhSachChungChi($pdo, 1, docBoLoc(['tu_khoa' => 'a', 'trang_thai' => 'expired']), docSapXep(['sap_xep' => 'con_lai'])) === [], 'Lọc và xếp trên danh sách rỗng không được lỗi');
 }
 
 // Luật: seed_demo.sql nạp được sau seed.sql, đủ 50 chứng chỉ, đủ mọi trạng thái và ba mốc cảnh báo; chạy lần hai không thêm gì.

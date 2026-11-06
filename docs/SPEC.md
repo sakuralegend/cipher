@@ -36,7 +36,7 @@ thời hạn, cảnh báo trước khi hết hạn, lưu lịch sử gia hạn, 
 | Na | Đăng nhập, đăng xuất | Mật khẩu băm bằng `password_hash`; tài khoản bị khoá không đăng nhập được; sai 5 lần thì tạm chặn tài khoản 15 phút; đổi mã phiên sau khi đăng nhập |
 | Nb | Quản lý người dùng | Admin thêm, sửa, khoá, mở khoá, xoá và gán vai trò; xem mục 3.3 |
 | Nc | CRUD đầy đủ | Chứng chỉ, tên miền, máy chủ, tổ chức cấp, người dùng |
-| Nd | Tìm kiếm, lọc | Từ khoá trong mã, tên chính, tên phụ, serial, fingerprint (viết hoa hay có dấu `:` đều tìm được). Lọc theo trạng thái, tổ chức cấp, tên miền, máy chủ, khoảng ngày hết hạn |
+| Nd | Tìm kiếm, lọc | Từ khoá trong mã, tên chính, tên phụ, serial, fingerprint (viết hoa hay có dấu `:` đều tìm được). Lọc theo trạng thái (hàng nút có số đếm), tổ chức cấp, tên miền, máy chủ, khoảng ngày hết hạn. Danh sách mặc định xếp theo mức gấp: đã hết hạn, sắp hết hạn, còn hiệu lực, chưa hiệu lực, đã thu hồi; trong mỗi nhóm, hạn gần hơn đứng trước. Bấm tiêu đề cột để đổi cách xếp |
 | Ne | Thống kê, báo cáo | Bảng và biểu đồ, xem D8, D9 |
 | Nf | Kiểm tra dữ liệu bằng JavaScript và PHP | JavaScript báo lỗi nhanh trên form; PHP kiểm tra lại mọi dữ liệu; ràng buộc CSDL là lớp chặn cuối |
 | Ng | Khoá chính, khoá ngoại, quan hệ | 9 bảng, xem ERD |

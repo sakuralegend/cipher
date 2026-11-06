@@ -11,6 +11,17 @@
     position: relative;
 }
 
+/* Tiêu đề cột bấm để sắp xếp: giữ màu chữ của tiêu đề, không hiện như liên kết thường. */
+.cot-sap-xep {
+    color: inherit;
+    white-space: nowrap;
+}
+
+/* Dòng đã thu hồi nhạt đi, trừ cột trạng thái và nút thao tác để vẫn đọc và bấm được rõ. */
+.dong-thu-hoi td:nth-child(-n+5) {
+    opacity: 0.75;
+}
+
 /* Ô ngày đã có biểu tượng lịch; biểu tượng đúng/sai của Bootstrap sẽ chồng lên nó. */
 .was-validated input[type="datetime-local"]:valid,
 .was-validated input[type="datetime-local"]:invalid,
