@@ -4,7 +4,7 @@ Khởi tạo bằng skill `quy-trinh-lam-viec` v1.0 · Vai user: **HIỂU** · M
 
 ## Dự án trong 3 dòng
 - Làm gì, cho ai: bài tập lớn đề 69 "Xây dựng hệ thống quản lý chứng chỉ số và thời hạn sử dụng" (tên này dùng trong báo cáo và trên web; `cipher` là tên repo và tên miền), cho quản trị viên trong tổ chức; sau khi nộp, web còn làm lớp ngụy trang self-SNI cho VPN (QD-08).
-- Stack: PHP 8 thuần + PDO · MariaDB · HTML/CSS/JS, Bootstrap, Chart.js · Chạy: `C:\xampp\php\php.exe -S localhost:8000 -t public` (bật MySQL trong XAMPP) · Deploy: chưa có, dựng ở phiếu ngày 7/11 (user tự chạy, AI chỉ nhắc)
+- Stack: PHP 8 thuần + PDO · MariaDB · HTML/CSS/JS, Tabler (trên Bootstrap 5, QD-13), Chart.js · Chạy: `C:\xampp\php\php.exe -S localhost:8000 -t public` (bật MySQL trong XAMPP) · Deploy: chưa có, dựng ở phiếu ngày 7/11 (user tự chạy, AI chỉ nhắc)
 - Hạn / mốc: cổng tối 11/11/2026 (đủ 19 chức năng, chạy trên VPS) · nộp 17/11/2026 · user sang Nga khoảng cuối 11/2026. Đề và lịch: `docs/BAN_GIAO.md` (ảnh chụp, không cập nhật).
 
 ## Người dùng

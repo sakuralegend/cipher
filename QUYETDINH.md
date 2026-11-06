@@ -17,6 +17,7 @@
 ## 🗂️ Sổ
 | QD | Chọn | Thay vì | Vì | Hết hạn khi (trạng thái đo được, không dùng ngày tuyệt đối) |
 |---|---|---|---|---|
+| QD-13 | Giao diện Tabler 1.7.3 (MIT), tải về repo, không CDN | AdminLTE 4, CoreUI | Hợp dark mode và phong cách user muốn; không CDN để demo không phụ thuộc mạng. Đổi lại CSS nặng gấp đôi AdminLTE | Đã bảo vệ xong và muốn đổi giao diện |
 | QD-10 | Repo ở `D:\Desktop\cipher`, chạy bằng `php -S` | Đặt trong `htdocs` | User muốn để ở Desktop; không dựa `.htaccess` | Bài đã nộp; trước đó phải thử chạy trong `htdocs` |
 | QD-09 | MariaDB 10.11 trên VPS, 10.4 ở XAMPP | MySQL 8 | XAMPP thực chất là MariaDB nên ít lệch; báo cáo ghi rõ | Giảng viên yêu cầu đúng MySQL |
 | QD-08 | Self-SNI cho VLESS Reality sau khi bảo vệ, thử Xray song song trước | Đổi 443 trước khi nộp | Lỗi không được làm hỏng cả VPN lẫn bài nộp | Đã đổi 443 xong và VPN chạy ổn |
