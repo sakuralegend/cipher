@@ -81,6 +81,9 @@ CAU_HINH
 
     systemctl daemon-reload
 
+    # Làm mới danh sách gói: bản cũ trỏ tới phiên bản đã bị gỡ khỏi máy chủ Ubuntu (lỗi 404, đo 06/11/2026).
+    apt-get update -q
+
     # NEEDRESTART_SUSPEND: gói needrestart có thể tự khởi động lại xray, anki-bot khi nâng cấp thư viện.
     # --no-install-recommends: không kéo thêm gói ngoài danh sách.
     DEBIAN_FRONTEND=noninteractive NEEDRESTART_SUSPEND=1 apt-get install -y --no-install-recommends \
