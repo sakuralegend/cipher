@@ -1,5 +1,6 @@
 <?php
-// Nhận POST thu hồi, xoá chứng chỉ. Không có giao diện: xử lý, lưu thông báo, rồi chuyển trang.
+// Nhận POST thu hồi, xoá chứng chỉ, đánh dấu cảnh báo đã xem. Không có giao diện: xử lý, lưu thông báo,
+// rồi chuyển trang. Với đã xem, id là id của cảnh báo, không phải của chứng chỉ.
 // Quyền xoá do xoaChungChi() kiểm tra, nên nhân viên gửi lệnh thẳng tới đây cũng bị từ chối.
 require __DIR__ . '/../../src/khoi_dong.php';
 require __DIR__ . '/../../src/danh_muc.php';
@@ -25,6 +26,10 @@ switch (chuoiPost('hanh_dong')) {
         $loi = xoaChungChi($pdo, $id, $nguoi);
         datThongBao($loi === null ? 'success' : 'danger', $loi ?? 'Đã xoá chứng chỉ.');
         chuyenHuong($loi === null ? 'admin/chung_chi.php' : 'admin/chung_chi_xem.php?id=' . $id);
+    case 'da_xem':
+        $loi = danhDauDaXem($pdo, $id);
+        datThongBao($loi === null ? 'success' : 'danger', $loi ?? 'Đã đánh dấu cảnh báo là đã xem.');
+        chuyenHuong('admin/canh_bao.php');
     default:
         datThongBao('danger', 'Thao tác không hợp lệ.');
         chuyenHuong('admin/chung_chi.php');

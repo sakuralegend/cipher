@@ -58,13 +58,14 @@ function oNhap(string $ten, string $nhan, ?string $giaTri, array $loi, string $t
 }
 
 // Dựng một ô chọn. $luaChon có dạng [giá trị => nhãn].
-function oChon(string $ten, string $nhan, array $luaChon, ?string $dangChon, array $loi, string $loiMacDinh): string
+// $batBuoc = false dùng cho bộ lọc: dòng đầu là "Tất cả" và được phép để trống.
+function oChon(string $ten, string $nhan, array $luaChon, ?string $dangChon, array $loi, string $loiMacDinh, bool $batBuoc = true): string
 {
     $saiCss = isset($loi[$ten]) ? ' is-invalid' : '';
     $html = '<div class="mb-3">'
-        . '<label class="form-label required" for="' . e($ten) . '">' . e($nhan) . '</label>'
-        . '<select class="form-select' . $saiCss . '" id="' . e($ten) . '" name="' . e($ten) . '" required>'
-        . '<option value="">Chọn</option>';
+        . '<label class="form-label' . ($batBuoc ? ' required' : '') . '" for="' . e($ten) . '">' . e($nhan) . '</label>'
+        . '<select class="form-select' . $saiCss . '" id="' . e($ten) . '" name="' . e($ten) . '"' . ($batBuoc ? ' required' : '') . '>'
+        . '<option value="">' . ($batBuoc ? 'Chọn' : 'Tất cả') . '</option>';
     foreach ($luaChon as $giaTri => $nhanLuaChon) {
         $chon = (string) $giaTri === (string) $dangChon ? ' selected' : '';
         $html .= '<option value="' . e((string) $giaTri) . '"' . $chon . '>' . e($nhanLuaChon) . '</option>';

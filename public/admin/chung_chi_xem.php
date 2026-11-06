@@ -92,6 +92,9 @@ require __DIR__ . '/../../views/tieu_de_trang.php';
                 <div class="card">
                     <div class="card-header"><h2 class="card-title">Thao tác</h2></div>
                     <div class="card-body d-grid gap-2">
+                        <?php if (!$cc['is_revoked']): ?>
+                            <a class="btn btn-primary" href="<?= e(url('admin/chung_chi_gia_han.php?id=' . (int) $cc['id'])) ?>">Gia hạn</a>
+                        <?php endif; ?>
                         <a class="btn" href="<?= e(url('admin/chung_chi_form.php?id=' . (int) $cc['id'])) ?>">Sửa</a>
                         <?php if (!$cc['is_revoked']): ?>
                             <form method="post" action="<?= e(url('admin/chung_chi_thao_tac.php')) ?>" class="d-grid"
@@ -122,6 +125,7 @@ require __DIR__ . '/../../views/tieu_de_trang.php';
                                     <th>Thời điểm</th>
                                     <th>Hạn cũ</th>
                                     <th>Hạn mới</th>
+                                    <th>Fingerprint, serial cũ</th>
                                     <th>Người thực hiện</th>
                                     <th>Ghi chú</th>
                                 </tr>
@@ -132,12 +136,16 @@ require __DIR__ . '/../../views/tieu_de_trang.php';
                                         <td><?= e($ngayGio($dong['renewed_at'])) ?></td>
                                         <td><?= e($ngayGio($dong['old_valid_to'])) ?></td>
                                         <td><?= e($ngayGio($dong['new_valid_to'])) ?></td>
+                                        <td class="ma-so small text-break">
+                                            <div><?= $dong['old_fingerprint'] === null ? 'Chưa có' : e($dong['old_fingerprint']) ?></div>
+                                            <div class="text-secondary"><?= $dong['old_serial'] === null ? 'Chưa có' : e($dong['old_serial']) ?></div>
+                                        </td>
                                         <td><?= e($dong['renewed_by_name']) ?></td>
                                         <td><?= e($dong['note']) ?></td>
                                     </tr>
                                 <?php endforeach; ?>
                                 <?php if ($lichSu === []): ?>
-                                    <tr><td colspan="5" class="text-center text-secondary py-4">Chưa gia hạn lần nào.</td></tr>
+                                    <tr><td colspan="6" class="text-center text-secondary py-4">Chưa gia hạn lần nào.</td></tr>
                                 <?php endif; ?>
                             </tbody>
                         </table>

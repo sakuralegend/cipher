@@ -5,6 +5,12 @@
     font-family: var(--tblr-font-monospace);
 }
 
+/* Chữ ẩn trong tiêu đề bảng định vị tuyệt đối, nên nếu không có dòng này nó thoát khỏi vùng cuộn
+   của bảng và làm cả trang kéo ngang được trên điện thoại. */
+.table-responsive {
+    position: relative;
+}
+
 /* Ô ngày đã có biểu tượng lịch; biểu tượng đúng/sai của Bootstrap sẽ chồng lên nó. */
 .was-validated input[type="datetime-local"]:valid,
 .was-validated input[type="datetime-local"]:invalid,

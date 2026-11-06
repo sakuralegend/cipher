@@ -42,18 +42,25 @@ function chuanHoaNgay(string $giaTri): ?string
     return null;
 }
 
-// $d: dữ liệu đã qua chuẩn hoá ở luuChungChi().
-function kiemTraChungChi(PDO $pdo, array $d): array
+// Dùng chung cho form sửa và form gia hạn. $d: fingerprint, serial đã chuẩn hoá.
+function kiemTraVanTayVaSerial(array $d): array
 {
     $loi = [];
-    if (preg_match('/^[A-Za-z0-9._-]{1,30}$/D', $d['cert_code']) !== 1) {
-        $loi['cert_code'] = 'Mã quản lý là bắt buộc, tối đa 30 ký tự: chữ không dấu, số, dấu chấm, gạch dưới, gạch ngang.';
-    }
     if ($d['fingerprint_sha256'] !== '' && preg_match('/^[0-9a-f]{64}$/D', $d['fingerprint_sha256']) !== 1) {
         $loi['fingerprint_sha256'] = 'Fingerprint SHA-256 phải đủ 64 ký tự hex, có thể kèm dấu hai chấm.';
     }
     if ($d['serial'] !== '' && preg_match('/^[0-9A-F]{1,128}$/D', $d['serial']) !== 1) {
         $loi['serial'] = 'Serial gồm ký tự hex, tối đa 128 ký tự, có thể kèm dấu hai chấm.';
+    }
+    return $loi;
+}
+
+// $d: dữ liệu đã qua chuẩn hoá ở luuChungChi().
+function kiemTraChungChi(PDO $pdo, array $d): array
+{
+    $loi = kiemTraVanTayVaSerial($d);
+    if (preg_match('/^[A-Za-z0-9._-]{1,30}$/D', $d['cert_code']) !== 1) {
+        $loi['cert_code'] = 'Mã quản lý là bắt buộc, tối đa 30 ký tự: chữ không dấu, số, dấu chấm, gạch dưới, gạch ngang.';
     }
     if ($d['subject_cn'] === '' || mb_strlen($d['subject_cn']) > 255) {
         $loi['subject_cn'] = 'Tên chính là bắt buộc, tối đa 255 ký tự.';
@@ -141,22 +148,107 @@ function luuChungChi(PDO $pdo, ?int $id, array $d, int $idNguoiTao): array
     return [];
 }
 
-function demChungChi(PDO $pdo): int
+// ---------- Tìm kiếm, lọc ----------
+
+// Đọc bộ lọc từ địa chỉ trang. Giá trị sai bị coi như chưa chọn, vì đây chỉ là bộ lọc: người dùng
+// sửa tay địa chỉ thì vẫn thấy trang, không thấy lỗi. Trả về chuỗi; '' nghĩa là không lọc.
+function docBoLoc(array $nguon): array
 {
-    return (int) $pdo->query('SELECT COUNT(*) FROM certificates')->fetchColumn();
+    // Địa chỉ có thể chứa mảng (tu_khoa[]=x) hoặc byte không phải UTF-8.
+    $doc = function (string $khoa) use ($nguon): string {
+        $giaTri = $nguon[$khoa] ?? '';
+        return is_string($giaTri) && mb_check_encoding($giaTri, 'UTF-8') ? trim($giaTri) : '';
+    };
+    $maSo = function (string $khoa) use ($doc): string {
+        $so = filter_var($doc($khoa), FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]);
+        return $so === false ? '' : (string) $so;
+    };
+    $ngay = function (string $khoa) use ($doc): string {
+        return chuanHoaNgay($doc($khoa) . ' 00:00:00') === null ? '' : $doc($khoa);
+    };
+
+    return [
+        'tu_khoa' => mb_substr($doc('tu_khoa'), 0, 255),
+        'trang_thai' => array_key_exists($doc('trang_thai'), TRANG_THAI) ? $doc('trang_thai') : '',
+        'ca_id' => $maSo('ca_id'),
+        'domain_id' => $maSo('domain_id'),
+        'server_id' => $maSo('server_id'),
+        'het_han_tu' => $ngay('het_han_tu'),
+        'het_han_den' => $ngay('het_han_den'),
+    ];
+}
+
+// Dựng phần WHERE từ kết quả của docBoLoc(). Trả về [câu SQL, các giá trị cho dấu ?].
+// Thống kê và báo cáo cũng lọc bằng hàm này, để mọi màn hình hiểu bộ lọc giống nhau.
+function dieuKienLoc(array $loc): array
+{
+    $dieuKien = [];
+    $thamSo = [];
+    $tuKhoa = $loc['tu_khoa'] ?? '';
+
+    if ($tuKhoa !== '') {
+        // Thoát % và _, nếu không người dùng gõ _ sẽ khớp mọi chứng chỉ.
+        $mau = '%' . addcslashes($tuKhoa, '\\%_') . '%';
+        $cot = ['c.cert_code LIKE ?', 'c.subject_cn LIKE ?', 'c.san LIKE ?'];
+        $thamSo = [$mau, $mau, $mau];
+
+        // Fingerprint, serial lưu ở dạng đã chuẩn hoá, nên từ khoá phải qua cùng phép chuẩn hoá,
+        // để dán EE:7A vẫn tìm thấy ee7a. Từ khoá không phải hex thì không thể khớp hai cột này.
+        $hex = chuanHoaFingerprint($tuKhoa);
+        if (ctype_xdigit($hex)) {
+            $cot[] = 'c.fingerprint_sha256 LIKE ?';
+            $cot[] = 'c.serial LIKE ?';
+            array_push($thamSo, "%$hex%", '%' . strtoupper($hex) . '%');
+        }
+        $dieuKien[] = '(' . implode(' OR ', $cot) . ')';
+    }
+
+    $bangGiaTri = [
+        'trang_thai' => 'c.status = ?',
+        'ca_id' => 'c.ca_id = ?',
+        'domain_id' => 'c.domain_id = ?',
+        'server_id' => 'd.server_id = ?',
+        'het_han_tu' => 'c.valid_to >= ?',
+        // Cộng một ngày để gồm cả ngày cuối: chứng chỉ hết hạn lúc 23:59 ngày đó vẫn được tính.
+        'het_han_den' => 'c.valid_to < DATE_ADD(?, INTERVAL 1 DAY)',
+    ];
+    foreach ($bangGiaTri as $khoa => $cauSql) {
+        if (($loc[$khoa] ?? '') !== '') {
+            $dieuKien[] = $cauSql;
+            $thamSo[] = $loc[$khoa];
+        }
+    }
+
+    return [$dieuKien === [] ? '' : 'WHERE ' . implode(' AND ', $dieuKien), $thamSo];
+}
+
+// Danh sách và phép đếm đọc cùng nguồn này, để số trang luôn khớp với số dòng khi có lọc.
+const NGUON_CHUNG_CHI = 'v_certificates c
+                         JOIN certificate_authorities a ON a.id = c.ca_id
+                         JOIN domains d ON d.id = c.domain_id';
+
+function demChungChi(PDO $pdo, array $loc = []): int
+{
+    [$where, $thamSo] = dieuKienLoc($loc);
+    $cau = $pdo->prepare('SELECT COUNT(*) FROM ' . NGUON_CHUNG_CHI . " $where");
+    $cau->execute($thamSo);
+    return (int) $cau->fetchColumn();
 }
 
 // Sắp theo ngày hết hạn tăng dần, nên chứng chỉ đã hết hạn và sắp hết hạn nằm trên cùng.
-function danhSachChungChi(PDO $pdo, int $trang): array
+function danhSachChungChi(PDO $pdo, int $trang, array $loc = []): array
 {
-    $cau = $pdo->prepare('SELECT c.*, a.name AS ca_name, d.domain_name
-                          FROM v_certificates c
-                          JOIN certificate_authorities a ON a.id = c.ca_id
-                          JOIN domains d ON d.id = c.domain_id
+    [$where, $thamSo] = dieuKienLoc($loc);
+    $cau = $pdo->prepare('SELECT c.*, a.name AS ca_name, d.domain_name FROM ' . NGUON_CHUNG_CHI . " $where
                           ORDER BY c.valid_to, c.id
-                          LIMIT ? OFFSET ?');
-    $cau->bindValue(1, SO_DONG_MOT_TRANG, PDO::PARAM_INT);
-    $cau->bindValue(2, (max($trang, 1) - 1) * SO_DONG_MOT_TRANG, PDO::PARAM_INT);
+                          LIMIT ? OFFSET ?");
+    $viTri = 1;
+    foreach ($thamSo as $giaTri) {
+        $cau->bindValue($viTri++, $giaTri);
+    }
+    // LIMIT, OFFSET phải gắn kiểu số; truyền qua execute() sẽ thành chuỗi và CSDL từ chối.
+    $cau->bindValue($viTri++, SO_DONG_MOT_TRANG, PDO::PARAM_INT);
+    $cau->bindValue($viTri, (max($trang, 1) - 1) * SO_DONG_MOT_TRANG, PDO::PARAM_INT);
     $cau->execute();
     return $cau->fetchAll();
 }
@@ -206,6 +298,112 @@ function xoaChungChi(PDO $pdo, int $id, array $nguoi): ?string
         return 'Chỉ Admin được xoá chứng chỉ. Bạn có thể dùng Thu hồi.';
     }
     return xoaHoacBaoConDuLieu($pdo, 'certificates', $id, 'Chứng chỉ này còn dữ liệu liên quan nên chưa xoá được.');
+}
+
+// ---------- Gia hạn ----------
+
+// Gia hạn sửa trên cùng dòng chứng chỉ, nên thông tin cũ được chép sang renewals trước (QD-11).
+// Trả về mảng lỗi theo ô; lỗi không thuộc ô nào nằm ở khoá 'chung'. Mảng rỗng là thành công.
+// $d: valid_to, fingerprint_sha256, serial, note.
+function giaHanChungChi(PDO $pdo, int $id, array $d, int $idNguoiThucHien): array
+{
+    $hanMoi = chuanHoaNgay($d['valid_to']);
+    $moi = [
+        'fingerprint_sha256' => chuanHoaFingerprint($d['fingerprint_sha256']),
+        'serial' => chuanHoaSerial($d['serial']),
+    ];
+    $ghiChu = trim($d['note']);
+
+    // Giao dịch: lịch sử và chứng chỉ phải đổi cùng nhau, lỗi ở bước nào thì không bước nào có hiệu lực.
+    $pdo->beginTransaction();
+    try {
+        // FOR UPDATE giữ dòng này tới khi xong, để hai người gia hạn cùng lúc không chép nhầm hạn cũ.
+        $cau = $pdo->prepare('SELECT valid_to, fingerprint_sha256, serial, is_revoked FROM certificates WHERE id = ? FOR UPDATE');
+        $cau->execute([$id]);
+        $cu = $cau->fetch();
+
+        $loi = kiemTraGiaHan($cu, $hanMoi, $moi, $ghiChu);
+        if ($loi !== []) {
+            $pdo->rollBack();
+            return $loi;
+        }
+
+        $pdo->prepare('INSERT INTO renewals (certificate_id, old_valid_to, new_valid_to, old_fingerprint, old_serial, renewed_by, note)
+                       VALUES (?, ?, ?, ?, ?, ?, ?)')
+            ->execute([$id, $cu['valid_to'], $hanMoi, $cu['fingerprint_sha256'], $cu['serial'], $idNguoiThucHien, $ghiChu === '' ? null : $ghiChu]);
+
+        // Ô trống lưu thành NULL chứ không giữ giá trị cũ: gia hạn là cấp lại, nên fingerprint cũ
+        // không còn đúng với chứng chỉ mới. Giá trị cũ vẫn nằm trong lịch sử.
+        $pdo->prepare('UPDATE certificates SET valid_to = ?, fingerprint_sha256 = ?, serial = ? WHERE id = ?')
+            ->execute([$hanMoi, $moi['fingerprint_sha256'] === '' ? null : $moi['fingerprint_sha256'], $moi['serial'] === '' ? null : $moi['serial'], $id]);
+
+        $pdo->commit();
+    } catch (PDOException $e) {
+        $pdo->rollBack();
+        return loiNeuTrung($e, 'fingerprint_sha256', 'Fingerprint này đã có ở chứng chỉ khác.');
+    }
+    return [];
+}
+
+// $cu: dòng chứng chỉ hiện tại, false nếu không còn. $hanMoi: null nếu sai dạng ngày.
+function kiemTraGiaHan(array|false $cu, ?string $hanMoi, array $moi, string $ghiChu): array
+{
+    if ($cu === false) {
+        return ['chung' => 'Chứng chỉ không còn tồn tại.'];
+    }
+    if ($cu['is_revoked']) {
+        return ['chung' => 'Chứng chỉ đã thu hồi không gia hạn được. Muốn dùng lại, hãy thêm chứng chỉ mới.'];
+    }
+    $loi = kiemTraVanTayVaSerial($moi);
+    // So sánh chuỗi đúng thứ tự thời gian, vì đều ở dạng Y-m-d H:i:s.
+    if ($hanMoi === null || $hanMoi <= $cu['valid_to'] || $hanMoi <= date('Y-m-d H:i:s')) {
+        $loi['valid_to'] = 'Ngày hết hạn mới phải sau hạn hiện tại và sau thời điểm này.';
+    }
+    if (mb_strlen($ghiChu) > 255) {
+        $loi['note'] = 'Ghi chú tối đa 255 ký tự.';
+    }
+    return $loi;
+}
+
+// ---------- Cảnh báo ----------
+
+// Tạo cảnh báo theo mốc gần nhất đã chạm. Gọi khi mở Dashboard hoặc trang Cảnh báo, nên chạy lặp
+// lại liên tục: dòng đã có bị UNIQUE (chứng chỉ, hạn, mốc) chặn và giữ nguyên, kể cả trạng thái đã xem.
+function taoCanhBao(PDO $pdo): void
+{
+    $pdo->exec("INSERT INTO alerts (certificate_id, valid_to, threshold_days)
+                SELECT id, valid_to, CASE WHEN days_left <= 7 THEN 7 WHEN days_left <= 15 THEN 15 ELSE 30 END
+                FROM v_certificates
+                WHERE status = 'expiring'
+                ON DUPLICATE KEY UPDATE alerts.id = alerts.id");
+}
+
+// Chỉ cảnh báo của chu kỳ hiện tại (hạn của cảnh báo trùng hạn của chứng chỉ). Giữ chứng chỉ đã hết
+// hạn vì đó là trường hợp gấp nhất; bỏ chứng chỉ đã thu hồi vì không còn việc gì để xử lý.
+const CANH_BAO_DANG_XET = "alerts a
+                           JOIN v_certificates c ON c.id = a.certificate_id AND c.valid_to = a.valid_to
+                           WHERE c.status IN ('expiring', 'expired')";
+
+// Cảnh báo chưa xem lên đầu, trong đó chứng chỉ gần hết hạn nhất đứng trước.
+function danhSachCanhBao(PDO $pdo): array
+{
+    return $pdo->query('SELECT a.id, a.threshold_days, a.status AS alert_status, a.created_at,
+                               c.id AS certificate_id, c.cert_code, c.subject_cn, c.valid_to, c.days_left, c.status
+                        FROM ' . CANH_BAO_DANG_XET . "
+                        ORDER BY a.status = 'new' DESC, c.valid_to, a.threshold_days")->fetchAll();
+}
+
+function demCanhBaoMoi(PDO $pdo): int
+{
+    return (int) $pdo->query('SELECT COUNT(*) FROM ' . CANH_BAO_DANG_XET . " AND a.status = 'new'")->fetchColumn();
+}
+
+// "Đã xem" tính cho mọi người dùng: bảng alerts chỉ có một trạng thái cho mỗi cảnh báo.
+function danhDauDaXem(PDO $pdo, int $id): ?string
+{
+    $cau = $pdo->prepare("UPDATE alerts SET status = 'seen' WHERE id = ? AND status = 'new'");
+    $cau->execute([$id]);
+    return $cau->rowCount() === 0 ? 'Cảnh báo đã được đánh dấu trước đó, hoặc không còn tồn tại.' : null;
 }
 
 // Câu hiển thị số ngày. Chứng chỉ đã thu hồi không còn ý nghĩa đếm ngày.

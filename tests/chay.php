@@ -876,6 +876,284 @@ function test_moi_trang_nhan_post_deu_kiem_tra_csrf(PDO $pdo): void
     kiem($soTrang >= 5, "Mong ít nhất 5 trang nhận POST, tìm thấy $soTrang: đường dẫn trong test có thể đã sai");
 }
 
+function datHanSauSoNgay(PDO $pdo, string $ma, int $soNgay): void
+{
+    $pdo->exec("UPDATE certificates SET valid_to = DATE_ADD(NOW(), INTERVAL $soNgay DAY) WHERE cert_code = '$ma'");
+}
+
+// Các mốc cảnh báo của một chứng chỉ trong chu kỳ hiện tại, tăng dần.
+function cacMocCanhBao(PDO $pdo, string $ma): array
+{
+    $cau = $pdo->query("SELECT a.threshold_days FROM alerts a
+                        JOIN certificates c ON c.id = a.certificate_id AND c.valid_to = a.valid_to
+                        WHERE c.cert_code = '$ma' ORDER BY a.threshold_days");
+    return array_map('intval', $cau->fetchAll(PDO::FETCH_COLUMN));
+}
+
+function maCuaCanhBaoDangHien(PDO $pdo): array
+{
+    return array_column(danhSachCanhBao($pdo), 'cert_code');
+}
+
+// Mã chứng chỉ khớp bộ lọc, đã sắp. Đồng thời kiểm tra phép đếm khớp danh sách.
+function maKhopBoLoc(PDO $pdo, array $nguon): array
+{
+    $loc = docBoLoc($nguon);
+    $ma = array_column(danhSachChungChi($pdo, 1, $loc), 'cert_code');
+    kiem(demChungChi($pdo, $loc) === count($ma), 'Phép đếm phải khớp danh sách khi có lọc');
+    sort($ma);
+    return $ma;
+}
+
+function duLieuGiaHan(array $doi = []): array
+{
+    return [...['valid_to' => '2031-01-01T00:00:00', 'fingerprint_sha256' => '', 'serial' => '', 'note' => ''], ...$doi];
+}
+
+// Luật: Chứng chỉ chỉ nhận cảnh báo ở mốc gần nhất đã chạm: tối đa 7, 15, 30 ngày.
+// Vì sao: Thêm chứng chỉ còn 5 ngày mà tạo cả ba mốc thì người dùng nhận ba cảnh báo cho một việc.
+// Đỏ nghĩa là: biểu thức CASE trong taoCanhBao() đã đổi, chứng chỉ có thể nhận sai mốc.
+// Đừng: tạo đủ các mốc đã qua để "cho chắc".
+function test_chung_chi_con_5_ngay_chi_tao_canh_bao_moc_7(PDO $pdo): void
+{
+    // Mỗi lần đổi hạn là một chu kỳ mới, nên cùng một chứng chỉ thử được mọi ranh giới.
+    foreach ([5 => [7], 7 => [7], 8 => [15], 15 => [15], 16 => [30], 30 => [30], 31 => []] as $soNgay => $mongDoi) {
+        datHanSauSoNgay($pdo, 'CERT-001', $soNgay);
+        taoCanhBao($pdo);
+        kiem(cacMocCanhBao($pdo, 'CERT-001') === $mongDoi, "Còn $soNgay ngày phải có mốc " . json_encode($mongDoi));
+    }
+}
+
+// Luật: Chạy lại việc tạo cảnh báo không sinh thêm dòng và không đổi trạng thái đã xem.
+// Vì sao: Việc này chạy mỗi lần mở Dashboard; sai thì cảnh báo đã xem cứ hiện lại là mới.
+// Đỏ nghĩa là: phần ON DUPLICATE KEY trong taoCanhBao() đã đổi.
+// Đừng: dùng INSERT IGNORE, vì nó nuốt cả các lỗi khác ngoài lỗi trùng.
+function test_tao_canh_bao_chay_lai_khong_sinh_them_dong(PDO $pdo): void
+{
+    $dem = fn(): int => (int) $pdo->query('SELECT COUNT(*) FROM alerts')->fetchColumn();
+    datHanSauSoNgay($pdo, 'CERT-001', 5);
+    taoCanhBao($pdo);
+    $truoc = $dem();
+    $pdo->exec("UPDATE alerts SET status = 'seen'");
+    taoCanhBao($pdo);
+    kiem($dem() === $truoc, 'Chạy lại không được sinh thêm dòng');
+    kiem(demCanhBaoMoi($pdo) === 0, 'Chạy lại không được đổi đã xem thành mới');
+}
+
+// Luật: Chỉ chứng chỉ Sắp hết hạn mới được tạo cảnh báo.
+// Vì sao: Chứng chỉ đã thu hồi, đã hết hạn, chưa hiệu lực thì mốc đếm ngược không còn ý nghĩa.
+// Đỏ nghĩa là: điều kiện status trong taoCanhBao() đã đổi, cảnh báo sẽ nhiễu.
+// Đừng: lọc theo days_left thay cho status, vì thu hồi và chưa hiệu lực vẫn có days_left nhỏ.
+function test_khong_tao_canh_bao_cho_chung_chi_khong_o_trang_thai_sap_het_han(PDO $pdo): void
+{
+    datHanSauSoNgay($pdo, 'CERT-006', 5); // Đã thu hồi.
+    datHanSauSoNgay($pdo, 'CERT-007', 10); // Chưa hiệu lực: bắt đầu sau 5 ngày.
+    taoCanhBao($pdo);
+    foreach (['CERT-001', 'CERT-005', 'CERT-006', 'CERT-007'] as $ma) {
+        kiem(cacMocCanhBao($pdo, $ma) === [], "$ma không được có cảnh báo");
+    }
+}
+
+// Luật: Trang Cảnh báo bỏ chu kỳ cũ và chứng chỉ đã thu hồi, nhưng giữ chứng chỉ đã hết hạn.
+// Vì sao: User chốt 07/11/2026: hết hạn là trường hợp gấp nhất; thu hồi thì không còn việc để xử lý.
+// Đỏ nghĩa là: điều kiện trong CANH_BAO_DANG_XET đã đổi; số cảnh báo mới có thể đếm sai.
+// Đừng: xoá cảnh báo cũ để ẩn; cảnh báo cũ phải được giữ theo SPEC.
+function test_trang_canh_bao_an_chu_ky_cu_va_chung_chi_thu_hoi_nhung_giu_het_han(PDO $pdo): void
+{
+    kiem(maCuaCanhBaoDangHien($pdo) === ['CERT-004', 'CERT-003', 'CERT-002'], 'Chứng chỉ gần hết hạn nhất phải lên đầu');
+
+    thuHoiChungChi($pdo, 3);
+    kiem(!in_array('CERT-003', maCuaCanhBaoDangHien($pdo), true), 'Đã thu hồi phải bị ẩn');
+
+    // Hạn mới vẫn trong 30 ngày, để cảnh báo bị ẩn đúng vì khác chu kỳ, không phải vì đổi trạng thái.
+    datHanSauSoNgay($pdo, 'CERT-002', 20);
+    kiem(!in_array('CERT-002', maCuaCanhBaoDangHien($pdo), true), 'Chu kỳ cũ phải bị ẩn');
+
+    $pdo->exec("UPDATE alerts a JOIN certificates c ON c.id = a.certificate_id
+                SET a.valid_to = DATE_SUB(NOW(), INTERVAL 1 DAY), c.valid_to = DATE_SUB(NOW(), INTERVAL 1 DAY)
+                WHERE c.cert_code = 'CERT-004'");
+    kiem(maCuaCanhBaoDangHien($pdo) === ['CERT-004'], 'Đã hết hạn phải vẫn hiện');
+    kiem(demCanhBaoMoi($pdo) === 1, 'Số cảnh báo mới phải khớp danh sách');
+    kiem((int) $pdo->query('SELECT COUNT(*) FROM alerts')->fetchColumn() === 3, 'Cảnh báo cũ phải được giữ');
+}
+
+// Luật: Đánh dấu đã xem làm giảm số cảnh báo mới, cảnh báo vẫn còn trong danh sách.
+// Vì sao: Đây là thao tác của chức năng 6; ẩn mất thì người dùng không xem lại được.
+// Đỏ nghĩa là: danhDauDaXem() đã đổi, hoặc danh sách đang lọc bỏ cảnh báo đã xem.
+// Đừng: xoá dòng cảnh báo khi đã xem; UNIQUE sẽ không còn gì để chặn và cảnh báo sẽ tạo lại.
+function test_danh_dau_da_xem_lam_giam_so_canh_bao_moi(PDO $pdo): void
+{
+    kiem(demCanhBaoMoi($pdo) === 3, 'Dữ liệu mẫu có 3 cảnh báo mới');
+    $dau = danhSachCanhBao($pdo)[0];
+    kiem(danhDauDaXem($pdo, (int) $dau['id']) === null, 'Phải đánh dấu được');
+    kiem(demCanhBaoMoi($pdo) === 2, 'Số cảnh báo mới phải giảm');
+
+    $danhSach = danhSachCanhBao($pdo);
+    kiem(count($danhSach) === 3, 'Cảnh báo đã xem vẫn phải còn trong danh sách');
+    kiem($danhSach[2]['id'] === $dau['id'] && $danhSach[2]['alert_status'] === 'seen', 'Đã xem phải xuống cuối');
+    kiem(danhDauDaXem($pdo, (int) $dau['id']) !== null, 'Đánh dấu lần hai phải báo lỗi');
+    kiem(danhDauDaXem($pdo, 9999) !== null, 'Cảnh báo không tồn tại phải báo lỗi');
+}
+
+// Luật: Gia hạn chép hạn, fingerprint, serial cũ vào lịch sử rồi cập nhật chứng chỉ; ô trống lưu NULL.
+// Vì sao: Gia hạn sửa trên cùng dòng (QD-11), nên lịch sử là nơi duy nhất còn thông tin cũ.
+// Đỏ nghĩa là: giaHanChungChi() đã đổi, thông tin bản cũ có thể mất vĩnh viễn.
+// Đừng: giữ fingerprint cũ khi ô trống; nó không còn đúng với chứng chỉ đã cấp lại.
+function test_gia_han_luu_thong_tin_cu_va_cap_nhat_chung_chi(PDO $pdo): void
+{
+    $cu = timChungChi($pdo, 1);
+    $vanTayMoi = str_repeat('a', 64);
+    $loi = giaHanChungChi($pdo, 1, duLieuGiaHan(['fingerprint_sha256' => strtoupper($vanTayMoi), 'serial' => 'ab:cd', 'note' => ' Cấp lại ']), 2);
+    kiem($loi === [], 'Phải gia hạn được: ' . json_encode($loi));
+
+    $moi = timChungChi($pdo, 1);
+    kiem($moi['valid_to'] === '2031-01-01 00:00:00' && $moi['fingerprint_sha256'] === $vanTayMoi && $moi['serial'] === 'ABCD', 'Chứng chỉ phải nhận thông tin mới, đã chuẩn hoá');
+
+    $lichSu = lichSuGiaHan($pdo, 1);
+    kiem(count($lichSu) === 1, 'Phải có một dòng lịch sử');
+    kiem($lichSu[0]['old_valid_to'] === $cu['valid_to'] && $lichSu[0]['new_valid_to'] === $moi['valid_to'], 'Lịch sử phải có hạn cũ và hạn mới');
+    kiem($lichSu[0]['old_fingerprint'] === $cu['fingerprint_sha256'] && $lichSu[0]['old_serial'] === $cu['serial'], 'Lịch sử phải giữ fingerprint, serial cũ');
+    kiem((int) $lichSu[0]['renewed_by'] === 2 && $lichSu[0]['note'] === 'Cấp lại', 'Lịch sử phải có người thực hiện và ghi chú');
+
+    kiem(giaHanChungChi($pdo, 1, duLieuGiaHan(['valid_to' => '2032-01-01T00:00:00']), 2) === [], 'Gia hạn lần hai phải được');
+    $sau = timChungChi($pdo, 1);
+    kiem($sau['fingerprint_sha256'] === null && $sau['serial'] === null, 'Ô trống phải lưu NULL');
+    kiem(lichSuGiaHan($pdo, 1)[0]['old_fingerprint'] === $vanTayMoi, 'Giá trị vừa bị bỏ phải nằm trong lịch sử');
+
+    // Được gia hạn chứng chỉ đã hết hạn.
+    kiem(giaHanChungChi($pdo, 5, duLieuGiaHan(), 2) === [], 'Chứng chỉ đã hết hạn phải gia hạn được');
+    kiem(timChungChi($pdo, 5)['status'] === 'valid', 'Gia hạn xong phải về còn hiệu lực');
+}
+
+// Luật: Sau khi gia hạn, cảnh báo cũ biến khỏi trang và các mốc được tính lại từ đầu.
+// Vì sao: Cảnh báo của hạn cũ không còn đúng; hạn mới vẫn phải được báo khi tới mốc.
+// Đỏ nghĩa là: chứng chỉ đã gia hạn sẽ hết hạn mà không ai được báo, và không có lỗi nào hiện ra.
+// Đừng: bắt người dùng đánh dấu đã xem cảnh báo cũ, hay xoá chúng khi gia hạn.
+function test_sau_gia_han_cac_moc_canh_bao_tinh_lai_tu_dau(PDO $pdo): void
+{
+    kiem(cacMocCanhBao($pdo, 'CERT-004') === [7], 'Dữ liệu mẫu: CERT-004 ở mốc 7');
+    $hanMoi = date('Y-m-d H:i:s', strtotime('+10 days'));
+    kiem(giaHanChungChi($pdo, 4, duLieuGiaHan(['valid_to' => $hanMoi]), 1) === [], 'Phải gia hạn được');
+    kiem(cacMocCanhBao($pdo, 'CERT-004') === [], 'Chu kỳ mới chưa có cảnh báo');
+
+    taoCanhBao($pdo);
+    kiem(cacMocCanhBao($pdo, 'CERT-004') === [15], 'Chu kỳ mới phải có mốc 15');
+    $dong = array_values(array_filter(danhSachCanhBao($pdo), fn(array $d): bool => $d['cert_code'] === 'CERT-004'));
+    kiem(count($dong) === 1 && $dong[0]['alert_status'] === 'new', 'Trang chỉ hiện cảnh báo mới của chu kỳ mới');
+}
+
+// Luật: Chứng chỉ đã thu hồi hoặc không tồn tại không gia hạn được, và không để lại lịch sử.
+// Vì sao: User chốt: chứng chỉ đã thu hồi không dùng lại; muốn dùng thì thêm chứng chỉ mới.
+// Đỏ nghĩa là: kiemTraGiaHan() đã bỏ kiểm tra, gửi lệnh thẳng sẽ gia hạn được chứng chỉ đã thu hồi.
+// Đừng: chỉ ẩn nút Gia hạn trên giao diện.
+function test_chan_gia_han_chung_chi_da_thu_hoi(PDO $pdo): void
+{
+    $truoc = timChungChi($pdo, 6)['valid_to'];
+    kiem(isset(giaHanChungChi($pdo, 6, duLieuGiaHan(), 1)['chung']), 'Đã thu hồi phải bị chặn');
+    kiem(timChungChi($pdo, 6)['valid_to'] === $truoc && lichSuGiaHan($pdo, 6) === [], 'Không được đổi gì');
+    kiem(isset(giaHanChungChi($pdo, 9999, duLieuGiaHan(), 1)['chung']), 'Không tồn tại phải báo lỗi');
+    kiem(!$pdo->inTransaction(), 'Phải kết thúc giao dịch');
+}
+
+// Luật: Hạn mới phải sau cả hạn hiện tại lẫn thời điểm gia hạn; dữ liệu sai bị từ chối đúng ô.
+// Vì sao: Chứng chỉ đã hết hạn được gia hạn; không xét thời điểm hiện tại thì gia hạn xong vẫn hết hạn.
+// Đỏ nghĩa là: kiemTraGiaHan() đã đổi; sai ngày hết hạn là sai tiêu chí chính của đề.
+// Đừng: chỉ dựa vào chk_renewal_dates; nó không biết thời điểm hiện tại, và người dùng sẽ thấy trang lỗi.
+function test_han_moi_phai_sau_han_cu_va_sau_hien_tai(PDO $pdo): void
+{
+    $hanHienTai = timChungChi($pdo, 1)['valid_to'];
+    $hanCu5 = timChungChi($pdo, 5)['valid_to'];
+    $truongHop = [
+        [1, ['valid_to' => $hanHienTai], 'valid_to', 'Bằng hạn hiện tại'],
+        [1, ['valid_to' => date('Y-m-d H:i:s', strtotime($hanHienTai . ' -1 day'))], 'valid_to', 'Trước hạn hiện tại'],
+        // Sau hạn cũ của chứng chỉ đã hết hạn, nhưng vẫn ở quá khứ.
+        [5, ['valid_to' => date('Y-m-d H:i:s', strtotime($hanCu5 . ' +1 day'))], 'valid_to', 'Vẫn ở quá khứ'],
+        [1, ['valid_to' => ''], 'valid_to', 'Trống'],
+        [1, ['valid_to' => '2031-02-31T00:00:00'], 'valid_to', 'Ngày không có thật'],
+        [1, ['fingerprint_sha256' => 'abc'], 'fingerprint_sha256', 'Fingerprint sai'],
+        [1, ['serial' => 'xyz'], 'serial', 'Serial sai'],
+        [1, ['note' => str_repeat('a', 256)], 'note', 'Ghi chú quá dài'],
+    ];
+    foreach ($truongHop as [$id, $doi, $o, $moTa]) {
+        $loi = giaHanChungChi($pdo, $id, duLieuGiaHan($doi), 1);
+        kiem(isset($loi[$o]), "$moTa phải báo lỗi ở ô $o");
+    }
+    kiem(lichSuGiaHan($pdo, 1) === [] && lichSuGiaHan($pdo, 5) === [], 'Dữ liệu sai không được ghi lịch sử');
+    kiem(timChungChi($pdo, 1)['valid_to'] === $hanHienTai, 'Dữ liệu sai không được đổi chứng chỉ');
+}
+
+// Luật: Gia hạn lỗi giữa chừng thì không bước nào có hiệu lực.
+// Vì sao: Fingerprint trùng chỉ bị phát hiện ở bước cập nhật, sau khi lịch sử đã ghi; thiếu giao dịch thì còn dòng lịch sử giả.
+// Đỏ nghĩa là: giao dịch trong giaHanChungChi() đã mất hoặc không rollBack.
+// Đừng: SELECT kiểm tra trùng trước thay cho giao dịch, vì hai yêu cầu cùng lúc vẫn lọt.
+function test_gia_han_loi_giua_chung_thi_khong_doi_gi(PDO $pdo): void
+{
+    $truoc = timChungChi($pdo, 1);
+    $vanTayCuaNguoiKhac = strtoupper(hash('sha256', 'CERT-002'));
+    $loi = giaHanChungChi($pdo, 1, duLieuGiaHan(['fingerprint_sha256' => $vanTayCuaNguoiKhac]), 1);
+    kiem(isset($loi['fingerprint_sha256']), 'Fingerprint trùng phải báo đúng ô');
+    kiem(lichSuGiaHan($pdo, 1) === [], 'Không được còn dòng lịch sử');
+    kiem(timChungChi($pdo, 1)['valid_to'] === $truoc['valid_to'], 'Hạn không được đổi');
+    kiem(!$pdo->inTransaction(), 'Phải kết thúc giao dịch');
+}
+
+// Luật: Từ khoá chứa %, _, dấu gạch ngược, tiếng Việt được hiểu đúng theo chữ, không thành ký tự đại diện.
+// Vì sao: Đo 06/11/2026: LIKE '%_%' khớp cả 9 chứng chỉ, người dùng tưởng đã lọc mà thực ra thấy tất cả.
+// Đỏ nghĩa là: addcslashes trong dieuKienLoc() đã mất, hoặc cột ascii báo lỗi với từ khoá có dấu.
+// Đừng: bỏ các ký tự đặc biệt khỏi từ khoá; mã quản lý được phép chứa dấu gạch dưới.
+function test_tu_khoa_co_ky_tu_dac_biet_khong_khop_tat_ca(PDO $pdo): void
+{
+    foreach (['%', '_', '\\', ':', 'tiếng việt'] as $tuKhoa) {
+        kiem(maKhopBoLoc($pdo, ['tu_khoa' => $tuKhoa]) === [], "Từ khoá $tuKhoa không được khớp gì");
+    }
+    luuChungChi($pdo, null, chungChiHopLe(['cert_code' => 'A_1']), 1);
+    kiem(maKhopBoLoc($pdo, ['tu_khoa' => '_']) === ['A_1'], 'Dấu gạch dưới phải khớp đúng theo chữ');
+    kiem(maKhopBoLoc($pdo, ['tu_khoa' => 'cert-001']) === ['CERT-001'], 'Tìm được theo mã, không phân biệt hoa thường');
+    kiem(maKhopBoLoc($pdo, ['tu_khoa' => 'smtp']) === ['CERT-003'], 'Tìm được theo tên phụ');
+    kiem(maKhopBoLoc($pdo, ['tu_khoa' => 'mail.congty']) === ['CERT-003'], 'Tìm được theo tên chính');
+}
+
+// Luật: Tìm fingerprint và serial được dù viết hoa, viết thường hay có dấu hai chấm.
+// Vì sao: Đo 06/11/2026: cột fingerprint phân biệt hoa thường nên tìm EE7A không ra; công cụ thường in dạng EE:7A.
+// Đỏ nghĩa là: từ khoá không còn qua chuẩn hoá trong dieuKienLoc(), người dùng tưởng chứng chỉ không có trong hệ thống.
+// Đừng: đổi kiểu cột fingerprint; ràng buộc CHECK cần nó phân biệt hoa thường.
+function test_tim_fingerprint_duoc_du_viet_hoa_hay_co_dau_hai_cham(PDO $pdo): void
+{
+    foreach (['EE:7A:1D:35', 'ee7a1d35', 'EE 7A 1D 35'] as $tuKhoa) {
+        kiem(in_array('CERT-009', maKhopBoLoc($pdo, ['tu_khoa' => $tuKhoa]), true), "Fingerprint $tuKhoa phải tìm thấy CERT-009");
+    }
+    foreach (['066AB80900C6', '06:6a:b8:09:00:c6'] as $tuKhoa) {
+        kiem(in_array('CERT-009', maKhopBoLoc($pdo, ['tu_khoa' => $tuKhoa]), true), "Serial $tuKhoa phải tìm thấy CERT-009");
+    }
+}
+
+// Luật: Các bộ lọc kết hợp với nhau bằng VÀ; giá trị lọc sai bị coi như chưa chọn; ngày cuối được tính trọn.
+// Vì sao: Đây là chức năng nền tảng d; thống kê, báo cáo phiếu sau dùng lại đúng bộ lọc này.
+// Đỏ nghĩa là: docBoLoc() hoặc dieuKienLoc() đã đổi; số liệu báo cáo sẽ sai theo.
+// Đừng: ghép giá trị lọc thẳng vào câu SQL.
+function test_cac_bo_loc_ket_hop_va_gia_tri_loc_sai_bi_bo_qua(PDO $pdo): void
+{
+    kiem(maKhopBoLoc($pdo, ['trang_thai' => 'expired']) === ['CERT-005'], 'Lọc theo trạng thái');
+    kiem(maKhopBoLoc($pdo, ['ca_id' => '3']) === ['CERT-005'], 'Lọc theo tổ chức cấp');
+    kiem(maKhopBoLoc($pdo, ['domain_id' => '4']) === ['CERT-004', 'CERT-005'], 'Lọc theo tên miền');
+    kiem(maKhopBoLoc($pdo, ['domain_id' => '4', 'trang_thai' => 'expired']) === ['CERT-005'], 'Hai bộ lọc phải kết hợp bằng VÀ');
+
+    $mayChu = (int) $pdo->query('SELECT server_id FROM domains WHERE id = 6')->fetchColumn();
+    $mongDoi = $pdo->query("SELECT c.cert_code FROM certificates c JOIN domains d ON d.id = c.domain_id
+                            WHERE d.server_id = $mayChu ORDER BY c.cert_code")->fetchAll(PDO::FETCH_COLUMN);
+    kiem($mongDoi !== [] && maKhopBoLoc($pdo, ['server_id' => (string) $mayChu]) === $mongDoi, 'Lọc theo máy chủ');
+
+    $pdo->exec("UPDATE certificates SET valid_to = '2031-03-15 23:59:59' WHERE cert_code = 'CERT-001'");
+    kiem(maKhopBoLoc($pdo, ['het_han_tu' => '2031-03-15', 'het_han_den' => '2031-03-15']) === ['CERT-001'], 'Ngày cuối phải được tính trọn');
+    kiem(maKhopBoLoc($pdo, ['het_han_tu' => '2031-03-16']) === [], 'Lọc từ ngày phải loại ngày trước đó');
+
+    $tatCa = demChungChi($pdo);
+    $giaTriSai = ['tu_khoa' => ['a'], 'trang_thai' => 'abc', 'ca_id' => '1 OR 1=1', 'domain_id' => '0',
+                  'server_id' => '-1', 'het_han_tu' => '2031-02-31', 'het_han_den' => "2031-01-01' --"];
+    kiem(array_filter(docBoLoc($giaTriSai), fn(string $g): bool => $g !== '') === [], 'Giá trị sai phải bị coi như chưa chọn');
+    kiem(count(maKhopBoLoc($pdo, $giaTriSai)) === $tatCa, 'Giá trị sai không được làm mất dòng');
+}
+
 $pdo = ketNoiCsdl('cipher_test');
 $soLoi = 0;
 $danhSachTest = array_filter(

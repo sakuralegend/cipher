@@ -65,6 +65,9 @@ HTML;
                         <li class="nav-item <?= $trangHienTai === 'chung_chi' ? 'active' : '' ?>">
                             <a class="nav-link" href="<?= e(url('admin/chung_chi.php')) ?>">Chứng chỉ</a>
                         </li>
+                        <li class="nav-item <?= $trangHienTai === 'canh_bao' ? 'active' : '' ?>">
+                            <a class="nav-link" href="<?= e(url('admin/canh_bao.php')) ?>">Cảnh báo</a>
+                        </li>
                         <li class="nav-item <?= $trangHienTai === 'may_chu' ? 'active' : '' ?>">
                             <a class="nav-link" href="<?= e(url('admin/may_chu.php')) ?>">Máy chủ</a>
                         </li>

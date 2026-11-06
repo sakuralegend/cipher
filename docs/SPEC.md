@@ -36,7 +36,7 @@ thời hạn, cảnh báo trước khi hết hạn, lưu lịch sử gia hạn, 
 | Na | Đăng nhập, đăng xuất | Mật khẩu băm bằng `password_hash`; tài khoản bị khoá không đăng nhập được; sai 5 lần thì tạm chặn tài khoản 15 phút; đổi mã phiên sau khi đăng nhập |
 | Nb | Quản lý người dùng | Admin thêm, sửa, khoá, mở khoá, xoá và gán vai trò; xem mục 3.3 |
 | Nc | CRUD đầy đủ | Chứng chỉ, tên miền, máy chủ, tổ chức cấp, người dùng |
-| Nd | Tìm kiếm, lọc | Từ khoá trong mã, tên, serial, fingerprint. Lọc theo trạng thái, tổ chức cấp, tên miền, máy chủ, thời hạn |
+| Nd | Tìm kiếm, lọc | Từ khoá trong mã, tên chính, tên phụ, serial, fingerprint (viết hoa hay có dấu `:` đều tìm được). Lọc theo trạng thái, tổ chức cấp, tên miền, máy chủ, khoảng ngày hết hạn |
 | Ne | Thống kê, báo cáo | Bảng và biểu đồ, xem D8, D9 |
 | Nf | Kiểm tra dữ liệu bằng JavaScript và PHP | JavaScript báo lỗi nhanh trên form; PHP kiểm tra lại mọi dữ liệu; ràng buộc CSDL là lớp chặn cuối |
 | Ng | Khoá chính, khoá ngoại, quan hệ | 9 bảng, xem ERD |
@@ -97,12 +97,15 @@ Trạng thái và số ngày không lưu trong bảng, mà tính mỗi lần đ�
 - Mỗi mốc chỉ tạo một lần trong một chu kỳ. Sau khi gia hạn, ngày hết hạn đổi nên các mốc được tính lại từ đầu.
 - Việc tạo cảnh báo chạy khi mở Dashboard hoặc trang Cảnh báo. Cảnh báo chỉ hiển thị trong hệ thống, nên chỉ cần tạo khi có người xem.
 - Trang Cảnh báo chỉ hiện cảnh báo của chu kỳ hiện tại. Cảnh báo cũ vẫn được giữ.
+- Chứng chỉ đã hết hạn vẫn hiện cảnh báo, vì đó là trường hợp gấp nhất. Chứng chỉ đã thu hồi thì không hiện, vì không còn việc gì để xử lý.
+- "Đã xem" tính chung cho mọi người dùng: một người đánh dấu thì mọi người đều thấy là đã xem.
 
 ## 6. Gia hạn
 
 - Chặn gia hạn chứng chỉ đã thu hồi; muốn dùng lại thì thêm chứng chỉ mới.
-- Ngày hết hạn mới phải sau ngày hết hạn hiện tại. Được gia hạn chứng chỉ đã hết hạn.
-- Fingerprint và serial mới là tuỳ chọn, cùng quy tắc ở mục 3.1.
+- Ngày hết hạn mới phải sau ngày hết hạn hiện tại và sau thời điểm gia hạn. Được gia hạn chứng chỉ đã hết hạn.
+- Fingerprint và serial mới là tuỳ chọn, cùng quy tắc ở mục 3.1. Để trống thì chứng chỉ hiện "Chưa có", vì giá trị cũ không còn đúng với chứng chỉ mới; giá trị cũ vẫn nằm trong lịch sử.
+- Gia hạn không đổi ngày bắt đầu. Cần sửa ngày này thì dùng form Sửa; thay đổi đó không ghi vào lịch sử gia hạn.
 - Lưu lịch sử và cập nhật chứng chỉ nằm trong một giao dịch: lỗi ở bước nào thì không bước nào có hiệu lực.
 
 ## 7. Yêu cầu bảo mật và vận hành
