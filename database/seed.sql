@@ -20,7 +20,8 @@ INSERT INTO servers (id, hostname, ip_address, port, environment, owner) VALUES
     (1, 'web-01', '192.0.2.10', 443, 'production', 'Phòng Hạ tầng'),
     (2, 'mail-01', '192.0.2.20', 465, 'production', 'Phòng Hạ tầng'),
     (3, 'test-01', '192.0.2.30', 8443, 'staging', 'Phòng Phát triển'),
-    (4, 'beta-01', '192.0.2.40', 8443, 'development', 'Phòng Phát triển');
+    (4, 'beta-01', '192.0.2.40', 8443, 'development', 'Phòng Phát triển'),
+    (5, 'cipher-vps', '161.248.146.56', 8443, 'production', 'Quản trị hệ thống');
 
 -- beta.congty.example không gắn chứng chỉ nào, để thử chặn xoá máy chủ chỉ còn tên miền.
 INSERT INTO domains (id, domain_name, server_id) VALUES
@@ -28,7 +29,8 @@ INSERT INTO domains (id, domain_name, server_id) VALUES
     (2, 'portal.congty.example', 1),
     (3, 'mail.congty.example', 2),
     (4, 'test.congty.example', 3),
-    (5, 'beta.congty.example', 4);
+    (5, 'beta.congty.example', 4),
+    (6, 'cert.cipher.id.vn', 5);
 
 INSERT INTO certificate_authorities (id, name, country, is_trusted) VALUES
     (1, 'Let''s Encrypt', 'Hoa Kỳ', 1),
@@ -55,6 +57,17 @@ VALUES
      DATE_ADD(NOW(), INTERVAL 5 DAY), DATE_ADD(NOW(), INTERVAL 370 DAY), 'ECDSA', 384, 'ecdsa-with-SHA384', 0, 1),
     (8, 'CERT-008', SHA2('CERT-008', 256), '03A1F0010008', 'shop.congty.example', NULL, 2, 1,
      DATE_SUB(NOW(), INTERVAL 65 DAY), DATE_ADD(NOW(), INTERVAL 300 DAY), 'RSA', 4096, 'sha256WithRSAEncryption', 0, 1);
+
+-- Chứng chỉ THẬT của chính web này, đọc bằng openssl ngày 06/11/2026, giờ đã đổi từ UTC sang +07:00.
+-- Ngày cố định chứ không theo NOW(), vì đây là dữ liệu thật. Caddy tự cấp lại khoảng 30 ngày trước
+-- khi hết hạn, khi đó fingerprint thật sẽ khác dòng này; dòng này chỉ là ảnh chụp ngày đọc.
+INSERT INTO certificates
+    (id, cert_code, fingerprint_sha256, serial, subject_cn, san, ca_id, domain_id,
+     valid_from, valid_to, key_algorithm, key_size, signature_algorithm, is_revoked, created_by)
+VALUES
+    (9, 'CERT-009', 'ee7a1d355685b88e42560a57530af572a77dd193e27ee7ba616c225869c55543',
+     '066AB80900C6DC903BF7B822C7016F7BA3BF', 'cert.cipher.id.vn', 'cert.cipher.id.vn', 1, 6,
+     '2026-11-06 10:18:41', '2027-02-04 10:18:40', 'ECDSA', 256, 'ecdsa-with-SHA384', 0, 1);
 
 -- CERT-008 đã gia hạn một lần: dòng chứng chỉ giữ thông tin mới, bản cũ nằm ở đây.
 INSERT INTO renewals (certificate_id, old_valid_to, new_valid_to, old_fingerprint, old_serial, renewed_by, renewed_at, note) VALUES

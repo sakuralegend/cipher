@@ -143,6 +143,14 @@ function csrfHopLe(mixed $ma): bool
     return is_string($ma) && !empty($_SESSION['csrf']) && hash_equals($_SESSION['csrf'], $ma);
 }
 
+// Đọc một ô form. Form bị sửa tay có thể gửi mảng (username[]=x) hoặc byte không phải UTF-8;
+// coi như ô trống để quy tắc kiểm tra báo lỗi đúng ô, thay vì CSDL từ chối và trang chết.
+function chuoiPost(string $khoa): string
+{
+    $giaTri = $_POST[$khoa] ?? '';
+    return is_string($giaTri) && mb_check_encoding($giaTri, 'UTF-8') ? $giaTri : '';
+}
+
 // Mọi yêu cầu POST phải gọi hàm này trước khi đổi dữ liệu.
 function yeuCauCsrf(): void
 {

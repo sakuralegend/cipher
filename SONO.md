@@ -13,7 +13,7 @@
 | Tinh chỉnh giao diện cho đẹp nhất có thể (QD-17): design tokens trong `app.css`, hiệu ứng, Dashboard, bảng, landing; trang quản trị trên điện thoại tràn ngang 9px ở rộng 390px (đo 06/11/2026) | Phần bắt buộc trước (QD-06); đủ chức năng mới biết cần chỉnh gì | Sau cổng 11/11, trước 14/11/2026 |
 | Báo cáo phải nêu rõ phân chia nhiệm vụ từng thành viên (đề mục I.4): user cung cấp khi viết báo cáo | User làm hết, chốt cách chia sau | 14–15/11/2026 |
 | Sổ tay 1–2 trang: luồng chính và câu dễ bị hỏi, để user hiểu sơ bộ trước khi nộp | Chức năng chưa đủ | 16/11/2026 |
-| Đóng gói mã nguồn nộp bằng file nén: `git archive` kèm `export-ignore` trong `.gitattributes`, loại `.claude/`, `CLAUDE.md`, các sổ, `docs/BAN_GIAO.md`, `deploy/`, `scripts/`, `ban_do_test.py`; mở file nén kiểm tra không còn chữ VPN, IP VPS | Chưa đến lúc nộp | 16/11/2026 |
+| Đóng gói mã nguồn nộp bằng file nén: `git archive` kèm `export-ignore` trong `.gitattributes`, loại `.claude/`, `CLAUDE.md`, các sổ, `docs/BAN_GIAO.md`, `deploy/`, `scripts/`, `ban_do_test.py`; mở file nén kiểm tra không còn chữ VPN; IP VPS chỉ được có ở `database/seed.sql` (máy chủ của chứng chỉ thật, IP này ai tra DNS cũng thấy) | Chưa đến lúc nộp | 16/11/2026 |
 | Nâng tài liệu nộp (QD-17): đặc tả từng use case (tác nhân, điều kiện, luồng chính, ngoại lệ), sơ đồ UML chuẩn thay `flowchart`, xuất ảnh ERD và Use Case | Bản hiện tại đủ làm danh sách kiểm tra; chức năng còn có thể đổi | 14–15/11/2026 |
 | Đề đòi "file SQL tạo CSDL": hướng dẫn cài phải nói rõ tạo CSDL trước, hoặc thêm file cài một bước | `schema.sql` cố ý không `CREATE DATABASE` (QD-14) | Khi viết hướng dẫn cài, 14–15/11/2026 |
 | Đổi hoặc khoá tài khoản demo đã đưa giảng viên | Chưa chấm bài | Ngay sau khi chấm, trước khi bay |

@@ -6,6 +6,38 @@
 // Số ngày còn lại phụ thuộc giờ hiện tại, nên múi giờ đặt trong code, không dựa php.ini.
 date_default_timezone_set('Asia/Ho_Chi_Minh');
 
+// Mã lỗi của MariaDB, để phân biệt nguyên nhân khi CSDL từ chối.
+const LOI_CSDL_TRUNG_KHOA = 1062;
+const LOI_CSDL_CON_DU_LIEU_CON = 1451;
+
+// Trùng giá trị thì trả về lỗi cho đúng ô; lỗi khác là lỗi hệ thống nên ném tiếp.
+// UNIQUE trong CSDL là nơi quyết định, vì hai yêu cầu cùng lúc vẫn qua được kiểm tra bằng PHP.
+function loiNeuTrung(PDOException $e, string $o, string $thongBao): array
+{
+    if (($e->errorInfo[1] ?? null) === LOI_CSDL_TRUNG_KHOA) {
+        return [$o => $thongBao];
+    }
+    throw $e;
+}
+
+// Xoá một dòng và để khoá ngoại quyết định có được xoá không. Không đếm dữ liệu con trước:
+// thêm bảng mới có khoá ngoại thì quy tắc vẫn đúng mà không phải sửa ở đây.
+// $bang chỉ nhận tên bảng viết cứng trong code, không bao giờ lấy từ người dùng.
+function xoaHoacBaoConDuLieu(PDO $pdo, string $bang, int $id, string $thongBao): ?string
+{
+    try {
+        $cau = $pdo->prepare("DELETE FROM $bang WHERE id = ?");
+        $cau->execute([$id]);
+    } catch (PDOException $e) {
+        if (($e->errorInfo[1] ?? null) === LOI_CSDL_CON_DU_LIEU_CON) {
+            return $thongBao;
+        }
+        throw $e;
+    }
+    // Không có dòng nào bị xoá, ví dụ người khác vừa xoá: không được báo "đã xoá".
+    return $cau->rowCount() === 0 ? 'Bản ghi này không còn tồn tại.' : null;
+}
+
 function ketNoiCsdl(?string $tenCsdl = null): PDO
 {
     $cauHinh = [

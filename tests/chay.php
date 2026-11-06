@@ -12,6 +12,7 @@ if (PHP_SAPI !== 'cli') {
 require __DIR__ . '/../config/db.php';
 require __DIR__ . '/../src/auth.php';
 require __DIR__ . '/../src/nguoi_dung.php';
+require __DIR__ . '/../src/danh_muc.php';
 
 function napLaiCsdl(PDO $pdo): void
 {
@@ -238,6 +239,8 @@ function test_du_lieu_mau_co_du_moc_va_trang_thai(PDO $pdo): void
     }
 
     kiem((int) $pdo->query('SELECT COUNT(*) FROM renewals')->fetchColumn() >= 1, 'Thiếu lịch sử gia hạn');
+    kiem((int) $pdo->query("SELECT COUNT(*) FROM certificates c JOIN domains d ON d.id = c.domain_id
+                            WHERE d.domain_name = 'cert.cipher.id.vn'")->fetchColumn() === 1, 'Thiếu chứng chỉ thật của web');
     kiem((int) $pdo->query('SELECT COUNT(*) FROM roles')->fetchColumn() === 2, 'Phải có đúng 2 vai trò');
 
     foreach ($pdo->query('SELECT username, password_hash FROM users')->fetchAll() as $nguoi) {
@@ -529,6 +532,150 @@ function test_trang_quan_ly_nguoi_dung_chi_danh_cho_admin(PDO $pdo): void
     foreach ($cacTrang as $trang) {
         kiem(preg_match('/\byeuCauAdmin\(/', codeKhongChuThich($trang)) === 1, basename($trang) . ' chưa gọi yeuCauAdmin()');
     }
+}
+
+function mayChuHopLe(array $thayDoi = []): array
+{
+    return array_merge([
+        'hostname' => 'web-02',
+        'ip_address' => '192.0.2.50',
+        'port' => '443',
+        'environment' => 'production',
+        'owner' => 'Phòng Hạ tầng',
+    ], $thayDoi);
+}
+
+// Luật: Máy chủ sai IP, cổng, môi trường, hay thiếu thông tin bắt buộc đều bị từ chối đúng ô.
+// Vì sao: Đề yêu cầu kiểm tra dữ liệu ở PHP; cột ENUM và kiểu số không báo được lỗi dễ hiểu.
+// Đỏ nghĩa là: một quy tắc trong kiemTraMayChu() đã mất.
+// Đừng: chỉ dựa vào pattern, type="number" trên form, vì JavaScript có thể bị bỏ qua.
+function test_may_chu_sai_ip_cong_moi_truong_bi_tu_choi(PDO $pdo): void
+{
+    $truongHop = [
+        'hostname' => ['', 'có dấu', "web\n"],
+        'ip_address' => ['', '999.1.1.1', 'abc', '1.2.3'],
+        'port' => ['', '0', '65536', '-1', '80a', '1.5'],
+        'environment' => ['', 'khac'],
+        'owner' => ['', str_repeat('a', 101)],
+    ];
+    foreach ($truongHop as $o => $cacGiaTriSai) {
+        foreach ($cacGiaTriSai as $giaTri) {
+            $loi = luuMayChu($pdo, null, mayChuHopLe([$o => $giaTri]));
+            kiem(isset($loi[$o]), "Ô $o phải báo lỗi với giá trị: " . json_encode($giaTri));
+        }
+    }
+    $truoc = (int) $pdo->query('SELECT COUNT(*) FROM servers')->fetchColumn();
+    kiem(luuMayChu($pdo, null, mayChuHopLe()) === [], 'Máy chủ hợp lệ phải thêm được');
+    kiem(luuMayChu($pdo, null, mayChuHopLe(['ip_address' => '2001:db8::1'])) === [], 'IPv6 phải được nhận');
+    kiem((int) $pdo->query('SELECT COUNT(*) FROM servers')->fetchColumn() === $truoc + 2, 'Phải có thêm đúng 2 dòng');
+}
+
+// Luật: Tên miền hợp lệ gồm cả wildcard thì được nhận, và lưu chữ thường; sai định dạng thì bị từ chối.
+// Vì sao: Quy tắc quá chặt sẽ chặn tên miền thật; quá lỏng thì dữ liệu rác lọt vào.
+// Đỏ nghĩa là: biểu thức trong tenMienHopLe() đã đổi, hoặc không còn chuyển về chữ thường.
+// Đừng: nới lỏng để cho qua một ca lạ mà không thêm ca đó vào danh sách dưới đây.
+function test_ten_mien_hop_le_duoc_nhan_va_sai_dinh_dang_bi_tu_choi(PDO $pdo): void
+{
+    $hopLe = ['cert.cipher.id.vn', '*.cipher.id.vn', 'congty.example', 'a.co', 'xn--bcher-kva.example', 'a-b.c-d.org'];
+    foreach ($hopLe as $ten) {
+        kiem(tenMienHopLe($ten), "Phải nhận: $ten");
+    }
+    $sai = ['', 'localhost', 'cert', '1.2.3.4', '1.2.3.44', '-a.vn', 'a-.vn', 'a..vn', '.vn', 'a.vn.', 'a b.vn', '*.*.vn', 'a.*.vn', '*', "a.vn\n", 'có-dấu.vn', 'a.v', str_repeat('a', 64) . '.vn', str_repeat('a.', 126) . 'vn'];
+    foreach ($sai as $ten) {
+        kiem(!tenMienHopLe($ten), 'Phải từ chối: ' . json_encode($ten));
+    }
+
+    kiem(luuTenMien($pdo, null, ['domain_name' => 'API.Cipher.ID.vn', 'server_id' => 1]) === [], 'Phải thêm được');
+    $luu = $pdo->query("SELECT domain_name FROM domains WHERE domain_name LIKE 'api.%'")->fetchColumn();
+    kiem($luu === 'api.cipher.id.vn', "Phải lưu chữ thường, đang là $luu");
+}
+
+// Luật: Tên miền trùng và tên tổ chức trùng được báo lỗi đúng ô, không làm hỏng trang.
+// Vì sao: CSDL là nơi chặn trùng; không bắt lỗi thì người dùng thấy trang lỗi thay vì câu dễ hiểu.
+// Đỏ nghĩa là: loiNeuTrung() không còn nhận ra mã lỗi, hoặc mất UNIQUE trong schema.
+// Đừng: bỏ UNIQUE và chỉ SELECT kiểm tra trước, vì hai yêu cầu cùng lúc vẫn tạo trùng được.
+function test_ten_mien_trung_va_ten_to_chuc_trung_bao_loi_ro_rang(PDO $pdo): void
+{
+    kiem(isset(luuTenMien($pdo, null, ['domain_name' => 'CONGTY.example', 'server_id' => 1])['domain_name']), 'Thêm trùng tên miền, kể cả khác hoa thường');
+    kiem(isset(luuTenMien($pdo, 2, ['domain_name' => 'congty.example', 'server_id' => 1])['domain_name']), 'Sửa thành trùng tên miền');
+    kiem(luuTenMien($pdo, 1, ['domain_name' => 'congty.example', 'server_id' => 2]) === [], 'Giữ nguyên tên của chính nó thì không tính là trùng');
+
+    kiem(isset(luuToChuc($pdo, null, ['name' => 'DigiCert', 'country' => 'X', 'is_trusted' => 1])['name']), 'Thêm trùng tên tổ chức');
+    kiem(isset(luuToChuc($pdo, 1, ['name' => 'DigiCert', 'country' => 'X', 'is_trusted' => 1])['name']), 'Sửa thành trùng tên tổ chức');
+    kiem(isset(luuToChuc($pdo, null, ['name' => '', 'country' => 'X', 'is_trusted' => 1])['name']), 'Thiếu tên tổ chức');
+    kiem(isset(luuToChuc($pdo, null, ['name' => 'Y', 'country' => '', 'is_trusted' => 1])['country']), 'Thiếu quốc gia');
+
+    kiem(luuToChuc($pdo, 1, ['name' => "Let's Encrypt", 'country' => 'Hoa Kỳ', 'is_trusted' => 0]) === [], 'Bỏ tick tin cậy phải lưu được');
+    kiem((int) timToChuc($pdo, 1)['is_trusted'] === 0, 'Bỏ tick phải thành không tin cậy');
+}
+
+// Luật: Tên miền phải gắn với một máy chủ có thật.
+// Vì sao: Không kiểm tra trước thì khoá ngoại từ chối và người dùng thấy trang lỗi.
+// Đỏ nghĩa là: luuTenMien() đã bỏ bước kiểm tra máy chủ.
+// Đừng: cho phép tên miền không có máy chủ; cột server_id là bắt buộc.
+function test_ten_mien_phai_gan_voi_may_chu_co_that(PDO $pdo): void
+{
+    foreach ([0, 999, ''] as $idSai) {
+        $loi = luuTenMien($pdo, null, ['domain_name' => 'moi.example', 'server_id' => $idSai]);
+        kiem(isset($loi['server_id']), 'Máy chủ sai phải báo lỗi: ' . json_encode($idSai));
+    }
+}
+
+// Luật: Xoá danh mục còn dữ liệu con thì báo lý do rõ ràng, và dữ liệu vẫn còn.
+// Vì sao: Xoá dây chuyền có thể làm mất hàng loạt chứng chỉ; báo lỗi hệ thống thì người dùng không biết phải làm gì.
+// Đỏ nghĩa là: xoaHoacBaoConDuLieu() không còn nhận ra lỗi khoá ngoại.
+// Đừng: đếm dữ liệu con bằng truy vấn riêng, vì thêm bảng mới là quên cập nhật.
+function test_xoa_danh_muc_con_du_lieu_con_bao_ly_do_ro_rang(PDO $pdo): void
+{
+    kiem(str_contains((string) xoaMayChu($pdo, 4), 'còn tên miền'), 'Máy chủ còn tên miền');
+    kiem(timMayChu($pdo, 4) !== null, 'Máy chủ phải còn');
+    kiem(str_contains((string) xoaTenMien($pdo, 1), 'còn chứng chỉ'), 'Tên miền còn chứng chỉ');
+    kiem(timTenMien($pdo, 1) !== null, 'Tên miền phải còn');
+    kiem(str_contains((string) xoaToChuc($pdo, 1), 'còn chứng chỉ'), 'Tổ chức còn chứng chỉ');
+    kiem(timToChuc($pdo, 1) !== null, 'Tổ chức phải còn');
+}
+
+// Luật: Xoá bản ghi không tồn tại thì báo lỗi, không báo đã xoá.
+// Vì sao: Hai người cùng mở trang, một người xoá trước; người sau thấy "đã xoá" sẽ tưởng chính mình vừa xoá.
+// Đỏ nghĩa là: xoaHoacBaoConDuLieu() không còn xét số dòng bị xoá.
+// Đừng: bỏ qua trường hợp này vì "kết quả vẫn là không còn dòng đó"; thông báo phải đúng sự thật.
+function test_xoa_ban_ghi_khong_ton_tai_bao_loi(PDO $pdo): void
+{
+    kiem(xoaMayChu($pdo, 9999) !== null, 'Máy chủ không tồn tại');
+    kiem(xoaTenMien($pdo, 0) !== null, 'Tên miền không tồn tại');
+    kiem(xoaToChuc($pdo, 9999) !== null, 'Tổ chức không tồn tại');
+    kiem(xoaNguoiDung($pdo, 9999, 1) !== null, 'Người dùng không tồn tại');
+}
+
+// Luật: Ô form không phải chuỗi UTF-8 hợp lệ được coi là trống, nên báo lỗi đúng ô thay vì làm chết trang.
+// Vì sao: Chế độ strict khiến CSDL từ chối byte sai mã (đã gặp lỗi 500 khi thử ngày 06/11/2026).
+// Đỏ nghĩa là: chuoiPost() không còn kiểm tra mã hoá hoặc kiểu dữ liệu.
+// Đừng: tắt strict để CSDL tự cắt dữ liệu; lỗi sẽ thành âm thầm.
+function test_o_form_sai_ma_hoa_hoac_la_mang_duoc_coi_la_trong(PDO $pdo): void
+{
+    $_POST = ['sai_ma' => "Ph\xF2ng A", 'mang' => ['x'], 'dung' => 'Phòng A'];
+    kiem(chuoiPost('sai_ma') === '', 'Byte không phải UTF-8 phải thành chuỗi rỗng');
+    kiem(chuoiPost('mang') === '', 'Mảng phải thành chuỗi rỗng');
+    kiem(chuoiPost('dung') === 'Phòng A', 'Tiếng Việt đúng mã phải giữ nguyên');
+    kiem(chuoiPost('khong_co') === '', 'Ô không gửi phải thành chuỗi rỗng');
+    $_POST = [];
+}
+
+// Luật: Danh mục không còn dữ liệu con thì xoá được.
+// Vì sao: Đề yêu cầu CRUD đầy đủ; chặn xoá chỉ áp dụng khi còn dữ liệu phụ thuộc.
+// Đỏ nghĩa là: một hàm xoá đang nhắm sai bảng hoặc luôn từ chối.
+// Đừng: thay xoá thật bằng cột ẩn để lách khoá ngoại.
+function test_danh_muc_khong_con_du_lieu_con_thi_xoa_duoc(PDO $pdo): void
+{
+    kiem(xoaTenMien($pdo, 5) === null, 'Tên miền không có chứng chỉ phải xoá được');
+    kiem(timTenMien($pdo, 5) === null, 'Đã xoá thì không còn');
+    kiem(xoaMayChu($pdo, 4) === null, 'Máy chủ hết tên miền phải xoá được');
+    kiem(timMayChu($pdo, 4) === null, 'Đã xoá thì không còn');
+
+    luuToChuc($pdo, null, ['name' => 'Tổ chức thử', 'country' => 'X', 'is_trusted' => 1]);
+    $id = (int) $pdo->query("SELECT id FROM certificate_authorities WHERE name = 'Tổ chức thử'")->fetchColumn();
+    kiem(xoaToChuc($pdo, $id) === null, 'Tổ chức không có chứng chỉ phải xoá được');
+    kiem(timToChuc($pdo, $id) === null, 'Đã xoá thì không còn');
 }
 
 // Luật: Mọi trang xử lý yêu cầu POST đều gọi yeuCauCsrf().

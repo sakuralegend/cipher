@@ -1,7 +1,7 @@
 <?php
 // Đầu trang dùng chung. Trang gọi file này phải có $tieuDe.
 // $nguoi:          có thì hiện thanh menu quản trị.
-// $trangHienTai:   tên mục menu đang mở, để tô đậm ('dashboard', 'nguoi_dung').
+// $trangHienTai:   tên mục menu đang mở, để tô đậm ('dashboard', 'may_chu', 'nguoi_dung'...).
 // $coThanhRieng:   trang tự có thanh trên cùng (landing), nên không hiện nút giao diện nổi.
 $nguoi ??= null;
 $trangHienTai ??= '';
@@ -61,6 +61,15 @@ HTML;
                     <ul class="navbar-nav">
                         <li class="nav-item <?= $trangHienTai === 'dashboard' ? 'active' : '' ?>">
                             <a class="nav-link" href="<?= e(url('admin/index.php')) ?>">Dashboard</a>
+                        </li>
+                        <li class="nav-item <?= $trangHienTai === 'may_chu' ? 'active' : '' ?>">
+                            <a class="nav-link" href="<?= e(url('admin/may_chu.php')) ?>">Máy chủ</a>
+                        </li>
+                        <li class="nav-item <?= $trangHienTai === 'ten_mien' ? 'active' : '' ?>">
+                            <a class="nav-link" href="<?= e(url('admin/ten_mien.php')) ?>">Tên miền</a>
+                        </li>
+                        <li class="nav-item <?= $trangHienTai === 'to_chuc_cap' ? 'active' : '' ?>">
+                            <a class="nav-link" href="<?= e(url('admin/to_chuc_cap.php')) ?>">Tổ chức cấp</a>
                         </li>
                         <?php if (laAdmin($nguoi)): ?>
                             <li class="nav-item <?= $trangHienTai === 'nguoi_dung' ? 'active' : '' ?>">

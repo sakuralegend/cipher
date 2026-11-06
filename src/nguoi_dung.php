@@ -5,10 +5,6 @@
 // Hàm trả về mảng lỗi dạng ['tên ô' => 'câu lỗi']; mảng rỗng nghĩa là thành công.
 // Hàm thao tác trên cả dòng (khoá, xoá) trả về câu lỗi, hoặc null nếu thành công.
 
-// Mã lỗi của MariaDB, để phân biệt nguyên nhân khi CSDL từ chối.
-const LOI_CSDL_TRUNG_KHOA = 1062;
-const LOI_CSDL_CON_DU_LIEU_CON = 1451;
-
 function danhSachVaiTro(PDO $pdo): array
 {
     return $pdo->query('SELECT id, name FROM roles ORDER BY id')->fetchAll();
@@ -139,11 +135,7 @@ function suaNguoiDung(PDO $pdo, int $id, array $duLieu, int $idNguoiThucHien): a
 
 function loiTrungTenDangNhap(PDOException $e): array
 {
-    // UNIQUE trong CSDL là nơi quyết định, vì hai yêu cầu cùng lúc vẫn qua được kiểm tra bằng PHP.
-    if (($e->errorInfo[1] ?? null) === LOI_CSDL_TRUNG_KHOA) {
-        return ['username' => 'Tên đăng nhập này đã tồn tại.'];
-    }
-    throw $e;
+    return loiNeuTrung($e, 'username', 'Tên đăng nhập này đã tồn tại.');
 }
 
 function capNhatMatKhau(PDO $pdo, int $id, string $matKhau): void
@@ -173,17 +165,7 @@ function xoaNguoiDung(PDO $pdo, int $id, int $idNguoiThucHien): ?string
     if ($id === $idNguoiThucHien) {
         return 'Bạn không thể tự xoá tài khoản của mình.';
     }
-    // Không đếm lịch sử trước: cứ xoá và để khoá ngoại quyết định. Thêm bảng mới có khoá ngoại
-    // tới users thì quy tắc này vẫn đúng mà không phải sửa ở đây.
-    try {
-        $pdo->prepare('DELETE FROM users WHERE id = ?')->execute([$id]);
-    } catch (PDOException $e) {
-        if (($e->errorInfo[1] ?? null) === LOI_CSDL_CON_DU_LIEU_CON) {
-            return 'Người dùng này đã có lịch sử thao tác nên không xoá được, chỉ có thể khoá.';
-        }
-        throw $e;
-    }
-    return null;
+    return xoaHoacBaoConDuLieu($pdo, 'users', $id, 'Người dùng này đã có lịch sử thao tác nên không xoá được, chỉ có thể khoá.');
 }
 
 function suaHoTen(PDO $pdo, int $id, string $hoTen): array

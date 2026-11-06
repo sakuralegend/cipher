@@ -40,9 +40,35 @@ function layThongBao(): ?array
     return $thongBao;
 }
 
-// Form gửi lên có thể là mảng (username[]=x) nếu bị sửa tay, nên chỉ nhận chuỗi.
-function chuoiPost(string $khoa): string
+// Dựng một ô nhập kèm nhãn và dòng lỗi, để các form không lặp lại cùng một đoạn HTML.
+// $loi là mảng lỗi từ PHP; $thuocTinh là quy tắc cho JavaScript, ví dụ 'required maxlength="100"'.
+// $loiMacDinh hiện khi JavaScript chặn; PHP báo lỗi thì câu của PHP được ưu tiên.
+function oNhap(string $ten, string $nhan, ?string $giaTri, array $loi, string $thuocTinh = '', string $loiMacDinh = '', string $goiY = ''): string
 {
-    $giaTri = $_POST[$khoa] ?? '';
-    return is_string($giaTri) ? $giaTri : '';
+    $batBuoc = str_contains($thuocTinh, 'required') ? ' required' : '';
+    $saiCss = isset($loi[$ten]) ? ' is-invalid' : '';
+    $html = '<div class="mb-3">'
+        . '<label class="form-label' . $batBuoc . '" for="' . e($ten) . '">' . e($nhan) . '</label>'
+        . '<input class="form-control' . $saiCss . '" id="' . e($ten) . '" name="' . e($ten) . '" value="' . e($giaTri) . '" ' . $thuocTinh . '>'
+        . '<div class="invalid-feedback">' . e($loi[$ten] ?? $loiMacDinh) . '</div>';
+    if ($goiY !== '') {
+        $html .= '<small class="form-hint">' . e($goiY) . '</small>';
+    }
+    return $html . '</div>';
 }
+
+// Dựng một ô chọn. $luaChon có dạng [giá trị => nhãn].
+function oChon(string $ten, string $nhan, array $luaChon, ?string $dangChon, array $loi, string $loiMacDinh): string
+{
+    $saiCss = isset($loi[$ten]) ? ' is-invalid' : '';
+    $html = '<div class="mb-3">'
+        . '<label class="form-label required" for="' . e($ten) . '">' . e($nhan) . '</label>'
+        . '<select class="form-select' . $saiCss . '" id="' . e($ten) . '" name="' . e($ten) . '" required>'
+        . '<option value="">Chọn</option>';
+    foreach ($luaChon as $giaTri => $nhanLuaChon) {
+        $chon = (string) $giaTri === (string) $dangChon ? ' selected' : '';
+        $html .= '<option value="' . e((string) $giaTri) . '"' . $chon . '>' . e($nhanLuaChon) . '</option>';
+    }
+    return $html . '</select><div class="invalid-feedback">' . e($loi[$ten] ?? $loiMacDinh) . '</div></div>';
+}
+
