@@ -21,13 +21,17 @@ function napLaiCsdl(PDO $pdo): void
     if ($pdo->query('SELECT DATABASE()')->fetchColumn() !== 'cipher_test') {
         throw new RuntimeException('Từ chối nạp lại: không phải CSDL cipher_test');
     }
-    foreach (['schema.sql', 'seed.sql'] as $tenFile) {
-        $sql = file_get_contents(__DIR__ . '/../database/' . $tenFile);
-        // Chạy từng câu, vì gửi cả file một lần thì lỗi ở câu sau có thể bị bỏ qua không báo.
-        foreach (preg_split('/;[ \t]*\r?\n/', $sql) as $cauLenh) {
-            if (trim($cauLenh) !== '') {
-                $pdo->exec($cauLenh);
-            }
+    chayFileSql($pdo, 'schema.sql');
+    chayFileSql($pdo, 'seed.sql');
+}
+
+function chayFileSql(PDO $pdo, string $tenFile): void
+{
+    $sql = file_get_contents(__DIR__ . '/../database/' . $tenFile);
+    // Chạy từng câu, vì gửi cả file một lần thì lỗi ở câu sau có thể bị bỏ qua không báo.
+    foreach (preg_split('/;[ \t]*\r?\n/', $sql) as $cauLenh) {
+        if (trim($cauLenh) !== '') {
+            $pdo->exec($cauLenh);
         }
     }
 }
@@ -1152,6 +1156,35 @@ function test_cac_bo_loc_ket_hop_va_gia_tri_loc_sai_bi_bo_qua(PDO $pdo): void
                   'server_id' => '-1', 'het_han_tu' => '2031-02-31', 'het_han_den' => "2031-01-01' --"];
     kiem(array_filter(docBoLoc($giaTriSai), fn(string $g): bool => $g !== '') === [], 'Giá trị sai phải bị coi như chưa chọn');
     kiem(count(maKhopBoLoc($pdo, $giaTriSai)) === $tatCa, 'Giá trị sai không được làm mất dòng');
+}
+
+// Luật: seed_demo.sql nạp được sau seed.sql, đủ 50 chứng chỉ, đủ mọi trạng thái và ba mốc cảnh báo; chạy lần hai không thêm gì.
+// Vì sao: File này nạp vào web đang chạy để xem thử và demo; nạp hỏng giữa chừng thì danh mục thừa nằm lại trong CSDL.
+// Đỏ nghĩa là: một dòng dữ liệu sai ràng buộc, hoặc dòng tra tên danh mục không khớp nên âm thầm bị bỏ.
+// Đừng: gộp vào seed.sql, vì nhiều test dựa vào đúng 9 chứng chỉ của file đó.
+function test_du_lieu_demo_du_50_chung_chi_du_trang_thai_va_khong_nap_trung(PDO $pdo): void
+{
+    chayFileSql($pdo, 'seed_demo.sql');
+    kiem(demChungChi($pdo) === 50, 'Phải đủ 50 chứng chỉ, đang có ' . demChungChi($pdo));
+
+    $trangThaiCo = $pdo->query('SELECT DISTINCT status FROM v_certificates')->fetchAll(PDO::FETCH_COLUMN);
+    kiem(array_diff(array_keys(TRANG_THAI), $trangThaiCo) === [], 'Thiếu trạng thái: ' . implode(', ', array_diff(array_keys(TRANG_THAI), $trangThaiCo)));
+
+    taoCanhBao($pdo);
+    $cacMoc = array_map('intval', $pdo->query('SELECT DISTINCT threshold_days FROM alerts ORDER BY 1')->fetchAll(PDO::FETCH_COLUMN));
+    kiem($cacMoc === [7, 15, 30], 'Phải có đủ ba mốc cảnh báo');
+    kiem((int) $pdo->query('SELECT COUNT(*) FROM renewals')->fetchColumn() === 7, 'Phải có 6 dòng gia hạn mới cộng 1 của seed.sql');
+
+    $soMayChu = (int) $pdo->query('SELECT COUNT(*) FROM servers')->fetchColumn();
+    try {
+        chayFileSql($pdo, 'seed_demo.sql');
+        throw new LogicException('Nạp lần hai phải báo trùng khoá');
+    } catch (PDOException $e) {
+        // Giống trình mysql thoát khi gặp lỗi: giao dịch chưa COMMIT bị huỷ.
+        $pdo->rollBack();
+    }
+    kiem((int) $pdo->query('SELECT COUNT(*) FROM servers')->fetchColumn() === $soMayChu, 'Nạp lần hai không được để lại máy chủ thừa');
+    kiem(demChungChi($pdo) === 50, 'Nạp lần hai không được thêm chứng chỉ');
 }
 
 $pdo = ketNoiCsdl('cipher_test');

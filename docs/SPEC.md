@@ -42,7 +42,7 @@ thời hạn, cảnh báo trước khi hết hạn, lưu lịch sử gia hạn, 
 | Ng | Khoá chính, khoá ngoại, quan hệ | 9 bảng, xem ERD |
 | Nh | Dashboard tổng quan | Số chứng chỉ theo trạng thái, số cảnh báo mới, danh sách sắp hết hạn |
 | Ni | Bảo mật | Xem mục 7 |
-| Nj | Dữ liệu mẫu | `database/seed.sql`, đủ mọi trạng thái và mốc cảnh báo |
+| Nj | Dữ liệu mẫu | `database/seed.sql` có 9 chứng chỉ, đủ mọi trạng thái và mốc cảnh báo; `database/seed_demo.sql` nạp nối tiếp để đủ 50 chứng chỉ |
 
 ## 3. Quy tắc kiểm tra dữ liệu
 
