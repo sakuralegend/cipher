@@ -8,3 +8,7 @@
 **Coi là XONG khi:** chạy file SQL trên XAMPP ra đủ 9 bảng và dữ liệu mẫu; xem được ERD; mỗi mốc 30/15/7, còn hạn, hết hạn, thu hồi đều có ít nhất một chứng chỉ mẫu.
 **CỐ Ý KHÔNG làm:** giao diện, đăng nhập, cài lên VPS, Use Case và SPEC (phiếu sau), dữ liệu mẫu đủ 30–50 chứng chỉ (lịch 13/11).
 **Đã đo:** trùng ĐÃ ĐO RỒI BÁC? không · hàm gần giống? không có, repo chưa có code.
+
+### Kế hoạch — ĐÃ TRÌNH 06/11, CHƯA DUYỆT, CẤM CODE. Toàn văn: `git log --grep "Bàn giao phiên"`
+Sản phẩm: `database/schema.sql` + view `v_certificates` · `database/seed.sql` (ngày theo `NOW()`) · `docs/ERD.md` (Mermaid) · `tests/chay.php` (PHP thuần, CSDL `cipher_test`).
+Chờ user chốt: `alerts` thêm `valid_to` vào UNIQUE · gia hạn sửa trên cùng dòng, `renewals` lưu fingerprint + serial cũ · người có lịch sử chỉ khoá, không xoá (đề đòi "xoá": user có thể đổi).
