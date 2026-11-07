@@ -75,7 +75,7 @@ HTML;
                     <span class="navbar-toggler-icon"></span>
                 </button>
                 <?php // Tên hệ thống dẫn về landing; về Dashboard đã có mục Dashboard ngay bên cạnh. ?>
-                <a class="navbar-brand me-3 ten-he-thong-qt d-inline-flex align-items-center gap-2" href="<?= e(url('index.php')) ?>"><?= $logo ?>Quản lý chứng chỉ số</a>
+                <a class="navbar-brand me-3 ten-he-thong-qt d-inline-flex align-items-center" href="<?= e(url('index.php')) ?>"><?= $logo ?>Quản lý chứng chỉ số</a>
                 <div class="navbar-nav flex-row order-md-last align-items-center thanh-tai-khoan">
                     <?= $nutGiaoDien ?>
                     <div class="nav-item dropdown">

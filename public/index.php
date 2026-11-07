@@ -16,7 +16,7 @@ require __DIR__ . '/../views/dau_trang.php';
 ?>
 <header class="navbar navbar-expand d-print-none ld-thanh-tren" data-bs-theme="dark" data-ld-thanh-tren>
     <div class="container-xl">
-        <span class="navbar-brand d-inline-flex align-items-center gap-2"><?= $logo ?>Quản lý chứng chỉ số</span>
+        <span class="navbar-brand d-inline-flex align-items-center"><?= $logo ?>Quản lý chứng chỉ số</span>
         <div class="navbar-nav flex-row ms-auto align-items-center gap-2">
             <?= $nutGiaoDien ?>
             <!-- Màn hình hẹp không đủ chỗ cho nút này, và ngay bên dưới đã có nút chính. -->

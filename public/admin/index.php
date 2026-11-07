@@ -34,7 +34,7 @@ require __DIR__ . '/../../views/tieu_de_trang.php';
                         <div class="card-body">
                             <div class="text-secondary text-nowrap">
                                 <?php // Chỉ chấm "Còn hiệu lực" có vòng sáng lan ra, như đèn "đang chạy" (CSS .cham-song). ?>
-                                <span class="badge bg-<?= e($thongTin['mau']) ?> badge-empty me-1<?= $khoa === 'valid' ? ' cham-song' : '' ?>"></span><?= e($thongTin['nhan']) ?>
+                                <span class="badge bg-<?= e($thongTin['mau']) ?> badge-empty me-2<?= $khoa === 'valid' ? ' cham-song' : '' ?>"></span><?= e($thongTin['nhan']) ?>
                             </div>
                             <div class="the-so-gia-tri"><?= $soTheoTrangThai[$khoa] ?></div>
                         </div>

@@ -241,9 +241,14 @@ input[type="datetime-local"].is-invalid {
     font-weight: 600;
 }
 
-/* Lớp bg-transparent, border-0 của nút dùng !important vì landing cần nút trong suốt, nên ở đây phải ghi đè. */
-.thanh-tai-khoan [data-doi-giao-dien] {
+/* Lớp bg-transparent, border-0 của nút dùng !important vì landing cần nút trong suốt, nên ở đây phải ghi đè.
+   Bộ chọn có thêm .navbar: màn hẹp Tabler đặt .navbar-expand-md .navbar-nav .nav-link { justify-content: start }
+   và min-width/min-height 2.5rem, đè quy tắc yếu hơn làm icon lệch trái (đo 07/11/2026 ở 390px: trái 9px, phải 11px).
+   Bỏ đệm px-2 vì nút đã có cỡ cố định và căn giữa bằng flex. */
+.navbar .thanh-tai-khoan [data-doi-giao-dien] {
     align-items: center;
+    min-height: 0;
+    min-width: 0;
     background-color: var(--khoi-nen) !important;
     border: 1px solid var(--khoi-vien) !important;
     border-radius: 0.5rem;
@@ -251,12 +256,13 @@ input[type="datetime-local"].is-invalid {
     display: flex;
     height: 2.75rem;
     justify-content: center;
+    padding: 0 !important;
     transition: background-color 0.15s ease, border-color 0.15s ease;
     width: 2.75rem;
 }
 
-.thanh-tai-khoan [data-doi-giao-dien]:hover,
-.thanh-tai-khoan [data-doi-giao-dien]:focus-visible {
+.navbar .thanh-tai-khoan [data-doi-giao-dien]:hover,
+.navbar .thanh-tai-khoan [data-doi-giao-dien]:focus-visible {
     background-color: var(--khoi-nen-re) !important;
     border-color: var(--khoi-vien-re) !important;
 }
@@ -279,7 +285,7 @@ input[type="datetime-local"].is-invalid {
         gap: 0.25rem;
     }
 
-    .thanh-tai-khoan [data-doi-giao-dien] {
+    .navbar .thanh-tai-khoan [data-doi-giao-dien] {
         height: 2.25rem;
         width: 2.25rem;
     }
@@ -307,12 +313,13 @@ input[type="datetime-local"].is-invalid {
     flex-shrink: 0;
     height: 1.875rem;
     justify-content: center;
+    margin-right: 0.75rem;
     width: 1.875rem;
 }
 
-/* Màn hẹp: thanh quản trị vốn đã sát một hàng, thêm khiên thì 390px và 414px rớt xuống hai hàng,
-   430px trở lên vẫn vừa (đo 07/11/2026). Dưới 432px bỏ khiên. */
-@media (max-width: 26.99rem) {
+/* Màn hẹp: thanh quản trị vốn đã sát một hàng, thêm khiên (kèm khoảng cách 0.75rem) thì 432px và 440px
+   rớt xuống hai hàng, 460px trở lên vẫn vừa (đo 07/11/2026). Dưới 480px bỏ khiên. */
+@media (max-width: 29.99rem) {
     .ten-he-thong-qt .logo-khien {
         display: none;
     }
@@ -1281,7 +1288,6 @@ input[type="datetime-local"].is-invalid {
     align-items: center;
     display: inline-flex;
     font-weight: 600;
-    gap: 0.5rem;
 }
 
 .dn-form {

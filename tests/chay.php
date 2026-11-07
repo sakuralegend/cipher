@@ -1525,6 +1525,19 @@ function test_chi_cham_con_hieu_luc_tren_dashboard_co_vong_sang(PDO $pdo): void
     kiem(preg_match('/prefers-reduced-motion: reduce\)\s*\{[^@]*\.cham-song/s', $css) === 1, 'Phải tắt vòng sáng khi máy bật giảm chuyển động');
 }
 
+// Luật: Nút giao diện trên thanh quản trị dùng bộ chọn có .navbar, bỏ min-width/min-height và đệm của Tabler, để icon luôn nằm giữa.
+// Vì sao: Đo 07/11/2026 ở 390px: Tabler đặt justify-content: start và min-width 2.5rem cho nav-link khi thanh thu gọn, icon lệch trái.
+// Đỏ nghĩa là: Ai đó bỏ .navbar khỏi bộ chọn hoặc bỏ các dòng đặt lại; trên điện thoại icon sáng/tối lại lệch.
+// Đừng: Thêm !important vào justify-content cho nhanh; tăng độ cụ thể của bộ chọn là đủ và không chặn chỗ khác ghi đè.
+function test_nut_giao_dien_tren_thanh_quan_tri_luon_can_giua(PDO $pdo): void
+{
+    $css = file_get_contents(__DIR__ . '/../public/assets/app.css');
+    kiem(preg_match('/\n\.navbar \.thanh-tai-khoan \[data-doi-giao-dien\] \{([^}]*)\}/', $css, $m) === 1, 'Thiếu quy tắc .navbar .thanh-tai-khoan [data-doi-giao-dien]');
+    foreach (['justify-content: center', 'min-width: 0', 'min-height: 0', 'padding: 0 !important'] as $dong) {
+        kiem(str_contains($m[1], $dong), "Nút giao diện thiếu \"$dong\"");
+    }
+}
+
 // Luật: Web có địa chỉ không đuôi cổng: cổng 80, Alt-Svc và cả địa chỉ gõ kèm :8443 đều dẫn về địa chỉ không đuôi, dữ liệu mẫu ghi cổng 443.
 // Vì sao: Caddy vẫn nghe 8443 nên tự quảng bá cổng này qua Alt-Svc, và người mở link cũ sẽ thấy lại đuôi nếu không bị đá về.
 // Đỏ nghĩa là: ai đó đã đưa đuôi :8443 trở lại, hoặc bỏ dòng xoá Alt-Svc trong cấu hình Caddy.
