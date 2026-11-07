@@ -6,7 +6,6 @@
 | Nợ | Vì sao chưa trả | Hết hạn |
 |---|---|---|
 | Đọc cert thật phải chặn IP nội bộ, kể cả với người đã đăng nhập: VPS có AnkiConnect `127.0.0.1:8765` không mật khẩu, không chặn thì thành công cụ dò cổng | Chức năng mở rộng, chỉ làm nếu còn thời gian (QD-18) | Trước khi làm chức năng này; bỏ nếu không làm |
-| Bỏ cửa phụ `cert.cipher.id.vn:8443`: đá về địa chỉ không đuôi. Cổng 8443 vẫn mở cho slushai | Giữ để vào được web nếu Xray lỗi lúc chấm (QD-08) | Ngay sau khi chấm, trước khi bay |
 | Đường vào quản trị VPS khi đang ở Nga, phòng VPN, SSH, Telegram cùng bị chặn | Chưa đến lượt, self-SNI vừa xong 07/11/2026 | Trước ngày bay, cuối 11/2026 |
 | Đường dự phòng VPN: cổng khác với cấu hình kiểu cũ; quyết định có cần VPS thứ hai | Chưa đến lượt, self-SNI vừa xong 07/11/2026 | Trước ngày bay, cuối 11/2026 |
 | Thử VPN từ mạng Nga thật; từ Việt Nam không đo được DPI Nga | Chưa ở Nga | Tuần đầu sau khi sang Nga |

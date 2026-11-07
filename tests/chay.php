@@ -1459,8 +1459,8 @@ function test_dau_trang_dung_yen_khi_chuyen_trang_nho_nhung_font_va_giu_cho_than
     kiem(str_contains($css, 'overflow-y: scroll'), 'app.css phải luôn giữ chỗ thanh cuộn');
 }
 
-// Luật: Web có địa chỉ không đuôi cổng: chuyển hướng cổng 80 và Alt-Svc đều không lộ cổng 8443, dữ liệu mẫu ghi cổng 443.
-// Vì sao: Caddy vẫn nghe 8443 nên tự quảng bá cổng này qua Alt-Svc, và chuyển hướng cũ ghi cứng đuôi; người xem trang sẽ thấy lại đuôi.
+// Luật: Web có địa chỉ không đuôi cổng: cổng 80, Alt-Svc và cả địa chỉ gõ kèm :8443 đều dẫn về địa chỉ không đuôi, dữ liệu mẫu ghi cổng 443.
+// Vì sao: Caddy vẫn nghe 8443 nên tự quảng bá cổng này qua Alt-Svc, và người mở link cũ sẽ thấy lại đuôi nếu không bị đá về.
 // Đỏ nghĩa là: ai đó đã đưa đuôi :8443 trở lại, hoặc bỏ dòng xoá Alt-Svc trong cấu hình Caddy.
 // Đừng: sửa test cho xanh bằng cách thêm lại đuôi; gói nộp không có thư mục deploy/ nên phần đọc file đó được bỏ qua.
 function test_web_co_dia_chi_khong_duoi_cong(PDO $pdo): void
@@ -1474,8 +1474,10 @@ function test_web_co_dia_chi_khong_duoi_cong(PDO $pdo): void
     }
     $caddy = file_get_contents($tep);
     kiem(str_contains($caddy, 'redir https://cert.cipher.id.vn{uri} permanent'), 'Cổng 80 phải đá về địa chỉ không đuôi');
-    kiem(!str_contains($caddy, 'cert.cipher.id.vn:8443'), 'Cấu hình Caddy không được ghi đuôi :8443');
+    kiem(!str_contains($caddy, 'redir https://cert.cipher.id.vn:8443'), 'Không chuyển hướng nào được dẫn tới đuôi :8443');
     kiem(str_contains($caddy, '-Alt-Svc'), 'Phải xoá Alt-Svc để không quảng bá cổng 8443');
+    kiem(str_contains($caddy, '@duoi_cu header Host cert.cipher.id.vn:8443'), 'Phải nhận ra địa chỉ gõ kèm :8443');
+    kiem(str_contains($caddy, 'redir @duoi_cu https://cert.cipher.id.vn{uri} permanent'), 'Địa chỉ kèm :8443 phải bị đá về không đuôi');
 }
 
 $pdo = ketNoiCsdl('cipher_test');
