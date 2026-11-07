@@ -79,6 +79,7 @@ document.querySelectorAll('[data-in]').forEach(function (nut) {
     };
     var MAU_TRANG_THAI = {red: '#d03b3b', yellow: '#fab219', green: '#0ca30c', secondary: '#898781'};
     var cacBieuDo = [];
+    Chart.defaults.font.family = '"Inter", "Segoe UI", system-ui, sans-serif';
 
     function ve() {
         var ten = document.documentElement.getAttribute('data-bs-theme') === 'dark' ? 'dark' : 'light';
@@ -141,4 +142,8 @@ document.querySelectorAll('[data-in]').forEach(function (nut) {
 
     ve();
     document.addEventListener('doi-giao-dien', ve);
+    // Canvas không tự vẽ lại khi font tải xong, nên vẽ lại một lần để chữ trên trục dùng đúng Inter.
+    if (document.fonts) {
+        document.fonts.ready.then(ve);
+    }
 })();
