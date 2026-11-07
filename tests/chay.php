@@ -1243,6 +1243,137 @@ function test_he_thong_chua_co_chung_chi_van_chay_dung(PDO $pdo): void
     kiem(danhSachCanhBao($pdo) === [] && demCanhBaoMoi($pdo) === 0, 'Không được có cảnh báo');
     kiem(maChungChiKeTiep($pdo) === 'CERT-001', 'Chứng chỉ đầu tiên phải có mã CERT-001');
     kiem(danhSachChungChi($pdo, 1, docBoLoc(['tu_khoa' => 'a', 'trang_thai' => 'expired']), docSapXep(['sap_xep' => 'con_lai'])) === [], 'Lọc và xếp trên danh sách rỗng không được lỗi');
+
+    kiem(chungChiSapHetHan($pdo) === [] && tatCaChungChi($pdo) === [], 'Dashboard và báo cáo phải rỗng');
+    kiem(demTheoNhom($pdo, 'to_chuc') === [] && demTheoNhom($pdo, 'thuat_toan') === [], 'Thống kê nhóm phải rỗng');
+    $theoThang = hetHanTheoThang($pdo);
+    kiem(count($theoThang) === 12 && array_sum($theoThang) === 0, 'Vẫn đủ 12 tháng, mọi tháng là 0');
+}
+
+// Luật: Bảng Cần xử lý ngay chỉ gồm chứng chỉ sắp hết hạn, tối đa 10 dòng, gần hạn nhất trước.
+// Vì sao: Chứng chỉ quá hạn lâu đứng đầu sẽ che mất các chứng chỉ còn cứu được; chúng đã có thẻ số riêng.
+// Đỏ nghĩa là: chungChiSapHetHan() đã đổi, người quản trị có thể không thấy chứng chỉ sắp hết hạn gấp nhất.
+// Đừng: gộp chứng chỉ đã quá hạn vào bảng này.
+function test_dashboard_chi_liet_ke_10_chung_chi_sap_het_han_gan_nhat(PDO $pdo): void
+{
+    chayFileSql($pdo, 'seed_demo.sql');
+    $dong = chungChiSapHetHan($pdo);
+    kiem(count($dong) === 10, 'Phải đúng 10 dòng dù có 13 chứng chỉ sắp hết hạn');
+    kiem(array_unique(array_column($dong, 'status')) === ['expiring'], 'Chỉ gồm chứng chỉ sắp hết hạn');
+    $han = array_column($dong, 'valid_to');
+    $daSap = $han;
+    sort($daSap);
+    kiem($han === $daSap && $dong[0]['cert_code'] === 'CERT-010', 'Gần hạn nhất phải đứng đầu');
+}
+
+// Luật: Thống kê theo tổ chức cấp và thuật toán có tổng khớp số chứng chỉ, nhiều nhất trước, và theo bộ lọc.
+// Vì sao: Các biểu đồ cùng một trang mà tổng lệch nhau thì người đọc không tin được số nào.
+// Đỏ nghĩa là: demTheoNhom() không còn dùng chung dieuKienLoc(), hoặc demTheoTrangThai() bỏ sót trạng thái đang chọn.
+// Đừng: nhận tên cột từ địa chỉ trang; chỉ khoá trong NHOM_THONG_KE mới vào được câu SQL.
+function test_thong_ke_to_chuc_va_thuat_toan_khop_tong_va_theo_bo_loc(PDO $pdo): void
+{
+    chayFileSql($pdo, 'seed_demo.sql');
+    foreach ([[], docBoLoc(['trang_thai' => 'revoked']), docBoLoc(['tu_khoa' => 'sso'])] as $loc) {
+        $tong = demChungChi($pdo, $loc);
+        kiem($tong > 0, 'Dữ liệu thử phải có dòng');
+        foreach (['to_chuc', 'thuat_toan'] as $nhom) {
+            $so = demTheoNhom($pdo, $nhom, $loc);
+            kiem(array_sum($so) === $tong, "Tổng của $nhom phải bằng $tong");
+            $daSap = $so;
+            arsort($daSap);
+            kiem(array_values($so) === array_values($daSap), "$nhom phải xếp nhiều nhất trước");
+        }
+        kiem(array_sum(demTheoTrangThai($pdo, $loc, true)) === $tong, 'Biểu đồ trạng thái phải khớp tổng, kể cả khi đang chọn một trạng thái');
+    }
+    kiem(demTheoNhom($pdo, 'thuat_toan')['GOST'] === 1, 'Đếm đúng theo thuật toán');
+}
+
+// Luật: Biểu đồ hết hạn theo tháng đủ 12 tháng liên tiếp, không tính đã thu hồi và đã quá hạn.
+// Vì sao: Biểu đồ dùng để dự báo việc gia hạn; chứng chỉ đã thu hồi không cần gia hạn nữa.
+// Đỏ nghĩa là: hetHanTheoThang() đã đổi, dự báo khối lượng gia hạn sẽ sai.
+// Đừng: bỏ các tháng có số 0; trục thời gian thiếu tháng làm người đọc hiểu sai.
+function test_het_han_theo_thang_du_12_thang_bo_thu_hoi_va_da_qua_han(PDO $pdo): void
+{
+    $homNay = date('Y-m-d H:i:s');
+    $thangNay = date('Y-m') . '-01';
+    $pdo->exec('DELETE FROM certificates');
+    $themHan = function (string $ma, string $han, int $thuHoi = 0) use ($pdo): void {
+        kiem(luuChungChi($pdo, null, chungChiHopLe(['cert_code' => $ma, 'valid_from' => '2020-01-01T00:00', 'valid_to' => $han]), 1) === [], "Phải lưu được $ma");
+        $pdo->exec("UPDATE certificates SET is_revoked = $thuHoi WHERE cert_code = '$ma'");
+    };
+    $trongThang3 = date('Y-m-d\TH:i', strtotime("$thangNay +2 month +5 day"));
+    $themHan('A', $trongThang3);
+    $themHan('B', $trongThang3);
+    $themHan('THU-HOI', $trongThang3, 1);
+    $themHan('QUA-HAN', date('Y-m-d\TH:i', strtotime('-1 day')));
+    $themHan('NGOAI-12-THANG', date('Y-m-d\TH:i', strtotime("$thangNay +12 month +1 day")));
+
+    $so = hetHanTheoThang($pdo, [], $homNay);
+    kiem(count($so) === 12 && array_key_first($so) === date('Y-m'), 'Phải đủ 12 tháng, bắt đầu từ tháng này');
+    kiem($so[date('Y-m', strtotime("$thangNay +2 month"))] === 2, 'Không được tính chứng chỉ đã thu hồi');
+    kiem(array_sum($so) === 2, 'Không được tính đã quá hạn và ngoài 12 tháng');
+    kiem(array_sum(hetHanTheoThang($pdo, docBoLoc(['tu_khoa' => 'zzz']), $homNay)) === 0, 'Phải theo bộ lọc');
+}
+
+// Luật: Hôm nay là ngày 31 thì 12 tháng vẫn liên tiếp, không nhảy cóc qua tháng ngắn.
+// Vì sao: Trong PHP, 31/01 cộng 1 tháng ra 03/03, nên tháng 2 biến mất khỏi biểu đồ mà không có lỗi nào.
+// Đỏ nghĩa là: hetHanTheoThang() không còn tính từ ngày đầu tháng.
+// Đừng: dùng strtotime('+1 month') từ ngày hiện tại.
+function test_het_han_theo_thang_khong_nhay_coc_khi_hom_nay_la_ngay_31(PDO $pdo): void
+{
+    $thang = array_keys(hetHanTheoThang($pdo, [], '2027-01-31 12:00:00'));
+    $mongDoi = ['2027-01', '2027-02', '2027-03', '2027-04', '2027-05', '2027-06', '2027-07', '2027-08', '2027-09', '2027-10', '2027-11', '2027-12'];
+    kiem($thang === $mongDoi, 'Sai dãy tháng: ' . implode(', ', $thang));
+    kiem(count(array_keys(hetHanTheoThang($pdo, [], '2026-12-31 23:59:59'))) === 12, 'Qua năm mới vẫn đủ 12 tháng');
+}
+
+// Luật: Ô CSV bắt đầu bằng = + - @ bị vô hiệu hoá, kể cả khi có khoảng trắng đầu ô; dữ liệu thường giữ nguyên.
+// Vì sao: Tên chứng chỉ do người dùng nhập; Excel chạy ô đó như công thức khi người khác mở báo cáo.
+// Đỏ nghĩa là: oCsvAnToan() đã đổi, báo cáo CSV có thể chạy lệnh trên máy người mở.
+// Đừng: xoá các ký tự này khỏi dữ liệu; báo cáo phải giữ đúng nội dung.
+function test_csv_vo_hieu_hoa_cong_thuc_va_giu_nguyen_du_lieu_thuong(PDO $pdo): void
+{
+    foreach (['=1+1', '+1', '-1', '@SUM(A1)', " =1", "\t=1", "\r\n=1"] as $giaTri) {
+        kiem(oCsvAnToan($giaTri) === "'" . $giaTri, 'Phải vô hiệu hoá: ' . json_encode($giaTri));
+    }
+    foreach (['CERT-001', 'a=b', 'Let\'s Encrypt', 'tiếng Việt', '', '1024'] as $giaTri) {
+        kiem(oCsvAnToan($giaTri) === $giaTri, 'Phải giữ nguyên: ' . json_encode($giaTri, JSON_UNESCAPED_UNICODE));
+    }
+    kiem(oCsvAnToan(null) === '', 'NULL thành ô trống');
+
+    $pdo->exec("UPDATE certificates SET subject_cn = '=cmd()' WHERE cert_code = 'CERT-001'");
+    $dong = dongCsv(timDongBaoCao($pdo, 'CERT-001'));
+    kiem(count($dong) === count(COT_CSV), 'Số ô phải khớp số cột');
+    kiem($dong[0] === 'CERT-001' && $dong[1] === "'=cmd()", 'Mọi ô phải qua lớp an toàn');
+    kiem($dong[9] === 'Còn hiệu lực', 'Trạng thái phải là chữ tiếng Việt');
+}
+
+function timDongBaoCao(PDO $pdo, string $ma): array
+{
+    foreach (tatCaChungChi($pdo) as $dong) {
+        if ($dong['cert_code'] === $ma) {
+            return $dong;
+        }
+    }
+    throw new RuntimeException("Không có $ma");
+}
+
+// Luật: Báo cáo lấy đủ kết quả, không bị chia trang, theo đúng bộ lọc và cách xếp đang chọn.
+// Vì sao: Báo cáo chỉ có 20 dòng đầu mà không báo gì thì người đọc tin là đủ.
+// Đỏ nghĩa là: tatCaChungChi() đã có LIMIT, hoặc không dùng chung dieuKienLoc(), menhDeSapXep() với danh sách.
+// Đừng: gọi danhSachChungChi() lặp từng trang; dữ liệu đổi giữa chừng sẽ trùng hoặc thiếu dòng.
+function test_xuat_bao_cao_lay_du_ket_qua_khong_chia_trang_va_theo_bo_loc(PDO $pdo): void
+{
+    chayFileSql($pdo, 'seed_demo.sql');
+    kiem(count(tatCaChungChi($pdo)) === 50, 'Phải đủ 50 dòng, không dừng ở 20');
+    $loc = docBoLoc(['trang_thai' => 'revoked']);
+    $thuHoi = tatCaChungChi($pdo, $loc);
+    kiem(count($thuHoi) === demChungChi($pdo, $loc) && array_unique(array_column($thuHoi, 'status')) === ['revoked'], 'Phải theo bộ lọc');
+
+    $giam = docSapXep(['sap_xep' => 'ma', 'chieu' => 'giam']);
+    kiem(tatCaChungChi($pdo, [], $giam)[0]['cert_code'] === 'CERT-050', 'Phải theo cách xếp đang chọn');
+    kiem(array_column(array_slice(tatCaChungChi($pdo), 0, 20), 'id') === array_column(danhSachChungChi($pdo, 1), 'id'), 'Thứ tự mặc định phải giống danh sách trên web');
+    kiem(!empty(tatCaChungChi($pdo)[0]['server_name']), 'Báo cáo phải có tên máy chủ');
 }
 
 // Luật: seed_demo.sql nạp được sau seed.sql, đủ 50 chứng chỉ, đủ mọi trạng thái và ba mốc cảnh báo; chạy lần hai không thêm gì.

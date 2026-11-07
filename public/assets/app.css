@@ -22,6 +22,39 @@
     opacity: 0.75;
 }
 
+/* Khung biểu đồ: chiều cao đã gồm cả trục, nên thẻ không có thanh cuộn nhỏ bên trong. */
+.khung-bieu-do {
+    height: 260px;
+    position: relative;
+}
+
+/* Thẻ số trên Dashboard. */
+.the-so-gia-tri {
+    font-size: 1.75rem;
+    font-weight: 600;
+    line-height: 1.2;
+}
+
+/* Bản in luôn nền sáng: trình duyệt bỏ màu nền khi in, nên giao diện tối sẽ thành chữ sáng trên giấy trắng. */
+@media print {
+    html {
+        color-scheme: light !important;
+    }
+
+    @page {
+        size: A4 landscape;
+        margin: 12mm;
+    }
+
+    .bang-in {
+        font-size: 9pt;
+    }
+
+    .bang-in tr {
+        break-inside: avoid;
+    }
+}
+
 /* Ô ngày đã có biểu tượng lịch; biểu tượng đúng/sai của Bootstrap sẽ chồng lên nó. */
 .was-validated input[type="datetime-local"]:valid,
 .was-validated input[type="datetime-local"]:invalid,

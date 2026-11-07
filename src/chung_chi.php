@@ -226,7 +226,8 @@ function dieuKienLoc(array $loc): array
 // Danh sách và phép đếm đọc cùng nguồn này, để số trang luôn khớp với số dòng khi có lọc.
 const NGUON_CHUNG_CHI = 'v_certificates c
                          JOIN certificate_authorities a ON a.id = c.ca_id
-                         JOIN domains d ON d.id = c.domain_id';
+                         JOIN domains d ON d.id = c.domain_id
+                         JOIN servers s ON s.id = d.server_id';
 
 function demChungChi(PDO $pdo, array $loc = []): int
 {
@@ -236,11 +237,12 @@ function demChungChi(PDO $pdo, array $loc = []): int
     return (int) $cau->fetchColumn();
 }
 
-// Số trên hàng nút trạng thái: đếm theo các bộ lọc khác, bỏ qua trạng thái đang chọn, để bấm sang
-// nút khác biết trước được bao nhiêu dòng. Trạng thái không có dòng nào vẫn có mặt với số 0.
-function demTheoTrangThai(PDO $pdo, array $loc = []): array
+// Mặc định dùng cho hàng nút: đếm theo các bộ lọc khác, bỏ qua trạng thái đang chọn, để bấm sang nút
+// khác biết trước được bao nhiêu dòng. $giuTrangThai = true dùng cho thống kê: tổng phải khớp các
+// biểu đồ khác đang lọc. Trạng thái không có dòng nào vẫn có mặt với số 0.
+function demTheoTrangThai(PDO $pdo, array $loc = [], bool $giuTrangThai = false): array
 {
-    [$where, $thamSo] = dieuKienLoc(['trang_thai' => ''] + $loc);
+    [$where, $thamSo] = dieuKienLoc($giuTrangThai ? $loc : ['trang_thai' => ''] + $loc);
     $cau = $pdo->prepare('SELECT c.status, COUNT(*) FROM ' . NGUON_CHUNG_CHI . " $where GROUP BY c.status");
     $cau->execute($thamSo);
     $dem = $cau->fetchAll(PDO::FETCH_KEY_PAIR);
@@ -300,10 +302,30 @@ function menhDeSapXep(array $sapXep): string
     return COT_SAP_XEP[$cot] . " $chieu, c.valid_to, c.id";
 }
 
+// Địa chỉ một trang kèm lọc và cách xếp hiện tại; $doi đổi riêng vài khoá, giá trị '' là bỏ khoá.
+// Danh sách, thống kê và hai trang báo cáo cùng đọc một bộ tham số này.
+function diaChiCoLoc(string $trang, array $loc, array $sapXep = [], array $doi = []): string
+{
+    $thamSo = [...$loc, ...(($sapXep['sap_xep'] ?? '') === '' ? [] : $sapXep), ...$doi];
+    $thamSo = array_filter($thamSo, fn($giaTri): bool => $giaTri !== '');
+    return url($trang . ($thamSo === [] ? '' : '?' . http_build_query($thamSo)));
+}
+
+const COT_CHUNG_CHI = 'SELECT c.*, a.name AS ca_name, d.domain_name, s.hostname AS server_name FROM ';
+
+// Toàn bộ kết quả, không chia trang, cho báo cáo: báo cáo chỉ có một phần là báo cáo sai.
+function tatCaChungChi(PDO $pdo, array $loc = [], array $sapXep = []): array
+{
+    [$where, $thamSo] = dieuKienLoc($loc);
+    $cau = $pdo->prepare(COT_CHUNG_CHI . NGUON_CHUNG_CHI . " $where ORDER BY " . menhDeSapXep($sapXep));
+    $cau->execute($thamSo);
+    return $cau->fetchAll();
+}
+
 function danhSachChungChi(PDO $pdo, int $trang, array $loc = [], array $sapXep = []): array
 {
     [$where, $thamSo] = dieuKienLoc($loc);
-    $cau = $pdo->prepare('SELECT c.*, a.name AS ca_name, d.domain_name FROM ' . NGUON_CHUNG_CHI . " $where
+    $cau = $pdo->prepare(COT_CHUNG_CHI . NGUON_CHUNG_CHI . " $where
                           ORDER BY " . menhDeSapXep($sapXep) . '
                           LIMIT ? OFFSET ?');
     $viTri = 1;
@@ -468,6 +490,80 @@ function danhDauDaXem(PDO $pdo, int $id): ?string
     $cau = $pdo->prepare("UPDATE alerts SET status = 'seen' WHERE id = ? AND status = 'new'");
     $cau->execute([$id]);
     return $cau->rowCount() === 0 ? 'Cảnh báo đã được đánh dấu trước đó, hoặc không còn tồn tại.' : null;
+}
+
+// ---------- Dashboard, thống kê ----------
+
+const SO_DONG_CAN_XU_LY = 10;
+
+// Bảng "Cần xử lý ngay": chỉ chứng chỉ sắp hết hạn, gần hạn nhất trước. Chứng chỉ đã quá hạn chỉ hiện
+// ở thẻ số, để chứng chỉ quá hạn lâu không che mất việc còn cứu được.
+function chungChiSapHetHan(PDO $pdo): array
+{
+    return array_slice(danhSachChungChi($pdo, 1, ['trang_thai' => 'expiring']), 0, SO_DONG_CAN_XU_LY);
+}
+
+// Khoá viết sẵn => cột SQL. Như COT_SAP_XEP, chỉ các khoá này mới vào được câu SQL.
+const NHOM_THONG_KE = ['to_chuc' => 'a.name', 'thuat_toan' => 'c.key_algorithm'];
+
+// [tên nhóm => số chứng chỉ], nhiều nhất trước. Đếm mọi chứng chỉ khớp bộ lọc, kể cả đã thu hồi,
+// để tổng khớp với biểu đồ trạng thái; muốn bỏ đã thu hồi thì dùng bộ lọc.
+function demTheoNhom(PDO $pdo, string $nhom, array $loc = []): array
+{
+    $cot = NHOM_THONG_KE[$nhom];
+    [$where, $thamSo] = dieuKienLoc($loc);
+    $cau = $pdo->prepare("SELECT $cot, COUNT(*) AS so FROM " . NGUON_CHUNG_CHI . " $where GROUP BY $cot ORDER BY so DESC, $cot");
+    $cau->execute($thamSo);
+    return array_map('intval', $cau->fetchAll(PDO::FETCH_KEY_PAIR));
+}
+
+// ['2026-11' => số chứng chỉ hết hạn trong tháng], đủ 12 tháng kể từ tháng này, tháng không có là 0.
+// Dự báo việc gia hạn sắp tới, nên bỏ chứng chỉ đã thu hồi và đã quá hạn.
+// $homNay chỉ truyền khi test, để thử được ngày 31.
+function hetHanTheoThang(PDO $pdo, array $loc = [], ?string $homNay = null): array
+{
+    $bayGio = new DateTimeImmutable($homNay ?? 'now');
+    // Tính từ ngày đầu tháng: cộng tháng từ ngày 31 sẽ nhảy cóc qua tháng ngắn hơn.
+    $dauThang = $bayGio->modify('first day of this month')->setTime(0, 0);
+    $ketQua = [];
+    for ($i = 0; $i < 12; $i++) {
+        $ketQua[$dauThang->modify("+$i month")->format('Y-m')] = 0;
+    }
+
+    [$where, $thamSo] = dieuKienLoc($loc);
+    $cau = $pdo->prepare("SELECT DATE_FORMAT(c.valid_to, '%Y-%m'), COUNT(*) FROM " . NGUON_CHUNG_CHI . ' '
+        . ($where === '' ? 'WHERE' : "$where AND") . ' c.is_revoked = 0 AND c.valid_to >= ? AND c.valid_to < ?
+        GROUP BY 1');
+    $cau->execute([...$thamSo, $bayGio->format('Y-m-d H:i:s'), $dauThang->modify('+12 month')->format('Y-m-d H:i:s')]);
+    foreach ($cau->fetchAll(PDO::FETCH_KEY_PAIR) as $thang => $so) {
+        $ketQua[$thang] = (int) $so;
+    }
+    return $ketQua;
+}
+
+// ---------- Báo cáo ----------
+
+const COT_CSV = ['Mã quản lý', 'Tên chính', 'Tên phụ', 'Tổ chức cấp', 'Tên miền', 'Máy chủ', 'Ngày bắt đầu', 'Ngày hết hạn',
+    'Còn lại', 'Trạng thái', 'Thuật toán khoá', 'Độ dài khoá', 'Thuật toán ký', 'Fingerprint SHA-256', 'Serial'];
+
+// Excel chạy ô bắt đầu bằng = + - @ như công thức, nên dữ liệu người dùng nhập có thể thành lệnh khi
+// người khác mở file. Thêm dấu nháy đơn phía trước để Excel coi đó là chữ. Tab, xuống dòng đầu ô cũng
+// bị Excel bỏ qua, nên xét sau khi bỏ khoảng trắng đầu ô.
+function oCsvAnToan(?string $giaTri): string
+{
+    $giaTri = (string) $giaTri;
+    return preg_match('/^\s*[=+\-@]/', $giaTri) === 1 ? "'" . $giaTri : $giaTri;
+}
+
+// Một dòng CSV theo đúng thứ tự COT_CSV, từ một dòng của tatCaChungChi().
+function dongCsv(array $cc): array
+{
+    return array_map('oCsvAnToan', [
+        $cc['cert_code'], $cc['subject_cn'], $cc['san'], $cc['ca_name'], $cc['domain_name'], $cc['server_name'],
+        date('d/m/Y H:i', strtotime($cc['valid_from'])), date('d/m/Y H:i', strtotime($cc['valid_to'])),
+        moTaSoNgay($cc), TRANG_THAI[$cc['status']]['nhan'], $cc['key_algorithm'], (string) $cc['key_size'],
+        $cc['signature_algorithm'], $cc['fingerprint_sha256'], $cc['serial'],
+    ]);
 }
 
 // Câu hiển thị số ngày. Chứng chỉ đã thu hồi không còn ý nghĩa đếm ngày.

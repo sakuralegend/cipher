@@ -18,8 +18,8 @@ thời hạn, cảnh báo trước khi hết hạn, lưu lịch sử gia hạn, 
 | D5 | Theo dõi trạng thái | Admin, Nhân viên | Không nhập; thu hồi bằng nút riêng | Xem mục 4 | Mỗi chứng chỉ có một trạng thái, tự tính khi xem |
 | D6 | Cảnh báo sắp hết hạn | Admin, Nhân viên | Đánh dấu đã xem | Xem mục 5 | Danh sách cảnh báo theo mốc 30, 15, 7 ngày; số cảnh báo mới trên Dashboard |
 | D7 | Quản lý lịch sử gia hạn | Admin, Nhân viên | Ngày hết hạn mới, fingerprint và serial mới, ghi chú | Xem mục 6 | Chứng chỉ được cập nhật; thêm một dòng lịch sử giữ thông tin cũ |
-| D8 | Thống kê theo trạng thái | Admin, Nhân viên | Khoảng thời gian, bộ lọc | Giá trị lọc hợp lệ | Bảng số liệu và biểu đồ Chart.js |
-| D9 | Xuất báo cáo | Admin, Nhân viên | Bộ lọc đang chọn | Giá trị lọc hợp lệ | File CSV và bản in |
+| D8 | Thống kê theo trạng thái | Admin, Nhân viên | Khoảng ngày hết hạn, bộ lọc | Giá trị lọc sai bị coi như chưa chọn | Bốn biểu đồ Chart.js, mỗi biểu đồ kèm bảng số: theo trạng thái, hết hạn theo tháng (12 tháng, không tính đã thu hồi và đã quá hạn), theo tổ chức cấp, theo thuật toán khoá |
+| D9 | Xuất báo cáo | Admin, Nhân viên | Bộ lọc đang chọn | Giá trị lọc sai bị coi như chưa chọn | File CSV và bản in chỉ gồm bảng số; lấy đủ kết quả, không chia trang |
 
 **Tiêu chí của đề, ánh xạ vào hệ thống:**
 
@@ -40,7 +40,7 @@ thời hạn, cảnh báo trước khi hết hạn, lưu lịch sử gia hạn, 
 | Ne | Thống kê, báo cáo | Bảng và biểu đồ, xem D8, D9 |
 | Nf | Kiểm tra dữ liệu bằng JavaScript và PHP | JavaScript báo lỗi nhanh trên form; PHP kiểm tra lại mọi dữ liệu; ràng buộc CSDL là lớp chặn cuối |
 | Ng | Khoá chính, khoá ngoại, quan hệ | 9 bảng, xem ERD |
-| Nh | Dashboard tổng quan | Số chứng chỉ theo trạng thái, số cảnh báo mới, danh sách sắp hết hạn |
+| Nh | Dashboard tổng quan | Số chứng chỉ theo trạng thái, số cảnh báo mới, 10 chứng chỉ sắp hết hạn gần nhất. Chứng chỉ đã quá hạn chỉ hiện ở thẻ số |
 | Ni | Bảo mật | Xem mục 7 |
 | Nj | Dữ liệu mẫu | `database/seed.sql` có 9 chứng chỉ, đủ mọi trạng thái và mốc cảnh báo; `database/seed_demo.sql` nạp nối tiếp để đủ 50 chứng chỉ |
 
