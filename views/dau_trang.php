@@ -46,6 +46,7 @@ HTML;
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title><?= e($tieuDe) ?> · Quản lý chứng chỉ số</title>
     <link rel="stylesheet" href="<?= e(url('assets/tabler/tabler.min.css')) ?>">
+    <link rel="stylesheet" href="<?= e(url('assets/inter/inter.css')) ?>">
     <link rel="stylesheet" href="<?= e(url('assets/app.css')) ?>">
     <!-- Đặt trong head và không defer: đổi màu trước khi vẽ trang, để không loé màu sáng. -->
     <script src="<?= e(url('assets/tabler/tabler-theme.min.js')) ?>"></script>
@@ -61,15 +62,16 @@ HTML;
                         aria-controls="menu-chinh" aria-expanded="false" aria-label="Mở menu">
                     <span class="navbar-toggler-icon"></span>
                 </button>
-                <a class="navbar-brand me-3" href="<?= e(url('admin/index.php')) ?>">Quản lý chứng chỉ số</a>
-                <div class="navbar-nav flex-row order-md-last align-items-center">
+                <?php // Tên hệ thống dẫn về landing; về Dashboard đã có mục Dashboard ngay bên cạnh. ?>
+                <a class="navbar-brand me-3 ten-he-thong-qt" href="<?= e(url('index.php')) ?>">Quản lý chứng chỉ số</a>
+                <div class="navbar-nav flex-row order-md-last align-items-center thanh-tai-khoan">
                     <?= $nutGiaoDien ?>
                     <div class="nav-item dropdown">
-                        <a href="#" class="nav-link px-2" data-bs-toggle="dropdown" aria-label="Mở menu tài khoản">
+                        <a href="#" class="nut-tai-khoan dropdown-toggle" data-bs-toggle="dropdown" aria-label="Mở menu tài khoản">
+                            <span class="avatar avatar-sm"><?= e(mb_substr($nguoi['full_name'], 0, 1)) ?></span>
                             <?php // Màn hẹp chỉ hiện chữ cái đầu, để đầu trang gọn trên một hàng. ?>
-                            <span class="avatar avatar-sm d-md-none"><?= e(mb_substr($nguoi['full_name'], 0, 1)) ?></span>
                             <span class="d-none d-md-block">
-                                <span class="d-block"><?= e($nguoi['full_name']) ?></span>
+                                <span class="d-block nut-tai-khoan-ten"><?= e($nguoi['full_name']) ?></span>
                                 <span class="d-block small text-secondary"><?= e($nguoi['role_name']) ?></span>
                             </span>
                         </a>

@@ -1417,6 +1417,48 @@ function test_du_lieu_demo_du_50_chung_chi_du_trang_thai_va_khong_nap_trung(PDO 
     kiem(demChungChi($pdo) === 50, 'Nạp lần hai không được thêm chứng chỉ');
 }
 
+// Luật: Landing công khai và CSS, JS của nó không nhắc đến VPN, Xray, VLESS, Reality.
+// Vì sao: Web còn làm lớp ngụy trang cho máy chủ VPN sau khi nộp (QD-08); ai cũng mở được trang này và tải được các file đó.
+// Đỏ nghĩa là: Có chữ, kể cả trong chú thích, làm lộ mục đích của máy chủ cho người ngoài và cho giảng viên.
+// Đừng: Xoá từ khoá khỏi danh sách để test xanh; hãy bỏ chữ đó khỏi file công khai.
+function test_landing_cong_khai_khong_nhac_den_vpn(PDO $pdo): void
+{
+    foreach (['public/index.php', 'public/assets/app.css', 'public/assets/app.js'] as $tep) {
+        $noiDung = file_get_contents(__DIR__ . '/../' . $tep);
+        kiem(!preg_match('/\b(vpn|xray|vless|reality)\b/i', $noiDung), "$tep có chữ làm lộ mục đích của máy chủ");
+    }
+}
+
+// Luật: Landing không dùng màu xanh chủ đạo mặc định của Tabler (btn-primary, --tblr-primary).
+// Vì sao: User 07/11/2026: nút đăng nhập "chưa ăn khớp với trang, mà vẫn là nút của tabler"; landing có bộ màu riêng (QD-21).
+// Đỏ nghĩa là: Có thành phần mới lấy màu mặc định của khung giao diện, trang lại trông như mẫu có sẵn.
+// Đừng: Đổi tên lớp để né test; dùng .ld-nut-chinh hoặc cặp màu --ld-net. Màu trạng thái xanh lá, vàng, đỏ vẫn dùng được.
+function test_landing_khong_dung_mau_chu_dao_mac_dinh_cua_tabler(PDO $pdo): void
+{
+    $trang = file_get_contents(__DIR__ . '/../public/index.php');
+    kiem(!str_contains($trang, 'btn-primary'), 'index.php còn nút btn-primary của Tabler');
+
+    // Phần CSS của landing nằm cuối app.css, bắt đầu từ chú thích "Landing:".
+    $css = file_get_contents(__DIR__ . '/../public/assets/app.css');
+    $cssLanding = substr($css, (int) strpos($css, '/* Landing:'));
+    kiem(!str_contains($cssLanding, '--tblr-primary'), 'CSS của landing còn dùng màu --tblr-primary');
+}
+
+// Luật: Font nhúng sẵn trong inter.css và trang luôn giữ chỗ thanh cuộn, để đầu trang đứng yên khi chuyển trang.
+// Vì sao: User 07/11/2026: chuyển menu "rung lắc rất rõ, gây đau mắt". Đo được: font về sau làm menu nhảy 11-13px, thanh cuộn lệch 7-8px.
+// Đỏ nghĩa là: Ai đó tách font ra file riêng hoặc bỏ phần giữ chỗ thanh cuộn; menu sẽ rung lại mỗi lần bấm.
+// Đừng: Đổi về file woff2 với font-display: swap vì "gọn hơn"; đó chính là nguyên nhân gây rung.
+function test_dau_trang_dung_yen_khi_chuyen_trang_nho_nhung_font_va_giu_cho_thanh_cuon(PDO $pdo): void
+{
+    $font = file_get_contents(__DIR__ . '/../public/assets/inter/inter.css');
+    kiem(substr_count($font, '@font-face') === substr_count($font, 'url("data:font/woff2;base64,'), 'inter.css phải nhúng mọi font ngay trong file');
+    kiem(str_contains(file_get_contents(__DIR__ . '/../views/dau_trang.php'), 'inter/inter.css'), 'dau_trang.php phải nạp inter.css');
+
+    $css = file_get_contents(__DIR__ . '/../public/assets/app.css');
+    kiem(!str_contains($css, '@font-face'), 'app.css không được khai báo font riêng');
+    kiem(str_contains($css, 'overflow-y: scroll'), 'app.css phải luôn giữ chỗ thanh cuộn');
+}
+
 $pdo = ketNoiCsdl('cipher_test');
 $soLoi = 0;
 $danhSachTest = array_filter(

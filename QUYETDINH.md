@@ -17,6 +17,7 @@
 ## 🗂️ Sổ
 | QD | Chọn | Thay vì | Vì | Hết hạn khi (trạng thái đo được, không dùng ngày tuyệt đối) |
 |---|---|---|---|---|
+| QD-23 | Chuyển động landing bằng CSS + JS thuần, chỉ ở landing | Thư viện Motion, GSAP | Hiệu ứng không cần thư viện; giữ tinh thần không CDN của QD-13 và không thêm thứ phải nuôi | Đã nộp và muốn hiệu ứng phức tạp hơn |
 | QD-22 | Font Inter (OFL) tải về repo, màu chữ theo GitHub | Font hệ thống, Mona Sans, CDN | So trên nội dung thật 07/11/2026: Inter dễ đọc nhất với chữ nhỏ và tiếng Việt; không CDN như QD-13 | Đã nộp và muốn đổi font |
 | QD-21 | Khu quản trị ưu tiên dễ nhìn, mặc định sáng; phần đẹp dồn vào landing | Làm đẹp đều toàn web, mặc định tối | User chốt 07/11/2026: quản trị để dùng hằng ngày, landing để gây ấn tượng | Đã nộp và muốn đổi giao diện |
 | QD-20 | Chart.js 4.6.1 (MIT) tải về repo, không CDN | CDN, tự vẽ SVG | Cùng lý do QD-13: demo không phụ thuộc mạng; đề và SPEC đã ghi Chart.js | Đã nộp và muốn đổi thư viện |
@@ -27,15 +28,12 @@
 | QD-15 | Web đặt ở `cert.cipher.id.vn` | Đặt ở `cipher.id.vn`, chuyển sau | Giữ domain chính cho định hướng sau này; link và HTTPS đưa giảng viên không phải đổi | Chuyển web sang tên miền khác |
 | QD-14 | `schema.sql` DROP rồi tạo lại, không `CREATE DATABASE`/`USE` | File tự tạo CSDL | Nạp được vào cả `cipher_dev`, `cipher_test`; chạy lại trước khi nộp. Chạy nhầm trên VPS là mất dữ liệu | Có dữ liệu thật cần giữ trên VPS: khi đó phải đổi sang migrate |
 | QD-13 | Giao diện Tabler 1.7.3 (MIT), tải về repo, không CDN | AdminLTE 4, CoreUI | Hợp dark mode và phong cách user muốn; không CDN để demo không phụ thuộc mạng. Đổi lại CSS nặng gấp đôi AdminLTE | Đã nộp và muốn đổi giao diện |
-| QD-12 | Test bằng script PHP thuần `tests/chay.php` | PHPUnit | Không thêm thư viện cho một bộ test nhỏ | Bộ test quá lớn để script tự chạy còn dễ đọc |
 | QD-11 | Gia hạn sửa trên cùng dòng, lưu fingerprint + serial cũ ở `renewals` | Mỗi lần gia hạn một dòng chứng chỉ | Đơn giản, danh sách mỗi chứng chỉ một dòng | Cần tra cứu bản cũ như chứng chỉ độc lập |
 | QD-10 | Repo ở `D:\Desktop\cipher`, chạy bằng `php -S` | Đặt trong `htdocs` | User muốn để ở Desktop; không dựa `.htaccess` | Bài đã nộp; trước đó phải thử chạy trong `htdocs` |
 | QD-09 | MariaDB 10.11 trên VPS, 10.4 ở XAMPP | MySQL 8 | XAMPP thực chất là MariaDB nên ít lệch; báo cáo ghi rõ | Giảng viên yêu cầu đúng MySQL |
 | QD-08 | Self-SNI cho VLESS Reality sau khi nộp và chấm xong, thử Xray song song trước | Đổi 443 trước khi nộp | Lỗi không được làm hỏng cả VPN lẫn bài nộp | Đã đổi 443 xong và VPN chạy ổn |
 | QD-07 | VPS chung: thêm khối Caddy, cổng 8443, PHP + CSDL có trần RAM, user riêng | VPS riêng, cổng 443 | Không tốn thêm, không đụng VPN; RAM còn 1 084 MB (06/11/2026) | Chuyển sang VPS khác |
-| QD-06 | Làm phần bắt buộc trước, cổng kiểm tra tối 11/11 | Làm song song mở rộng | Một mình, thời gian ngắn; điểm chấm theo đề 69 | Cổng 11/11 đã qua |
 | QD-05 | Bảo mật làm thật: prepared statements, phân quyền, chặn ~5 lần sai | Làm cho đủ điểm | Web thật trên internet, chung máy với VPN và bot | Web ngừng chạy trên internet |
-| QD-04 | Deploy VPS từ 7/11 | Deploy cuối kỳ | Lúc nào cũng có bản chạy được; demo bằng domain có HTTPS | Bài đã nộp |
 | QD-03 | Không có trang đăng ký công khai, admin tạo tài khoản | Cho tự đăng ký | Hệ thống nội bộ; bớt bề mặt tấn công | Hệ thống mở cho người ngoài |
 | QD-02 | Back-end PHP thuần | C# / ASP.NET, framework PHP | Đề bắt buộc PHP + MySQL; một mình, thời gian ngắn, không cần framework nặng | Đã nộp và muốn phát triển tiếp |
 | QD-01 | Đề 69 + mở rộng 65/66/63 rút gọn | Đề 63, 16, 64 | Gần ngành mật mã nhất, nhẹ hơn 63/16, phát triển tiếp được | Đổi hướng phát triển sau khi nộp |
