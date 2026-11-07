@@ -9,4 +9,4 @@
 **CỐ Ý KHÔNG làm:** đổi logic đăng nhập, chặn dò mật khẩu.
 **Đã có sẵn:** `.ld-nut-chinh`, `--ld-net` và nền tối của landing trong `app.css`.
 
-### Kế hoạch — CHƯA TRÌNH, CẤM CODE. Việc đầu phiên mới: `kehoach.md`, chờ duyệt.
+### Kế hoạch — CHƯA TRÌNH, CẤM CODE. Việc đầu phiên mới: hỏi kiểu dáng, `kehoach.md`, chờ duyệt. Toàn cảnh: `git log --grep "Bàn giao phiên" -1`.
