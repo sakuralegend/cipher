@@ -1823,6 +1823,28 @@ function test_o_go_ten_mien_to_chuc_cap_chi_nhan_ten_co_trong_danh_muc(PDO $pdo)
     kiem((int) $pdo->query("SELECT COUNT(*) FROM certificates WHERE cert_code = 'CERT-100'")->fetchColumn() === 0, 'Không được lưu');
 }
 
+// Luật: Bốn biểu đồ Thống kê giữ trần trục theo toàn bộ chứng chỉ; lọc thì cột ngắn lại trên cùng một thước.
+// Vì sao: User 08/11/2026: trục co theo dữ liệu lọc thì cột dài nhất lúc nào cũng kín khung, "không có giá trị so sánh".
+// Đỏ nghĩa là: Trần tính theo dữ liệu đã lọc, một biểu đồ quên truyền 'tran', hoặc app.js không dùng nó cho trục số.
+// Đừng: Đổi suggestedMax thành max; max cắt đúng số lẻ (22) thay vì làm tròn lên mốc đẹp như lúc chưa lọc.
+function test_bieu_do_thong_ke_giu_tran_truc_khi_loc(PDO $pdo): void
+{
+    $tran = tranBieuDoThongKe($pdo);
+    kiem($tran['trang_thai'] === max(demTheoTrangThai($pdo, [], true)), 'Trần trạng thái phải là số lớn nhất khi chưa lọc');
+    kiem($tran['to_chuc'] === max(demTheoNhom($pdo, 'to_chuc')), 'Trần tổ chức cấp phải là số lớn nhất khi chưa lọc');
+    foreach ([['trang_thai' => 'expired'], ['ca_id' => '2'], ['tu_khoa' => 'mail']] as $nguon) {
+        $loc = docBoLoc($nguon);
+        kiem(max(demTheoTrangThai($pdo, $loc, true)) <= $tran['trang_thai'], 'Số khi lọc không được vượt trần');
+        kiem(max(demTheoNhom($pdo, 'thuat_toan', $loc) ?: [0]) <= $tran['thuat_toan'], 'Số khi lọc không được vượt trần');
+    }
+    $trang = codeKhongChuThich(__DIR__ . '/../public/admin/thong_ke.php');
+    foreach (['trang_thai', 'thang', 'to_chuc', 'thuat_toan'] as $bieuDo) {
+        kiem(str_contains($trang, "\$tran['$bieuDo']"), "Biểu đồ $bieuDo phải truyền trần trục");
+    }
+    kiem(str_contains($trang, '$tran = tranBieuDoThongKe($pdo);'), 'Trần phải lấy từ tranBieuDoThongKe(), không theo bộ lọc');
+    kiem(str_contains(file_get_contents(__DIR__ . '/../public/assets/app.js'), 'suggestedMax: duLieu.tran'), 'app.js phải dùng trần cho trục số');
+}
+
 $pdo = ketNoiCsdl('cipher_test');
 $soLoi = 0;
 $danhSachTest = array_filter(

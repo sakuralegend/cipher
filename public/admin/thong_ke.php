@@ -23,6 +23,8 @@ $tong = array_sum($trangThai);
 $toChuc = demTheoNhom($pdo, 'to_chuc', $loc);
 $thuatToan = demTheoNhom($pdo, 'thuat_toan', $loc);
 $theoThang = hetHanTheoThang($pdo, $loc);
+// Trần trục theo toàn bộ chứng chỉ, giữ nguyên khi lọc (xem tranBieuDoThongKe()).
+$tran = tranBieuDoThongKe($pdo);
 // '2026-11' thành '11/2026' để đọc theo kiểu Việt Nam.
 $nhanThang = array_map(fn(string $thang): string => substr($thang, 5) . '/' . substr($thang, 0, 4), array_keys($theoThang));
 
@@ -49,6 +51,7 @@ require __DIR__ . '/../../views/tieu_de_trang.php';
                             'nhan' => array_values(array_column(TRANG_THAI, 'nhan')),
                             'so' => array_values($trangThai),
                             'mau' => array_values(array_column(TRANG_THAI, 'mau')),
+                            'tran' => $tran['trang_thai'],
                         ], 'Biểu đồ số chứng chỉ theo trạng thái; số liệu ở bảng bên dưới.') ?>
                     </div>
                     <div class="table-responsive">
@@ -74,7 +77,7 @@ require __DIR__ . '/../../views/tieu_de_trang.php';
                         <div class="card-actions text-secondary">Không tính đã thu hồi, đã quá hạn</div>
                     </div>
                     <div class="card-body">
-                        <?= khungBieuDo(['huong' => 'doc', 'nhan' => nhanTrucThang($theoThang), 'so' => array_values($theoThang)],
+                        <?= khungBieuDo(['huong' => 'doc', 'nhan' => nhanTrucThang($theoThang), 'so' => array_values($theoThang), 'tran' => $tran['thang']],
                             'Biểu đồ số chứng chỉ hết hạn theo từng tháng; số liệu ở bảng bên dưới.') ?>
                     </div>
                     <div class="table-responsive">
@@ -97,7 +100,7 @@ require __DIR__ . '/../../views/tieu_de_trang.php';
                 </div>
             </div>
 
-            <?php foreach ([['Theo tổ chức cấp', 'Tổ chức cấp', $toChuc], ['Theo thuật toán khoá', 'Thuật toán', $thuatToan]] as [$tieuDeThe, $tenCot, $soLieu]): ?>
+            <?php foreach ([['Theo tổ chức cấp', 'Tổ chức cấp', $toChuc, $tran['to_chuc']], ['Theo thuật toán khoá', 'Thuật toán', $thuatToan, $tran['thuat_toan']]] as [$tieuDeThe, $tenCot, $soLieu, $tranTruc]): ?>
                 <div class="col-lg-6">
                     <div class="card h-100">
                         <div class="card-header"><h2 class="card-title"><?= e($tieuDeThe) ?></h2></div>
@@ -105,7 +108,7 @@ require __DIR__ . '/../../views/tieu_de_trang.php';
                             <div class="card-body text-center text-secondary py-4">Không có chứng chỉ nào khớp bộ lọc.</div>
                         <?php else: ?>
                             <div class="card-body">
-                                <?= khungBieuDo(['huong' => 'ngang', 'nhan' => array_map('strval', array_keys($soLieu)), 'so' => array_values($soLieu)],
+                                <?= khungBieuDo(['huong' => 'ngang', 'nhan' => array_map('strval', array_keys($soLieu)), 'so' => array_values($soLieu), 'tran' => $tranTruc],
                                     $tieuDeThe . '; số liệu ở bảng bên dưới.') ?>
                             </div>
                             <div class="table-responsive">

@@ -86,8 +86,10 @@ document.querySelectorAll('[data-hien-mat-khau]').forEach(function (nut) {
     });
 });
 
-// Biểu đồ: <canvas data-bieu-do='{"huong":"ngang"|"doc","nhan":[],"so":[],"mau":[]}'>. Chỉ trang Thống kê
-// nạp Chart.js. "mau" là tên màu trạng thái cho từng cột; không có thì mọi cột cùng một màu.
+// Biểu đồ: <canvas data-bieu-do='{"huong":"ngang"|"doc","nhan":[],"so":[],"mau":[],"tran":số}'>. Chỉ trang có
+// biểu đồ (Thống kê, Dashboard) nạp Chart.js. "mau" là tên màu trạng thái cho từng cột; không có thì mọi cột cùng
+// một màu. "tran" là trần trục số tính trên toàn bộ dữ liệu: lọc thì cột ngắn lại trên cùng một thước.
+// Dùng suggestedMax chứ không dùng max: Chart.js vẫn làm tròn lên mốc đẹp (22 thành 25) như lúc chưa lọc.
 // Số liệu đầy đủ nằm ở bảng ngay dưới biểu đồ, nên giá trị không phụ thuộc vào rê chuột.
 (function () {
     if (typeof Chart === 'undefined') {
@@ -117,6 +119,7 @@ document.querySelectorAll('[data-hien-mat-khau]').forEach(function (nut) {
             var ngang = duLieu.huong === 'ngang';
             var trucSo = {
                 beginAtZero: true,
+                suggestedMax: duLieu.tran,
                 ticks: {precision: 0, color: mau.chu},
                 grid: {color: mau.luoi},
                 border: {display: false},

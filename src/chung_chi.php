@@ -524,6 +524,20 @@ function demTheoNhom(PDO $pdo, string $nhom, array $loc = []): array
     return array_map('intval', $cau->fetchAll(PDO::FETCH_KEY_PAIR));
 }
 
+// Trần trục số của bốn biểu đồ Thống kê, tính trên TOÀN BỘ chứng chỉ, không theo bộ lọc: lọc thì cột ngắn lại trên
+// cùng một thước nên so được với lúc chưa lọc (user yêu cầu 08/11/2026: trục co theo dữ liệu lọc thì cột dài nhất
+// lúc nào cũng kín khung, mất giá trị so sánh). Lọc chỉ bớt chứng chỉ, nên số khi lọc không bao giờ vượt trần này.
+function tranBieuDoThongKe(PDO $pdo): array
+{
+    $lonNhat = fn(array $so): int => $so === [] ? 0 : max($so);
+    return [
+        'trang_thai' => $lonNhat(demTheoTrangThai($pdo, [], true)),
+        'thang' => $lonNhat(hetHanTheoThang($pdo)),
+        'to_chuc' => $lonNhat(demTheoNhom($pdo, 'to_chuc')),
+        'thuat_toan' => $lonNhat(demTheoNhom($pdo, 'thuat_toan')),
+    ];
+}
+
 // ['2026-11' => số chứng chỉ hết hạn trong tháng], đủ 12 tháng kể từ tháng này, tháng không có là 0.
 // Dự báo việc gia hạn sắp tới, nên bỏ chứng chỉ đã thu hồi và đã quá hạn.
 // $homNay chỉ truyền khi test, để thử được ngày 31.
