@@ -64,7 +64,7 @@ require __DIR__ . '/../../views/tieu_de_trang.php';
                                 <td class="ma-so text-nowrap">
                                     <a href="<?= e(url('admin/chung_chi_xem.php?id=' . (int) $dong['id'])) ?>"><?= e($dong['cert_code']) ?></a>
                                 </td>
-                                <td class="text-break"><?= e($dong['subject_cn']) ?></td>
+                                <td><?= tenMienNgatDong($dong['subject_cn']) ?></td>
                                 <td class="d-none d-md-table-cell"><?= e($dong['ca_name']) ?></td>
                                 <td class="d-none d-md-table-cell"><?= e(date('d/m/Y', strtotime($dong['valid_to']))) ?></td>
                                 <td><?= e(moTaSoNgay($dong)) ?></td>
@@ -76,7 +76,6 @@ require __DIR__ . '/../../views/tieu_de_trang.php';
                                 </td>
                                 <td class="d-none d-md-table-cell">
                                     <div class="btn-list flex-nowrap">
-                                        <a class="btn btn-sm" href="<?= e(url('admin/chung_chi_xem.php?id=' . (int) $dong['id'])) ?>">Xem</a>
                                         <a class="btn btn-sm" href="<?= e(url('admin/chung_chi_form.php?id=' . (int) $dong['id'])) ?>">Sửa</a>
                                     </div>
                                 </td>

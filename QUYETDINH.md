@@ -17,6 +17,7 @@
 ## 🗂️ Sổ
 | QD | Chọn | Thay vì | Vì | Hết hạn khi (trạng thái đo được, không dùng ngày tuyệt đối) |
 |---|---|---|---|---|
+| QD-24 | Brand ngắn "Cipher Cert", logo ổ khoá, menu dọc navy cho khu quản trị | Giữ "Quản lý chứng chỉ số", menu ngang xanh Tabler | User chốt 08/11/2026: quản trị phải liền một sản phẩm với landing; tên đề tài đầy đủ giữ ở landing, đăng nhập, báo cáo | Đổi tên miền hoặc giao diện sau khi nộp |
 | QD-23 | Chuyển động bằng CSS + JS thuần, chỉ ở landing và trang đăng nhập (chuyển cảnh qua `@view-transition` có sẵn) | Thư viện Motion, GSAP | Hiệu ứng không cần thư viện; giữ tinh thần không CDN của QD-13 và không thêm thứ phải nuôi | Đã nộp và muốn hiệu ứng phức tạp hơn |
 | QD-22 | Font Inter (OFL) tải về repo, màu chữ theo GitHub | Font hệ thống, Mona Sans, CDN | So trên nội dung thật 07/11/2026: Inter dễ đọc nhất với chữ nhỏ và tiếng Việt; không CDN như QD-13 | Đã nộp và muốn đổi font |
 | QD-21 | Khu quản trị ưu tiên dễ nhìn, mặc định sáng; phần đẹp dồn vào landing | Làm đẹp đều toàn web, mặc định tối | User chốt 07/11/2026: quản trị để dùng hằng ngày, landing để gây ấn tượng | Đã nộp và muốn đổi giao diện |
@@ -31,7 +32,6 @@
 | QD-11 | Gia hạn sửa trên cùng dòng, lưu fingerprint + serial cũ ở `renewals` | Mỗi lần gia hạn một dòng chứng chỉ | Đơn giản, danh sách mỗi chứng chỉ một dòng | Cần tra cứu bản cũ như chứng chỉ độc lập |
 | QD-10 | Repo ở `D:\Desktop\cipher`, chạy bằng `php -S` | Đặt trong `htdocs` | User muốn để ở Desktop; không dựa `.htaccess` | Bài đã nộp; trước đó phải thử chạy trong `htdocs` |
 | QD-09 | MariaDB 10.11 trên VPS, 10.4 ở XAMPP | MySQL 8 | XAMPP thực chất là MariaDB nên ít lệch; báo cáo ghi rõ | Giảng viên yêu cầu đúng MySQL |
-| QD-08 | Làm self-SNI trước khi nộp, thử Xray song song trước, tự hoàn tác 5 phút | Đợi chấm xong; dịch vụ trung gian | User chốt 07/11/2026: VPN phải ngụy trang đúng trang không đuôi; còn 10 ngày để sửa nếu lỗi | Đã đổi 443 xong và VPN chạy ổn |
 | QD-07 | VPS chung: thêm khối Caddy nghe 8443, PHP + CSDL có trần RAM, user riêng; khách vào qua 443 của Xray (QD-08) | VPS riêng, Caddy giữ 443 | Không tốn thêm; RAM còn 1 084 MB (06/11/2026) | Chuyển sang VPS khác |
 | QD-05 | Bảo mật làm thật: prepared statements, phân quyền, chặn ~5 lần sai | Làm cho đủ điểm | Web thật trên internet, chung máy với VPN và bot | Web ngừng chạy trên internet |
 | QD-03 | Không có trang đăng ký công khai, admin tạo tài khoản | Cho tự đăng ký | Hệ thống nội bộ; bớt bề mặt tấn công | Hệ thống mở cho người ngoài |

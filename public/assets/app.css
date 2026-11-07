@@ -9,6 +9,19 @@
     --tblr-body-color: #1f2328;
     --tblr-secondary: #59636e;
     --tblr-secondary-color: #59636e;
+    /* Màu thương hiệu thay xanh dương mặc định của Tabler, cho khu quản trị liền với landing (user chốt 08/11/2026):
+       nút chính, trang đang chọn, ô số trang là navy như nút Đăng nhập; liên kết là xanh dương trong dải màu
+       cyan sang xanh dương của landing, vì liên kết màu navy khó phân biệt với chữ thường.
+       Tabler tính các biến primary khác (darken, lt, nền nhạt) từ --tblr-primary nên đổi ở đây là đủ. */
+    --tblr-primary: #0b1730;
+    --tblr-primary-rgb: 11, 23, 48;
+    --tblr-primary-fg: #fff;
+    --tblr-link-color: #1f5fd6;
+    --tblr-link-color-rgb: 31, 95, 214;
+    --tblr-link-hover-color: #1a4fb3;
+    --tblr-link-hover-color-rgb: 26, 79, 179;
+    /* Nền trang ngả xanh rất nhẹ thay cho xám trung tính, hợp với cột menu navy. */
+    --tblr-body-bg: #f4f6fa;
 }
 
 /* Chỉ trên màn hình: bản in luôn nền trắng, nên in từ giao diện tối vẫn phải dùng chữ tối. */
@@ -17,6 +30,22 @@
         --tblr-body-color: #f0f6fc;
         --tblr-secondary: #9198a1;
         --tblr-secondary-color: #9198a1;
+        /* Nền tối navy thì nút navy chìm mất: nút chính đổi sang cyan, chữ tối, như nút chính của landing tối. */
+        --tblr-primary: #38bdf8;
+        --tblr-primary-rgb: 56, 189, 248;
+        --tblr-primary-fg: #04111f;
+        --tblr-link-color: #7cc4fa;
+        --tblr-link-color-rgb: 124, 196, 250;
+        --tblr-link-hover-color: #a5d8fd;
+        --tblr-link-hover-color-rgb: 165, 216, 253;
+    }
+}
+
+/* Màn hẹp: lề hai bên 16px thay cho 12px của Tabler, thẻ và bảng không dính sát mép điện thoại. */
+@media (max-width: 575.98px) {
+    .page .container-xl {
+        padding-left: 1rem;
+        padding-right: 1rem;
     }
 }
 
@@ -93,6 +122,12 @@
     width: 100%;
 }
 
+/* Dòng đổi sáng/tối có hai cụm chữ, mỗi lúc ẩn một cụm: display: contents cho hình và chữ xếp thẳng theo dòng
+   như các dòng khác. Cụm bị ẩn vẫn ẩn, vì quy tắc ẩn của Tabler có !important. */
+.dropdown-item > [class^="hide-theme-"] {
+    display: contents;
+}
+
 .dropdown-menu .dropdown-item-icon {
     flex-shrink: 0;
     margin: 0;
@@ -101,13 +136,6 @@
 
 .dropdown-menu .dropdown-divider {
     margin: 0.5rem -0.5rem;
-}
-
-/* Màn hẹp: menu Danh mục nằm trong thanh mở rộng nên không cần bóng đổ. */
-@media (max-width: 767.98px) {
-    .navbar-collapse .dropdown-menu {
-        box-shadow: none;
-    }
 }
 
 /* Màn hẹp: cột gần nhau hơn, để các cột chính vừa khung mà không phải kéo ngang. */
@@ -134,6 +162,11 @@
 .khung-bieu-do {
     height: 260px;
     position: relative;
+}
+
+/* Biểu đồ nhỏ trên Dashboard: hai thẻ chồng nhau cao vừa bằng bảng "Cần xử lý ngay" bên cạnh. */
+.khung-bieu-do.khung-bieu-do-nho {
+    height: 190px;
 }
 
 /* Thẻ số trên Dashboard. */
@@ -188,7 +221,7 @@ input[type="datetime-local"].is-invalid {
 }
 
 /* Khu tài khoản trên thanh quản trị: thành khối có khung và nền riêng, để nhìn ra ngay chỗ bấm vào cài đặt
-   (user yêu cầu 07/11/2026). Nút đổi giao diện cùng chiều cao với khối đó. */
+   (user yêu cầu 07/11/2026). Đổi sáng/tối nằm trong menu của khối này (08/11/2026). */
 .thanh-tai-khoan {
     --khoi-bong: 0 1px 2px rgba(10, 14, 20, 0.1);
     --khoi-nen: rgba(10, 14, 20, 0.045);
@@ -233,7 +266,7 @@ input[type="datetime-local"].is-invalid {
 
 .nut-tai-khoan .avatar {
     background: var(--tblr-primary);
-    color: #fff;
+    color: var(--tblr-primary-fg);
     font-weight: 600;
 }
 
@@ -241,34 +274,8 @@ input[type="datetime-local"].is-invalid {
     font-weight: 600;
 }
 
-/* Lớp bg-transparent, border-0 của nút dùng !important vì landing cần nút trong suốt, nên ở đây phải ghi đè.
-   Bộ chọn có thêm .navbar: màn hẹp Tabler đặt .navbar-expand-md .navbar-nav .nav-link { justify-content: start }
-   và min-width/min-height 2.5rem, đè quy tắc yếu hơn làm icon lệch trái (đo 07/11/2026 ở 390px: trái 9px, phải 11px).
-   Bỏ đệm px-2 vì nút đã có cỡ cố định và căn giữa bằng flex. */
-.navbar .thanh-tai-khoan [data-doi-giao-dien] {
-    align-items: center;
-    min-height: 0;
-    min-width: 0;
-    background-color: var(--khoi-nen) !important;
-    border: 1px solid var(--khoi-vien) !important;
-    border-radius: 0.5rem;
-    box-shadow: var(--khoi-bong);
-    display: flex;
-    height: 2.75rem;
-    justify-content: center;
-    padding: 0 !important;
-    transition: background-color 0.15s ease, border-color 0.15s ease;
-    width: 2.75rem;
-}
-
-.navbar .thanh-tai-khoan [data-doi-giao-dien]:hover,
-.navbar .thanh-tai-khoan [data-doi-giao-dien]:focus-visible {
-    background-color: var(--khoi-nen-re) !important;
-    border-color: var(--khoi-vien-re) !important;
-}
-
-/* Màn hẹp chỉ còn chữ cái đầu: bỏ mũi tên và thu khối lại cho gọn. */
-@media (max-width: 47.99rem) {
+/* Màn dưới 992px (menu dọc thu thành thanh trên) chỉ còn chữ cái đầu: bỏ mũi tên và thu khối lại cho gọn. */
+@media (max-width: 61.99rem) {
     .nut-tai-khoan {
         padding: 0.25rem;
     }
@@ -278,32 +285,9 @@ input[type="datetime-local"].is-invalid {
     }
 }
 
-/* Màn rất hẹp: thu nhỏ khối và tên hệ thống, không thì rớt xuống hai hàng (đo 07/11/2026: 320px và 390px
-   rớt, 414px trở lên vừa). Ngưỡng dưới 400px để gồm cả iPhone 390px. */
-@media (max-width: 24.99rem) {
-    .thanh-tai-khoan {
-        gap: 0.25rem;
-    }
-
-    .navbar .thanh-tai-khoan [data-doi-giao-dien] {
-        height: 2.25rem;
-        width: 2.25rem;
-    }
-
-    .nut-tai-khoan {
-        min-height: 2.25rem;
-        padding: 0.0625rem;
-    }
-
-    .ten-he-thong-qt {
-        font-size: 0.9375rem;
-        margin-right: 0.25rem !important;
-    }
-}
-
-/* Biểu tượng khiên trước tên hệ thống ($logo trong dau_trang.php): khiên tối trong ô bo góc dải cyan sang
-   xanh dương, cùng màu nút chính của landing; đọc rõ trên cả nền sáng lẫn nền tối nên không cần đổi theo giao diện. */
-.logo-khien {
+/* Logo ổ khoá ($logo trong dau_trang.php): ổ khoá tối trong ô bo góc dải cyan sang xanh dương, cùng màu nút chính
+   của landing; đọc rõ trên cả nền sáng lẫn nền tối nên không cần đổi theo giao diện. */
+.logo-khoa {
     align-items: center;
     background-image: linear-gradient(135deg, #22d3ee, #3b82f6);
     border-radius: 0.5rem;
@@ -317,11 +301,100 @@ input[type="datetime-local"].is-invalid {
     width: 1.875rem;
 }
 
-/* Màn hẹp: thanh quản trị vốn đã sát một hàng, thêm khiên (kèm khoảng cách 0.75rem) thì 432px và 440px
-   rớt xuống hai hàng, 460px trở lên vẫn vừa (đo 07/11/2026). Dưới 480px bỏ khiên. */
-@media (max-width: 29.99rem) {
-    .ten-he-thong-qt .logo-khien {
-        display: none;
+/* Giao diện tối của cả web: nền xanh đen cho liền với phần navy của landing và cột menu, thay màu xám của Tabler.
+   Trước 08/11/2026 chỉ landing và trang đăng nhập có, nên vào quản trị là đổi sang xám như một sản phẩm khác. */
+[data-bs-theme="dark"] body {
+    /* Ô nhập lấy màu từ --tblr-btn-input-bg; Tabler đã tính biến này sẵn ở thẻ gốc từ --tblr-bg-forms,
+       nên đổi --tblr-bg-forms ở đây không ăn, phải ghi đè chính nó. */
+    --tblr-btn-input-bg: #0b1527;
+    --tblr-bg-surface: #0d1729;
+    --tblr-bg-surface-secondary: #0a1324;
+    --tblr-bg-surface-tertiary: #111d35;
+    --tblr-body-bg: #08101f;
+    --tblr-border-color: #1c2840;
+}
+
+/* ---------- Menu dọc của khu quản trị (dau_trang.php) ----------
+   Nền navy dùng chung với hero landing (quy tắc có .menu-doc ở phần Landing); ở đây chỉ chỉnh chữ, nhóm và mục đang mở. */
+.navbar.menu-doc {
+    --tblr-navbar-border-color: rgba(125, 211, 252, 0.12);
+    --tblr-navbar-color: rgba(226, 232, 240, 0.74);
+    --tblr-navbar-hover-color: #fff;
+    --tblr-navbar-active-color: #fff;
+    /* Nền mục đang mở: Tabler tô bằng biến này qua một quy tắc cụ thể hơn mọi bộ chọn ở đây,
+       nên đổi biến chứ không đặt background (đặt background thì giao diện sáng mất nền, đo 08/11/2026). */
+    --tblr-navbar-active-bg: rgba(34, 211, 238, 0.1);
+}
+
+/* Tabler dàn logo và tên ra hai đầu cột (space-between); thương hiệu cần logo đứng sát tên. */
+.navbar.menu-doc .ten-thuong-hieu {
+    align-items: center;
+    color: #fff;
+    display: inline-flex;
+    justify-content: flex-start;
+    font-size: 1.0625rem;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+}
+
+/* Tên nhóm: chữ nhỏ in hoa, nhạt, để mắt lướt theo nhóm trước rồi mới đọc từng mục. */
+.menu-doc .menu-nhom {
+    color: rgba(203, 213, 225, 0.5);
+    font-size: 0.6875rem;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    list-style: none;
+    padding: 1.125rem 1.25rem 0.375rem;
+    text-transform: uppercase;
+}
+
+.menu-doc .menu-nhom:first-child {
+    padding-top: 0.5rem;
+}
+
+.navbar.menu-doc .nav-link {
+    border-radius: 0.5rem;
+    margin: 0.0625rem 0.75rem;
+    padding: 0.5rem 0.625rem;
+    position: relative;
+    transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.navbar.menu-doc .nav-link:hover {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+/* Mục đang mở: nền ánh cyan (biến ở trên), vạch dải cyan sang xanh dương bên trái, biểu tượng cyan.
+   Bỏ vạch có sẵn của Tabler. */
+.navbar.menu-doc .nav-item.active > .nav-link::after {
+    display: none;
+}
+
+.navbar.menu-doc .nav-item.active > .nav-link::before {
+    background: linear-gradient(#22d3ee, #3b82f6);
+    border-radius: 0 3px 3px 0;
+    bottom: 0.4375rem;
+    content: "";
+    left: -0.75rem;
+    position: absolute;
+    top: 0.4375rem;
+    width: 3px;
+}
+
+.navbar.menu-doc .nav-item.active .nav-link-icon {
+    color: #67e8f9;
+    opacity: 1;
+}
+
+/* Thanh trên của phần nội dung (máy tính): chỉ có nút sáng/tối và tài khoản, nên mỏng và không viền đậm. */
+.navbar.thanh-dau {
+    min-height: 3.75rem;
+}
+
+/* Bản in: cột menu đã ẩn, bỏ luôn khoảng chừa cho nó, không thì bảng in bị đẩy sang phải. */
+@media print {
+    .navbar-vertical ~ .page {
+        padding-inline-start: 0 !important;
     }
 }
 
@@ -361,7 +434,8 @@ input[type="datetime-local"].is-invalid {
    Phải đặt lại color: chữ thừa hưởng màu đã tính ở body, tức màu tối của giao diện sáng. */
 .ld-san-khau,
 .ld-dai-cuoi,
-.dn-trai {
+.dn-trai,
+.menu-doc {
     background:
         radial-gradient(rgba(125, 211, 252, 0.12) 1px, transparent 1px) 0 0 / 1.75rem 1.75rem,
         radial-gradient(60rem 36rem at 0% 0%, rgba(59, 130, 246, 0.16), transparent 70%),
@@ -375,17 +449,6 @@ input[type="datetime-local"].is-invalid {
     background-clip: text;
     background-image: linear-gradient(90deg, #67e8f9, #60a5fa);
     color: transparent;
-}
-
-/* Giao diện tối của landing và trang đăng nhập: nền xanh đen cho liền với phần navy, thay màu xám của Tabler.
-   Trang quản trị không có hai lớp này nên giữ nguyên (QD-21). */
-[data-bs-theme="dark"] body:has(.ld-san-khau, .dn-trang) {
-    /* Ô nhập lấy màu từ --tblr-btn-input-bg; Tabler đã tính biến này sẵn ở thẻ gốc từ --tblr-bg-forms,
-       nên đổi --tblr-bg-forms ở đây không ăn, phải ghi đè chính nó. */
-    --tblr-btn-input-bg: #0b1527;
-    --tblr-bg-surface: #0d1729;
-    --tblr-body-bg: #08101f;
-    --tblr-border-color: #1c2840;
 }
 
 /* Khối bọc thẻ chứng chỉ (hero landing, nửa trái trang đăng nhập): màu trạng thái --ld-mau đổi theo
@@ -1246,6 +1309,12 @@ input[type="datetime-local"].is-invalid {
 
 .dn-trai .ld-tieu-de {
     font-size: clamp(1.875rem, 2.4vw, 2.75rem);
+}
+
+/* Vế đầu giữ một dòng: cột chữ hẹp (thẻ chứng chỉ chiếm nửa còn lại) nên tiêu đề vỡ thành 3 dòng, lệch với
+   landing 2 dòng (chụp 08/11/2026 ở 1440px). */
+.dn-dong-dau {
+    white-space: nowrap;
 }
 
 /* Cụm "hết hạn bất ngờ" đứng riêng một dòng, không bị cắt đôi giữa hai dòng. */

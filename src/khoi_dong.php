@@ -8,6 +8,9 @@ require_once __DIR__ . '/nhat_ky.php';
 
 batDauPhien();
 
+// Tên thương hiệu ngắn trên logo, menu và tab trình duyệt (QD-24). Tên đề tài đầy đủ vẫn ở landing, đăng nhập, báo cáo.
+const TEN_THUONG_HIEU = 'Cipher Cert';
+
 // Chống XSS: mọi dữ liệu in ra trang đều đi qua hàm này.
 function e(?string $chuoi): string
 {
@@ -82,3 +85,12 @@ function oChon(string $ten, string $nhan, array $luaChon, ?string $dangChon, arr
     return $html . '</select><div class="invalid-feedback">' . e($loi[$ten] ?? $loiMacDinh) . '</div></div>';
 }
 
+
+// Khung biểu đồ cho app.js vẽ, dùng ở Thống kê và Dashboard. $bieuDo có dạng mô tả ở đầu phần biểu đồ trong app.js.
+// $moTa đọc cho trình đọc màn hình; số liệu đầy đủ luôn nằm ở bảng hoặc trang khác, không chỉ trong hình.
+function khungBieuDo(array $bieuDo, string $moTa, string $lopThem = ''): string
+{
+    return '<div class="khung-bieu-do' . ($lopThem !== '' ? ' ' . e($lopThem) : '') . '">'
+        . '<canvas role="img" aria-label="' . e($moTa) . '" data-bieu-do="' . e(json_encode($bieuDo, JSON_UNESCAPED_UNICODE)) . '"></canvas>'
+        . '</div>';
+}

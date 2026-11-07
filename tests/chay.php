@@ -1497,17 +1497,6 @@ function test_css_js_cua_he_thong_co_so_phien_ban_theo_file(PDO $pdo): void
     kiem(preg_match('/function urlTep\(.*?filemtime/s', $khoiDong) === 1, 'urlTep() phải gắn thời điểm sửa file (filemtime)');
 }
 
-// Luật: Thanh quản trị thu gọn (nút nhỏ, tên nhỏ) ở mọi màn rộng dưới 400px, để iPhone 390px vẫn thấy thanh trên một hàng.
-// Vì sao: Đo 07/11/2026: ngưỡng cũ 23.75rem (380px) bỏ sót 390px, nút giao diện và tài khoản rớt xuống hàng hai trên iPhone.
-// Đỏ nghĩa là: Ngưỡng thu gọn của .thanh-tai-khoan bị hạ xuống dưới 24.375rem (390px).
-// Đừng: Hạ ngưỡng lại cho "đúng 320px"; đo lại ở 390px và 414px trước khi đổi.
-function test_thanh_quan_tri_thu_gon_o_man_390px(PDO $pdo): void
-{
-    $css = file_get_contents(__DIR__ . '/../public/assets/app.css');
-    kiem(preg_match('/@media \(max-width: ([\d.]+)rem\) \{\s*\.thanh-tai-khoan \{/', $css, $m) === 1, 'Không tìm thấy khối thu gọn của .thanh-tai-khoan');
-    kiem((float) $m[1] >= 24.375, "Ngưỡng thu gọn {$m[1]}rem nhỏ hơn 390px");
-}
-
 // Luật: Chỉ chấm "Còn hiệu lực" trên thẻ số Dashboard có vòng sáng lan ra (cham-song); máy giảm chuyển động thì đứng yên.
 // Vì sao: User 07/11/2026 muốn chấm "đang hoạt động" có hiệu ứng; nhiều chấm cùng động thì rối và kéo mắt khỏi chứng chỉ cần xử lý (QD-21).
 // Đỏ nghĩa là: cham-song lan sang trang khác hoặc gắn cho trạng thái khác, hoặc mất phần tắt hiệu ứng khi giảm chuyển động.
@@ -1526,19 +1515,6 @@ function test_chi_cham_con_hieu_luc_tren_dashboard_co_vong_sang(PDO $pdo): void
 
     $css = file_get_contents(__DIR__ . '/../public/assets/app.css');
     kiem(preg_match('/prefers-reduced-motion: reduce\)\s*\{[^@]*\.cham-song/s', $css) === 1, 'Phải tắt vòng sáng khi máy bật giảm chuyển động');
-}
-
-// Luật: Nút giao diện trên thanh quản trị dùng bộ chọn có .navbar, bỏ min-width/min-height và đệm của Tabler, để icon luôn nằm giữa.
-// Vì sao: Đo 07/11/2026 ở 390px: Tabler đặt justify-content: start và min-width 2.5rem cho nav-link khi thanh thu gọn, icon lệch trái.
-// Đỏ nghĩa là: Ai đó bỏ .navbar khỏi bộ chọn hoặc bỏ các dòng đặt lại; trên điện thoại icon sáng/tối lại lệch.
-// Đừng: Thêm !important vào justify-content cho nhanh; tăng độ cụ thể của bộ chọn là đủ và không chặn chỗ khác ghi đè.
-function test_nut_giao_dien_tren_thanh_quan_tri_luon_can_giua(PDO $pdo): void
-{
-    $css = file_get_contents(__DIR__ . '/../public/assets/app.css');
-    kiem(preg_match('/\n\.navbar \.thanh-tai-khoan \[data-doi-giao-dien\] \{([^}]*)\}/', $css, $m) === 1, 'Thiếu quy tắc .navbar .thanh-tai-khoan [data-doi-giao-dien]');
-    foreach (['justify-content: center', 'min-width: 0', 'min-height: 0', 'padding: 0 !important'] as $dong) {
-        kiem(str_contains($m[1], $dong), "Nút giao diện thiếu \"$dong\"");
-    }
 }
 
 // Luật: Đăng xuất xong thì về landing (index.php), không về trang đăng nhập.
@@ -1657,18 +1633,50 @@ function test_csdl_tu_choi_sua_xoa_nhat_ky(PDO $pdo): void
     kiem((int) $pdo->query('SELECT COUNT(*) FROM audit_logs')->fetchColumn() === 0, 'TRUNCATE phải dọn được nhật ký trước demo');
 }
 
-// Luật: Trang Nhật ký chỉ Admin vào được, và mục "Nhật ký" trên menu chỉ hiện với Admin.
-// Vì sao: User 07/11/2026 chốt chỉ Admin xem; nhân viên không được thấy việc của người khác.
-// Đỏ nghĩa là: nhat_ky.php không gọi yeuCauAdmin(), hoặc link Nhật ký nằm ngoài khối laAdmin() trong đầu trang.
+// Luật: Trang Nhật ký và Người dùng chỉ Admin vào được, và nhóm "Hệ thống" (hai mục đó) trên menu chỉ hiện với Admin.
+// Vì sao: User 07/11/2026 chốt chỉ Admin xem nhật ký; quản lý tài khoản là việc của Admin. Menu dọc 08/11/2026 gom hai mục vào nhóm Hệ thống.
+// Đỏ nghĩa là: Một trong hai trang không gọi yeuCauAdmin(), hoặc link tới nó nằm ngoài khối laAdmin() trong đầu trang.
 // Đừng: chỉ giấu link trên menu; người biết địa chỉ vẫn mở được trang.
-function test_trang_nhat_ky_chi_danh_cho_admin(PDO $pdo): void
+function test_nhom_he_thong_tren_menu_va_hai_trang_cua_no_chi_danh_cho_admin(PDO $pdo): void
 {
-    $trang = __DIR__ . '/../public/admin/nhat_ky.php';
-    kiem(is_file($trang), 'Chưa có trang admin/nhat_ky.php');
-    kiem(preg_match('/\byeuCauAdmin\(/', codeKhongChuThich($trang)) === 1, 'nhat_ky.php chưa gọi yeuCauAdmin()');
-    $dauTrang = file_get_contents(__DIR__ . '/../views/dau_trang.php');
-    kiem(substr_count($dauTrang, 'admin/nhat_ky.php') === 1, 'Đầu trang phải có đúng một link tới Nhật ký');
-    kiem(preg_match('/if \(laAdmin\(\$nguoi\)\): \?>((?:(?!endif).)*)admin\/nhat_ky\.php/s', $dauTrang) === 1, 'Link Nhật ký phải nằm trong khối laAdmin()');
+    $dauTrang = codeKhongChuThich(__DIR__ . '/../views/dau_trang.php');
+    kiem(preg_match('/if \(\$nguoi !== null && laAdmin\(\$nguoi\)\) \{([^}]*)\}/', $dauTrang, $m) === 1, 'Đầu trang thiếu khối laAdmin() thêm nhóm Hệ thống');
+    foreach (['nhat_ky', 'nguoi_dung'] as $trang) {
+        $tep = __DIR__ . "/../public/admin/$trang.php";
+        kiem(preg_match('/\byeuCauAdmin\(/', codeKhongChuThich($tep)) === 1, "$trang.php chưa gọi yeuCauAdmin()");
+        kiem(substr_count($dauTrang, "admin/$trang.php") === 1, "Đầu trang phải có đúng một link tới $trang.php");
+        kiem(str_contains($m[1], "admin/$trang.php"), "Link $trang.php phải nằm trong khối laAdmin()");
+    }
+    kiem(str_contains($m[1], "'Hệ thống'"), 'Hai mục chỉ dành cho Admin phải nằm trong nhóm Hệ thống');
+}
+
+// Luật: Tab trình duyệt ghi "Tên trang | Cipher Cert"; tên thương hiệu khai báo một chỗ (TEN_THUONG_HIEU).
+// Vì sao: User 08/11/2026 chốt brand ngắn Cipher Cert và dấu | (QD-24); tên trang đứng trước để mở nhiều tab vẫn phân biệt được.
+// Đỏ nghĩa là: Ai đó đổi lại dấu phân cách, đảo thứ tự, hoặc viết cứng tên ở đầu trang thay vì dùng hằng.
+// Đừng: Viết "Cipher Cert" thẳng vào từng trang; đổi tên lần sau sẽ sót.
+function test_tab_trinh_duyet_ghi_ten_trang_roi_ten_thuong_hieu(PDO $pdo): void
+{
+    $khoiDong = codeKhongChuThich(__DIR__ . '/../src/khoi_dong.php');
+    kiem(str_contains($khoiDong, "const TEN_THUONG_HIEU = 'Cipher Cert';"), 'Thiếu hằng TEN_THUONG_HIEU = Cipher Cert');
+    $dauTrang = codeKhongChuThich(__DIR__ . '/../views/dau_trang.php');
+    kiem(str_contains($dauTrang, "\$tieuDeTab ??= \$tieuDe . ' | ' . TEN_THUONG_HIEU;"), 'Tab mặc định phải là "Tên trang | Cipher Cert"');
+    kiem(str_contains($dauTrang, '<title><?= e($tieuDeTab) ?></title>'), 'Thẻ title phải in $tieuDeTab');
+    kiem(!str_contains($dauTrang, 'Cipher Cert'), 'Đầu trang không được viết cứng tên thương hiệu');
+}
+
+// Luật: Tên miền trong bảng chỉ được xuống dòng ngay sau dấu chấm, và vẫn được thoát ký tự HTML.
+// Vì sao: Chụp 08/11/2026 ở 390px: cột hẹp làm trình duyệt bẻ giữa chữ ("pay.congt" / "y.example").
+// Đỏ nghĩa là: tenMienNgatDong() không chèn <wbr> sau dấu chấm, hoặc in thẳng ký tự HTML (lỗ XSS), hoặc bảng quay lại dùng text-break.
+// Đừng: Bọc kết quả thêm e(): <wbr> sẽ hiện thành chữ trên trang.
+function test_ten_mien_chi_xuong_dong_o_dau_cham(PDO $pdo): void
+{
+    kiem(tenMienNgatDong('pay.congty.example') === 'pay.<wbr>congty.<wbr>example', 'Phải chèn <wbr> sau mỗi dấu chấm');
+    kiem(tenMienNgatDong('<b>.vn') === '&lt;b&gt;.<wbr>vn', 'Phải thoát ký tự HTML trong tên miền');
+    foreach (['public/admin/index.php', 'public/admin/chung_chi.php'] as $tep) {
+        $code = file_get_contents(__DIR__ . '/../' . $tep);
+        kiem(str_contains($code, "tenMienNgatDong(\$dong['subject_cn'])"), "$tep phải in tên chính bằng tenMienNgatDong()");
+        kiem(!preg_match('/text-break[^>]*>\s*<\?= e\(\$dong\[.subject_cn.\]\)/', $code), "$tep còn để trình duyệt bẻ tên miền giữa chữ");
+    }
 }
 
 // Luật: Web có địa chỉ không đuôi cổng: cổng 80, Alt-Svc và cả địa chỉ gõ kèm :8443 đều dẫn về địa chỉ không đuôi, dữ liệu mẫu ghi cổng 443.

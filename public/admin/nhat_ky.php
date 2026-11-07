@@ -93,15 +93,19 @@ require __DIR__ . '/../../views/tieu_de_trang.php';
                                 <td>
                                     <?php // Màn hẹp không có cột Hành động: nhãn hành động nằm đầu ô này. ?>
                                     <span class="badge bg-<?= e($hd['mau']) ?>-lt d-md-none mb-1"><?= e($hd['nhan']) ?></span>
+                                    <?php // Link chỉ đặt trên loại đối tượng: mô tả có thể kèm lý do ("nhanvien, sai mật khẩu"),
+                                          // tô màu link cả câu thì lý do trông như một phần tên (review 08/11/2026).
+                                          // Chỉ đặt link khi đối tượng còn trong CSDL; đã xoá thì vẫn đọc được tên lúc đó. ?>
                                     <?php if ($loai !== null): ?>
-                                        <div class="small text-secondary"><?= e($loai['nhan']) ?></div>
+                                        <div class="small">
+                                            <?php if ($dong['con_ton_tai']): ?>
+                                                <a href="<?= e(url($loai['trang'] . (int) $dong['object_id'])) ?>"><?= e($loai['nhan']) ?></a>
+                                            <?php else: ?>
+                                                <span class="text-secondary"><?= e($loai['nhan']) ?></span>
+                                            <?php endif; ?>
+                                        </div>
                                     <?php endif; ?>
-                                    <?php // Chỉ đặt link khi đối tượng còn trong CSDL; đã xoá thì vẫn đọc được tên lúc đó. ?>
-                                    <?php if ($loai !== null && $dong['con_ton_tai']): ?>
-                                        <a href="<?= e(url($loai['trang'] . (int) $dong['object_id'])) ?>"><?= e($dong['detail']) ?></a>
-                                    <?php else: ?>
-                                        <?= e($dong['detail']) ?>
-                                    <?php endif; ?>
+                                    <?= e($dong['detail']) ?>
                                 </td>
                                 <td class="d-none d-lg-table-cell small text-secondary ma-so"><?= e($dong['ip']) ?></td>
                             </tr>

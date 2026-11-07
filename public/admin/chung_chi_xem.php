@@ -16,6 +16,7 @@ $lichSu = lichSuGiaHan($pdo, (int) $cc['id']);
 $ngayGio = fn(string $giaTri): string => date('d/m/Y H:i:s', strtotime($giaTri));
 
 $tieuDe = 'Chứng chỉ ' . $cc['cert_code'];
+$quayLai = ['nhan' => 'Danh sách chứng chỉ', 'dich' => 'admin/chung_chi.php'];
 $trangHienTai = 'chung_chi';
 require __DIR__ . '/../../views/dau_trang.php';
 require __DIR__ . '/../../views/tieu_de_trang.php';
@@ -75,15 +76,16 @@ require __DIR__ . '/../../views/tieu_de_trang.php';
                         </div>
                         <div class="mt-4">
                             <div class="datagrid-title">Fingerprint SHA-256</div>
-                            <div class="ma-so text-break"><?= $cc['fingerprint_sha256'] === null ? 'Chưa có' : e($cc['fingerprint_sha256']) ?></div>
+                            <?php // Chữ "Chưa có", "Không có" là câu thường, không phải mã, nên không dùng font mã (.ma-so). ?>
+                            <div class="text-break<?= $cc['fingerprint_sha256'] === null ? ' text-secondary' : ' ma-so' ?>"><?= $cc['fingerprint_sha256'] === null ? 'Chưa có' : e($cc['fingerprint_sha256']) ?></div>
                         </div>
                         <div class="mt-3">
                             <div class="datagrid-title">Serial</div>
-                            <div class="ma-so text-break"><?= $cc['serial'] === null ? 'Chưa có' : e($cc['serial']) ?></div>
+                            <div class="text-break<?= $cc['serial'] === null ? ' text-secondary' : ' ma-so' ?>"><?= $cc['serial'] === null ? 'Chưa có' : e($cc['serial']) ?></div>
                         </div>
                         <div class="mt-3">
                             <div class="datagrid-title">Tên phụ (SAN)</div>
-                            <div class="ma-so text-break"><?= $cc['san'] === null ? 'Không có' : e($cc['san']) ?></div>
+                            <div class="text-break<?= $cc['san'] === null ? ' text-secondary' : ' ma-so' ?>"><?= $cc['san'] === null ? 'Không có' : e($cc['san']) ?></div>
                         </div>
                     </div>
                 </div>

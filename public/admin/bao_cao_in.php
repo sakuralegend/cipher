@@ -93,7 +93,7 @@ require __DIR__ . '/../../views/dau_trang.php';
                     <?php foreach ($danhSach as $dong): ?>
                         <tr>
                             <td class="text-nowrap"><?= e($dong['cert_code']) ?></td>
-                            <td class="text-break"><?= e($dong['subject_cn']) ?></td>
+                            <td><?= tenMienNgatDong($dong['subject_cn']) ?></td>
                             <td><?= e($dong['ca_name']) ?></td>
                             <td><?= e($dong['server_name']) ?></td>
                             <td class="text-nowrap"><?= e($dong['key_algorithm']) ?> <?= (int) $dong['key_size'] ?></td>

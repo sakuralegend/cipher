@@ -25,10 +25,6 @@ $thuatToan = demTheoNhom($pdo, 'thuat_toan', $loc);
 $theoThang = hetHanTheoThang($pdo, $loc);
 // '2026-11' thành '11/2026' để đọc theo kiểu Việt Nam.
 $nhanThang = array_map(fn(string $thang): string => substr($thang, 5) . '/' . substr($thang, 0, 4), array_keys($theoThang));
-// Trên trục biểu đồ dùng dạng ngắn '11/26', để nhãn nằm ngang, không phải xoay nghiêng.
-$nhanTruc = array_map(fn(string $thang): string => substr($thang, 5) . '/' . substr($thang, 2, 2), array_keys($theoThang));
-
-$duLieuBieuDo = fn(array $bieuDo): string => e(json_encode($bieuDo, JSON_UNESCAPED_UNICODE));
 
 $tieuDe = 'Thống kê';
 $trangHienTai = 'thong_ke';
@@ -48,15 +44,12 @@ require __DIR__ . '/../../views/tieu_de_trang.php';
                         <div class="card-actions text-secondary">Tổng <?= $tong ?> chứng chỉ</div>
                     </div>
                     <div class="card-body">
-                        <div class="khung-bieu-do">
-                            <canvas role="img" aria-label="Biểu đồ số chứng chỉ theo trạng thái; số liệu ở bảng bên dưới."
-                                    data-bieu-do="<?= $duLieuBieuDo([
-                                        'huong' => 'ngang',
-                                        'nhan' => array_values(array_column(TRANG_THAI, 'nhan')),
-                                        'so' => array_values($trangThai),
-                                        'mau' => array_values(array_column(TRANG_THAI, 'mau')),
-                                    ]) ?>"></canvas>
-                        </div>
+                        <?= khungBieuDo([
+                            'huong' => 'ngang',
+                            'nhan' => array_values(array_column(TRANG_THAI, 'nhan')),
+                            'so' => array_values($trangThai),
+                            'mau' => array_values(array_column(TRANG_THAI, 'mau')),
+                        ], 'Biểu đồ số chứng chỉ theo trạng thái; số liệu ở bảng bên dưới.') ?>
                     </div>
                     <div class="table-responsive">
                         <table class="table table-sm card-table">
@@ -81,10 +74,8 @@ require __DIR__ . '/../../views/tieu_de_trang.php';
                         <div class="card-actions text-secondary">Không tính đã thu hồi, đã quá hạn</div>
                     </div>
                     <div class="card-body">
-                        <div class="khung-bieu-do">
-                            <canvas role="img" aria-label="Biểu đồ số chứng chỉ hết hạn theo từng tháng; số liệu ở bảng bên dưới."
-                                    data-bieu-do="<?= $duLieuBieuDo(['huong' => 'doc', 'nhan' => $nhanTruc, 'so' => array_values($theoThang)]) ?>"></canvas>
-                        </div>
+                        <?= khungBieuDo(['huong' => 'doc', 'nhan' => nhanTrucThang($theoThang), 'so' => array_values($theoThang)],
+                            'Biểu đồ số chứng chỉ hết hạn theo từng tháng; số liệu ở bảng bên dưới.') ?>
                     </div>
                     <div class="table-responsive">
                         <table class="table table-sm card-table">
@@ -114,10 +105,8 @@ require __DIR__ . '/../../views/tieu_de_trang.php';
                             <div class="card-body text-center text-secondary py-4">Không có chứng chỉ nào khớp bộ lọc.</div>
                         <?php else: ?>
                             <div class="card-body">
-                                <div class="khung-bieu-do">
-                                    <canvas role="img" aria-label="<?= e($tieuDeThe) ?>; số liệu ở bảng bên dưới."
-                                            data-bieu-do="<?= $duLieuBieuDo(['huong' => 'ngang', 'nhan' => array_map('strval', array_keys($soLieu)), 'so' => array_values($soLieu)]) ?>"></canvas>
-                                </div>
+                                <?= khungBieuDo(['huong' => 'ngang', 'nhan' => array_map('strval', array_keys($soLieu)), 'so' => array_values($soLieu)],
+                                    $tieuDeThe . '; số liệu ở bảng bên dưới.') ?>
                             </div>
                             <div class="table-responsive">
                                 <table class="table table-sm card-table">

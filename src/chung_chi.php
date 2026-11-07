@@ -548,6 +548,13 @@ function hetHanTheoThang(PDO $pdo, array $loc = [], ?string $homNay = null): arr
     return $ketQua;
 }
 
+// Nhãn trục biểu đồ tháng: '2026-11' thành '11/26', ngắn để nhãn nằm ngang, không phải xoay nghiêng.
+// Dùng ở Thống kê và Dashboard.
+function nhanTrucThang(array $theoThang): array
+{
+    return array_map(fn(string $thang): string => substr($thang, 5) . '/' . substr($thang, 2, 2), array_keys($theoThang));
+}
+
 // ---------- Báo cáo ----------
 
 const COT_CSV = ['Mã quản lý', 'Tên chính', 'Tên phụ', 'Tổ chức cấp', 'Tên miền', 'Máy chủ', 'Ngày bắt đầu', 'Ngày hết hạn',
@@ -573,6 +580,15 @@ function dongCsv(array $cc): array
         moTaSoNgay($cc), TRANG_THAI[$cc['status']]['nhan'], $cc['key_algorithm'], (string) $cc['key_size'],
         $cc['signature_algorithm'], $cc['fingerprint_sha256'], $cc['serial'],
     ]);
+}
+
+// Tên miền in trong bảng: chỉ được xuống dòng ngay sau dấu chấm. Để trình duyệt tự bẻ thì cột hẹp trên
+// điện thoại ra "pay.congt" / "y.example" (chụp 08/11/2026 ở 390px). <wbr> là chỗ được phép xuống dòng.
+// Trả về HTML đã thoát ký tự, nên in thẳng, không bọc e() thêm lần nữa.
+function tenMienNgatDong(string $ten): string
+{
+    $cacPhan = array_map(fn(string $phan): string => htmlspecialchars($phan, ENT_QUOTES, 'UTF-8'), explode('.', $ten));
+    return implode('.<wbr>', $cacPhan);
 }
 
 // Câu hiển thị số ngày. Chứng chỉ đã thu hồi không còn ý nghĩa đếm ngày.

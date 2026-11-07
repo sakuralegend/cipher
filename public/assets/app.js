@@ -86,10 +86,11 @@ document.querySelectorAll('[data-hien-mat-khau]').forEach(function (nut) {
         return;
     }
 
-    // Màu riêng cho từng giao diện, đã kiểm tra độ phân biệt trên nền thẻ sáng và tối.
+    // Màu riêng cho từng giao diện. Cột chính lấy trong dải cyan sang xanh dương của landing (08/11/2026);
+    // lưới và trục ngả xanh theo nền navy của giao diện tối.
     var BANG_MAU = {
-        light: {chinh: '#2a78d6', chu: '#52514e', luoi: '#e1e0d9', truc: '#c3c2b7'},
-        dark: {chinh: '#3987e5', chu: '#c3c2b7', luoi: '#383838', truc: '#4a4a4a'},
+        light: {chinh: '#2f6fe4', chu: '#59636e', luoi: '#e3e8f0', truc: '#c5cdd9'},
+        dark: {chinh: '#38bdf8', chu: '#9fb0c8', luoi: '#1c2840', truc: '#2a3a58'},
     };
     var MAU_TRANG_THAI = {red: '#d03b3b', yellow: '#fab219', green: '#0ca30c', secondary: '#898781'};
     var cacBieuDo = [];

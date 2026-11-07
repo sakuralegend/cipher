@@ -39,7 +39,7 @@ require __DIR__ . '/../views/dau_trang.php';
         <div class="dn-giua">
             <div class="dn-loi-chao">
                 <p class="ld-nhan-nho">Quản lý chứng chỉ số và thời hạn sử dụng</p>
-                <p class="ld-tieu-de">Không để chứng chỉ nào <span class="ld-chu-sang">hết hạn bất ngờ</span></p>
+                <p class="ld-tieu-de"><span class="dn-dong-dau">Không để chứng chỉ nào</span> <span class="ld-chu-sang">hết hạn bất ngờ</span></p>
                 <p class="ld-mo-ta">Đăng nhập để xem chứng chỉ sắp hết hạn và xử lý cảnh báo theo từng mốc.</p>
             </div>
             <div class="dn-phim">
@@ -50,7 +50,7 @@ require __DIR__ . '/../views/dau_trang.php';
 
     <section class="dn-phai">
         <div class="dn-phai-dau">
-            <span class="dn-ten"><?= $logo ?>Quản lý chứng chỉ số</span>
+            <span class="dn-ten"><?= $logo ?><?= e(TEN_THUONG_HIEU) ?></span>
             <?= $nutGiaoDien ?>
         </div>
         <div class="dn-form">
