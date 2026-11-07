@@ -21,6 +21,7 @@ THU_MUC=/var/www/cipher
 REPO=git@github.com:sakuralegend/cipher.git
 KHOA=/home/cipher/.ssh/cipher_deploy
 CADDYFILE=/etc/caddy/Caddyfile
+XRAY_CONFIG=/usr/local/etc/xray/config.json
 TEP_MAT_KHAU=/root/cipher-matkhau.txt
 
 chet() { echo "DUNG: $*" >&2; exit 1; }
@@ -37,6 +38,11 @@ kiem() {
     echo "--- Qua 443 phải ra web thật (Xray chuyển sang Caddy); hỏng là VPN cũng không nhận kết nối mới:"
     [ "$(curl -s -m 15 -o /dev/null -w '%{http_code}' --resolve cert.cipher.id.vn:443:127.0.0.1 https://cert.cipher.id.vn/)" = 200 ] \
         && echo "OK web qua 443" || chet "Web qua 443 KHÔNG trả 200"
+    echo "--- Xray gửi PROXY protocol (xver 1) thì Caddy phải nhận ở 8443, lệch là web qua 443 hỏng:"
+    if grep -q '"xver": *[12]' "$XRAY_CONFIG" && ! grep -q 'proxy_protocol' "$CADDYFILE"; then
+        chet "Xray gửi PROXY protocol nhưng Caddyfile thiếu khối nhận. Chạy bước caddy để thêm lại."
+    fi
+    echo "OK Xray và Caddy khớp về PROXY protocol"
     echo "--- Dịch vụ có sẵn:"
     systemctl is-active anki-bot slushai caddy
     docker ps --format '{{.Names}}' | grep -qx anki && echo "OK container anki" || chet "mất container anki"
@@ -204,6 +210,45 @@ caddy_noi() {
             cp -p "$sao_luu" "$CADDYFILE"
             chet "Caddyfile sai cú pháp, đã khôi phục bản cũ."
         fi
+    fi
+
+    # Nhận PROXY protocol ở 8443 (08/11/2026): Xray chuyển khách từ 443 sang 127.0.0.1:8443 kèm IP gốc
+    # (xver 1 trong cấu hình Xray, repo vpn-xray), để Nhật ký ghi IP thật thay cho 127.0.0.1. Chỉ tin phần
+    # này từ 127.0.0.1; khách slushai vào thẳng 8443 không gửi nên fallback_policy skip: nhận như cũ.
+    # Khối nằm trong phần cài đặt toàn cục (chung với slushai). dungmoi.sh của slushai ghi đè Caddyfile là
+    # mất nó; khi đó Xray vẫn gửi mà Caddy không nhận: web qua 443 hỏng, VPN không nhận kết nối mới.
+    # Bước kiem bắt được tình huống này.
+    if ! grep -q 'proxy_protocol' "$CADDYFILE"; then
+        local sao_luu_pp
+        sao_luu_pp="$CADDYFILE.truoc-proxyproto-$(date +%Y%m%d-%H%M%S)"
+        cp -p "$CADDYFILE" "$sao_luu_pp"
+        python3 - "$CADDYFILE" <<'THEM_PROXY'
+import sys
+duong = sys.argv[1]
+# Ghi rõ UTF-8: chú thích có tiếng Việt, không để bảng mã mặc định của máy quyết định.
+s = open(duong, encoding="utf-8").read()
+cu = "\thttps_port 8443\n}"
+if s.count(cu) != 1:
+    sys.exit("Không thấy khối toàn cục có https_port 8443; thêm khối nhận PROXY protocol bằng tay.")
+moi = """\thttps_port 8443
+\t# cipher: nhận PROXY protocol từ Xray (127.0.0.1) để web biết IP thật; xem deploy/dung_vps.sh của repo cipher.
+\tservers :8443 {
+\t\tlistener_wrappers {
+\t\t\tproxy_protocol {
+\t\t\t\tallow 127.0.0.1/32
+\t\t\t\tfallback_policy skip
+\t\t\t}
+\t\t\ttls
+\t\t}
+\t}
+}"""
+open(duong, "w", encoding="utf-8").write(s.replace(cu, moi, 1))
+THEM_PROXY
+        if ! caddy validate --adapter caddyfile --config "$CADDYFILE"; then
+            cp -p "$sao_luu_pp" "$CADDYFILE"
+            chet "Khối nhận PROXY protocol làm Caddyfile sai cú pháp, đã khôi phục bản cũ."
+        fi
+        echo "Đã thêm khối nhận PROXY protocol. Sao lưu: $sao_luu_pp"
     fi
 
     # reload, không restart: giữ nguyên kết nối đang có của slushai.

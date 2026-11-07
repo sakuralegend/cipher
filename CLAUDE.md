@@ -33,7 +33,7 @@ Phản biện trước khi tuân lệnh · thuật ngữ phải giải thích ·
 1. Xoá/ghi đè hàng loạt dữ liệu thật, đổi schema, migrate — việc đó đứng riêng, backup trước, kiểm sau.
 2. Thêm thư viện/framework mới.
 3. Đụng hạ tầng hay repo ngoài phạm vi việc được giao.
-4. 🔴 Bất cứ thay đổi nào trên VPS `161.248.146.56`: máy chạy chung VPN, bot Anki, slushai, bot Telegram. Đọc `D:\Desktop\slushai\VPS_CHUNG.md` trước; đo RAM trước và sau khi cài; chạy đủ lệnh kiểm trong đó sau mỗi lần đụng. Khách vào web qua 443 của Xray, Xray chuyển sang Caddy (QD-08): khối `cert` trong `Caddyfile` hỏng thì VPN không nhận kết nối mới; chỉ `deploy/caddy-cipher.conf` đổi thì VPS chưa đổi. Đổi Xray hay cổng 443 phải hỏi.
+4. 🔴 Bất cứ thay đổi nào trên VPS `161.248.146.56`: máy chạy chung VPN, bot Anki, slushai, bot Telegram. Đọc `D:\Desktop\slushai\VPS_CHUNG.md` trước; đo RAM trước và sau khi cài; chạy đủ lệnh kiểm trong đó sau mỗi lần đụng. Khách vào web qua 443 của Xray, Xray chuyển sang Caddy (QD-08): khối `cert` trong `Caddyfile` hỏng thì VPN không nhận kết nối mới; chỉ `deploy/caddy-cipher.conf` đổi thì VPS chưa đổi. Từ 08/11/2026 Xray gửi IP gốc bằng PROXY protocol (`xver` 1), Caddy nhận ở khối toàn cục `servers :8443`: mất khối đó thì web qua 443 cũng hỏng (bước `caddy` thêm lại, bước `kiem` bắt lệch). Đổi Xray hay cổng 443 phải hỏi.
 
 ## Lệnh nghiệm thu — chạy THẬT cuối mỗi việc
 Chạy trong Git Bash, từ thư mục gốc repo:

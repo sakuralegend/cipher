@@ -1845,6 +1845,25 @@ function test_bieu_do_thong_ke_giu_tran_truc_khi_loc(PDO $pdo): void
     kiem(str_contains(file_get_contents(__DIR__ . '/../public/assets/app.js'), 'suggestedMax: duLieu.tran'), 'app.js phải dùng trần cho trục số');
 }
 
+// Luật: Caddy nhận PROXY protocol ở 8443 chỉ từ 127.0.0.1 (Xray), kết nối khác nhận như cũ; bước kiem báo lỗi khi Xray gửi mà Caddy không nhận.
+// Vì sao: User 08/11/2026 muốn Nhật ký có IP thật thay cho 127.0.0.1; khối này nằm ở phần chung của Caddyfile, bị ghi đè là web qua 443 hỏng và VPN không nhận kết nối mới.
+// Đỏ nghĩa là: Script deploy mất khối nhận, tin PROXY protocol từ mọi nơi (ai cũng giả được IP), chặn khách slushai vào thẳng 8443, hoặc bước kiem bỏ dòng bắt lệch.
+// Đừng: Đọc IP từ header X-Forwarded-For cho nhanh; khách tự gõ được header đó.
+function test_caddy_nhan_proxy_protocol_chi_tu_xray(PDO $pdo): void
+{
+    $tep = __DIR__ . '/../deploy/dung_vps.sh';
+    if (!is_file($tep)) {
+        return; // Gói nộp không có thư mục deploy/.
+    }
+    $script = file_get_contents($tep);
+    kiem(preg_match('/proxy_protocol \{\s*\\\\t\\\\t\\\\t\\\\tallow 127\.0\.0\.1\/32\s*\\\\t\\\\t\\\\t\\\\tfallback_policy skip/', $script) === 1,
+        'Khối nhận phải chỉ tin 127.0.0.1 và nhận như cũ mọi kết nối khác (fallback_policy skip)');
+    kiem(preg_match('/fallback_policy skip\s*\\\\t\\\\t\\\\t\}\s*\\\\t\\\\t\\\\ttls\s/', $script) === 1, 'Phải giữ lớp tls ngay sau proxy_protocol, không thì 8443 mất HTTPS');
+    kiem(str_contains($script, 'grep -q \'"xver": *[12]\' "$XRAY_CONFIG" && ! grep -q \'proxy_protocol\' "$CADDYFILE"'),
+        'Bước kiem phải báo lỗi khi Xray gửi PROXY protocol mà Caddyfile không nhận');
+    kiem(!str_contains(codeKhongChuThich(__DIR__ . '/../src/nhat_ky.php'), 'X_FORWARDED_FOR'), 'Nhật ký không được đọc IP từ header khách tự gõ được');
+}
+
 $pdo = ketNoiCsdl('cipher_test');
 $soLoi = 0;
 $danhSachTest = array_filter(
