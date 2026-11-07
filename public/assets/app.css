@@ -39,6 +39,48 @@
     padding-top: 0.4rem;
 }
 
+/* Menu thả xuống: khung bo tròn, từng dòng cũng bo tròn khi rê chuột. */
+.dropdown-menu {
+    border: 1px solid var(--tblr-border-color);
+    border-radius: 12px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.16);
+    margin-top: 0.375rem !important; /* Tách khỏi thanh trên; vị trí còn lại do thư viện tính. */
+    min-width: 13.5rem;
+    padding: 0.5rem;
+}
+
+/* Nền tối: bóng nhạt không thấy được, nên đậm hơn để khung tách khỏi trang. */
+[data-bs-theme="dark"] .dropdown-menu {
+    border-color: rgba(255, 255, 255, 0.16);
+    box-shadow: 0 8px 28px rgba(0, 0, 0, 0.6);
+}
+
+.dropdown-menu .dropdown-item {
+    align-items: center;
+    border-radius: 8px;
+    display: flex;
+    gap: 0.625rem;
+    padding: 0.5rem 0.625rem;
+    width: 100%;
+}
+
+.dropdown-menu .dropdown-item-icon {
+    flex-shrink: 0;
+    margin: 0;
+    opacity: 0.75;
+}
+
+.dropdown-menu .dropdown-divider {
+    margin: 0.5rem -0.5rem;
+}
+
+/* Màn hẹp: menu Danh mục nằm trong thanh mở rộng nên không cần bóng đổ. */
+@media (max-width: 767.98px) {
+    .navbar-collapse .dropdown-menu {
+        box-shadow: none;
+    }
+}
+
 /* Màn hẹp: cột gần nhau hơn, để các cột chính vừa khung mà không phải kéo ngang. */
 @media (max-width: 767.98px) {
     .card-table > * > tr > td,

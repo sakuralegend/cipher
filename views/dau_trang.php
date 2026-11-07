@@ -16,6 +16,21 @@ if ($nguoi !== null) {
 }
 $trongDanhMuc = in_array($trangHienTai, ['may_chu', 'ten_mien', 'to_chuc_cap'], true);
 
+// Biểu tượng trong menu thả xuống (bộ Tabler Icons, MIT): nét đường của từng hình, vẽ inline để không tải thêm file.
+const BIEU_TUONG_MENU = [
+    'may_chu' => '<rect x="3" y="4" width="18" height="7" rx="2"/><rect x="3" y="13" width="18" height="7" rx="2"/><path d="M7 8v.01M7 17v.01"/>',
+    'ten_mien' => '<circle cx="12" cy="12" r="9"/><path d="M3.6 9h16.8M3.6 15h16.8M11.5 3a17 17 0 0 0 0 18M12.5 3a17 17 0 0 1 0 18"/>',
+    'to_chuc_cap' => '<path d="M12 3l8 4.5v4.5c0 4.5-3.2 8-8 9-4.8-1-8-4.5-8-9V7.5z"/><path d="M9 12l2 2 4-4"/>',
+    'tai_khoan' => '<circle cx="12" cy="8" r="4"/><path d="M5 21a7 7 0 0 1 14 0"/>',
+    'dang_xuat' => '<path d="M14 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-2"/><path d="M9 12h12M18 9l3 3-3 3"/>',
+];
+
+function bieuTuongMenu(string $ten): string
+{
+    return '<svg class="icon dropdown-item-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'
+        . BIEU_TUONG_MENU[$ten] . '</svg>';
+}
+
 $nutGiaoDien = <<<'HTML'
 <button type="button" class="nav-link px-2 bg-transparent border-0" data-doi-giao-dien
         title="Đổi giao diện sáng/tối" aria-label="Đổi giao diện sáng/tối">
@@ -59,11 +74,11 @@ HTML;
                             </span>
                         </a>
                         <div class="dropdown-menu dropdown-menu-end">
-                            <a class="dropdown-item" href="<?= e(url('admin/tai_khoan.php')) ?>">Tài khoản của tôi</a>
+                            <a class="dropdown-item" href="<?= e(url('admin/tai_khoan.php')) ?>"><?= bieuTuongMenu('tai_khoan') ?>Tài khoản của tôi</a>
                             <div class="dropdown-divider"></div>
                             <form method="post" action="<?= e(url('logout.php')) ?>">
                                 <input type="hidden" name="csrf" value="<?= e(maCsrf()) ?>">
-                                <button type="submit" class="dropdown-item">Đăng xuất</button>
+                                <button type="submit" class="dropdown-item"><?= bieuTuongMenu('dang_xuat') ?>Đăng xuất</button>
                             </form>
                         </div>
                     </div>
@@ -90,9 +105,9 @@ HTML;
                         <li class="nav-item dropdown <?= $trongDanhMuc ? 'active' : '' ?>">
                             <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown" role="button" aria-expanded="false">Danh mục</a>
                             <div class="dropdown-menu">
-                                <a class="dropdown-item <?= $trangHienTai === 'may_chu' ? 'active' : '' ?>" href="<?= e(url('admin/may_chu.php')) ?>">Máy chủ</a>
-                                <a class="dropdown-item <?= $trangHienTai === 'ten_mien' ? 'active' : '' ?>" href="<?= e(url('admin/ten_mien.php')) ?>">Tên miền</a>
-                                <a class="dropdown-item <?= $trangHienTai === 'to_chuc_cap' ? 'active' : '' ?>" href="<?= e(url('admin/to_chuc_cap.php')) ?>">Tổ chức cấp</a>
+                                <a class="dropdown-item <?= $trangHienTai === 'may_chu' ? 'active' : '' ?>" href="<?= e(url('admin/may_chu.php')) ?>"><?= bieuTuongMenu('may_chu') ?>Máy chủ</a>
+                                <a class="dropdown-item <?= $trangHienTai === 'ten_mien' ? 'active' : '' ?>" href="<?= e(url('admin/ten_mien.php')) ?>"><?= bieuTuongMenu('ten_mien') ?>Tên miền</a>
+                                <a class="dropdown-item <?= $trangHienTai === 'to_chuc_cap' ? 'active' : '' ?>" href="<?= e(url('admin/to_chuc_cap.php')) ?>"><?= bieuTuongMenu('to_chuc_cap') ?>Tổ chức cấp</a>
                             </div>
                         </li>
                         <?php if (laAdmin($nguoi)): ?>
