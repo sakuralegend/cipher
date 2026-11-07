@@ -86,6 +86,29 @@ function oChon(string $ten, string $nhan, array $luaChon, ?string $dangChon, arr
 }
 
 
+// Ô gõ có gợi ý từ danh mục [mã => tên], dùng datalist có sẵn của trình duyệt (không thêm thư viện): gõ vài chữ
+// là hiện tên khớp để chọn. Gửi đi TÊN; trang nhận tra ra mã bằng idTheoTen() (src/danh_muc.php), tên lạ thì báo
+// lỗi chứ không tự tạo. Không gộp vào oChon(): bộ lọc vẫn cần ô chọn có dòng "Tất cả".
+// data-trong-danh-sach: app.js báo lỗi ngay khi tên gõ vào không có trong danh sách.
+// $goiYHtml là HTML đã thoát sẵn (có thể chứa link), in dưới ô.
+function oGoiY(string $ten, string $nhan, array $danhMuc, string $giaTri, array $loi, string $loiMacDinh, string $goiYHtml = ''): string
+{
+    $html = '<div class="mb-3">'
+        . '<label class="form-label required" for="' . e($ten) . '">' . e($nhan) . '</label>'
+        . '<input class="form-control' . (isset($loi[$ten]) ? ' is-invalid' : '') . '" id="' . e($ten) . '" name="' . e($ten) . '"'
+        . ' value="' . e($giaTri) . '" list="ds-' . e($ten) . '" required maxlength="255" autocomplete="off"'
+        . ' placeholder="Gõ để tìm" data-trong-danh-sach>'
+        . '<datalist id="ds-' . e($ten) . '">';
+    foreach ($danhMuc as $tenMuc) {
+        $html .= '<option value="' . e((string) $tenMuc) . '"></option>';
+    }
+    $html .= '</datalist><div class="invalid-feedback">' . e($loi[$ten] ?? $loiMacDinh) . '</div>';
+    if ($goiYHtml !== '') {
+        $html .= '<small class="form-hint">' . $goiYHtml . '</small>';
+    }
+    return $html . '</div>';
+}
+
 // Khung biểu đồ cho app.js vẽ, dùng ở Thống kê và Dashboard. $bieuDo có dạng mô tả ở đầu phần biểu đồ trong app.js.
 // $moTa đọc cho trình đọc màn hình; số liệu đầy đủ luôn nằm ở bảng hoặc trang khác, không chỉ trong hình.
 function khungBieuDo(array $bieuDo, string $moTa, string $lopThem = ''): string

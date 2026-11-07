@@ -18,6 +18,9 @@ const HANH_DONG = [
     'dang_nhap' => ['nhan' => 'Đăng nhập', 'mau' => 'secondary'],
     'dang_xuat' => ['nhan' => 'Đăng xuất', 'mau' => 'secondary'],
     'dang_nhap_sai' => ['nhan' => 'Đăng nhập sai', 'mau' => 'red'],
+    // Đọc chứng chỉ từ máy chủ ngoài (form Thêm chứng chỉ): chi tiết ghi địa chỉ đã đọc và kết quả,
+    // để biết ai đã cho máy chủ kết nối đi đâu.
+    'doc_chung_chi' => ['nhan' => 'Đọc chứng chỉ', 'mau' => 'blue'],
 ];
 
 // Loại đối tượng lưu ở cột object_type: bảng, cột dùng làm tên, trang xem hoặc sửa đối tượng.

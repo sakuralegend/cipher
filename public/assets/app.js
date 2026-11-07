@@ -39,6 +39,14 @@ document.querySelectorAll('form[data-kiem-tra]').forEach(function (form) {
             var truoc = document.getElementById(o.dataset.sau);
             o.setCustomValidity(truoc.value && o.value && o.value <= truoc.value ? 'khong-sau' : '');
         });
+        // Ô gõ có gợi ý (oGoiY trong khoi_dong.php): tên phải đúng một dòng trong danh sách, không phân biệt hoa thường.
+        form.querySelectorAll('[data-trong-danh-sach]').forEach(function (o) {
+            var go = o.value.trim().toLowerCase();
+            var co = Array.prototype.some.call(o.list ? o.list.options : [], function (muc) {
+                return muc.value.toLowerCase() === go;
+            });
+            o.setCustomValidity(go === '' || co ? '' : 'khong-co');
+        });
     }
 
     form.addEventListener('input', function (suKien) {

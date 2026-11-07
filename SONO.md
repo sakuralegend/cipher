@@ -5,7 +5,6 @@
 
 | Nợ | Vì sao chưa trả | Hết hạn |
 |---|---|---|
-| Đọc cert thật phải chặn IP nội bộ, kể cả với người đã đăng nhập: VPS có AnkiConnect `127.0.0.1:8765` không mật khẩu, không chặn thì thành công cụ dò cổng | Chức năng mở rộng, chỉ làm nếu còn thời gian (QD-18) | Trước khi làm chức năng này; bỏ nếu không làm |
 | Đường vào quản trị VPS khi đang ở Nga, phòng VPN, SSH, Telegram cùng bị chặn | Chưa đến lượt, self-SNI vừa xong 07/11/2026 | Trước ngày bay, cuối 11/2026 |
 | Báo cáo phải nêu rõ phân chia nhiệm vụ từng thành viên (đề mục I.4): user cung cấp khi viết báo cáo | User làm hết, chốt cách chia sau | 14–15/11/2026 |
 | Sổ tay 1–2 trang: luồng chính và câu dễ bị hỏi, để user hiểu sơ bộ trước khi nộp | Chức năng chưa đủ | 16/11/2026 |

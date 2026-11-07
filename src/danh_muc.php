@@ -132,6 +132,24 @@ function xoaTenMien(PDO $pdo, int $id): ?string
     return xoaVaGhiNhatKy($pdo, 'ten_mien', $id, 'Tên miền này còn chứng chỉ, hãy chuyển hoặc xoá chứng chỉ trước.');
 }
 
+// Mã của bản ghi có đúng tên đó trong danh mục [mã => tên], không phân biệt hoa thường; null nếu không có.
+// Dùng cho ô gõ có gợi ý (form chứng chỉ gửi TÊN tên miền, tổ chức cấp) và khi tự chọn theo chứng chỉ đọc
+// được. Chỉ tra, không bao giờ tạo bản ghi mới (user chốt 08/11/2026). Tên là UNIQUE trong CSDL nên
+// khớp nhiều nhất một bản ghi.
+function idTheoTen(array $danhMuc, string $ten): ?int
+{
+    $ten = mb_strtolower(trim($ten));
+    if ($ten === '') {
+        return null;
+    }
+    foreach ($danhMuc as $id => $tenCo) {
+        if (mb_strtolower((string) $tenCo) === $ten) {
+            return (int) $id;
+        }
+    }
+    return null;
+}
+
 // ---------- Tổ chức cấp ----------
 
 function danhSachToChuc(PDO $pdo): array

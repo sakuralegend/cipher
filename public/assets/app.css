@@ -164,6 +164,22 @@
     position: relative;
 }
 
+/* Form Thêm chứng chỉ, tab "Đọc từ máy chủ": thẻ tóm tắt chứng chỉ vừa đọc, viền trái màu thương hiệu. */
+.the-doc {
+    background: var(--tblr-bg-surface-secondary);
+    border: 1px solid var(--tblr-border-color);
+    border-left: 3px solid #22d3ee;
+    border-radius: 0.5rem;
+    padding: 0.875rem 1rem;
+}
+
+/* Phần thu gọn chứa các ô đã đọc: dòng tiêu đề bấm được, có mũi tên mặc định của trình duyệt. */
+.chi-tiet-doc > summary {
+    color: var(--tblr-link-color);
+    cursor: pointer;
+    font-weight: 500;
+}
+
 /* Biểu đồ nhỏ trên Dashboard: hai thẻ chồng nhau cao vừa bằng bảng "Cần xử lý ngay" bên cạnh. */
 .khung-bieu-do.khung-bieu-do-nho {
     height: 190px;

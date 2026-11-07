@@ -1617,6 +1617,11 @@ function test_moi_thao_tac_deu_ghi_nhat_ky(PDO $pdo): void
     $_SESSION['user_id'] = 2;
     @dangXuat($pdo);
     $mong('Đăng xuất', 'dang_xuat', 'nguoi_dung', 2, 2);
+
+    // Đọc chứng chỉ bị chặn vẫn phải ghi: địa chỉ nội bộ bị từ chối trước khi kết nối, nên test không cần mạng.
+    $_SESSION['user_id'] = 1;
+    kiem(isset(docChungChiChoForm($pdo, '127.0.0.1', 443, [], [])['loi']), 'Đọc 127.0.0.1 phải bị chặn');
+    $mong('Đọc chứng chỉ bị chặn', 'doc_chung_chi', null, null, 1);
     unset($_SESSION['user_id']);
 }
 
@@ -1698,6 +1703,124 @@ function test_web_co_dia_chi_khong_duoi_cong(PDO $pdo): void
     kiem(str_contains($caddy, '-Alt-Svc'), 'Phải xoá Alt-Svc để không quảng bá cổng 8443');
     kiem(str_contains($caddy, '@duoi_cu header Host cert.cipher.id.vn:8443'), 'Phải nhận ra địa chỉ gõ kèm :8443');
     kiem(str_contains($caddy, 'redir @duoi_cu https://cert.cipher.id.vn{uri} permanent'), 'Địa chỉ kèm :8443 phải bị đá về không đuôi');
+}
+
+// Chứng chỉ thật của cert.cipher.id.vn (Let's Encrypt, ECDSA P-256), đọc ngày 08/11/2026. Dữ liệu công khai:
+// ai kết nối tới web cũng nhận được. Dùng làm mẫu để test phần đọc chứng chỉ mà không cần mạng.
+const CHUNG_CHI_MAU_PEM = <<<'PEM'
+-----BEGIN CERTIFICATE-----
+MIIDkTCCAxegAwIBAgISBmq4CQDG3JA797gixwFve6O/MAoGCCqGSM49BAMDMDMx
+CzAJBgNVBAYTAlVTMRYwFAYDVQQKEw1MZXQncyBFbmNyeXB0MQwwCgYDVQQDEwNZ
+RTEwHhcNMjYxMTA2MDMxODQxWhcNMjcwMjA0MDMxODQwWjAcMRowGAYDVQQDExFj
+ZXJ0LmNpcGhlci5pZC52bjBZMBMGByqGSM49AgEGCCqGSM49AwEHA0IABJpnXDFB
+4sQnqEMlHBdo8JFgQWu9SF88ADgcOswxtLI/mqasuQPYbwj4rL36F3Yjs+49WE1x
+EEiOvukY9mev472jggIgMIICHDAOBgNVHQ8BAf8EBAMCB4AwEwYDVR0lBAwwCgYI
+KwYBBQUHAwEwDAYDVR0TAQH/BAIwADAdBgNVHQ4EFgQUmdMQMRuhMapRQCa+dlSM
++XTOhwAwHwYDVR0jBBgwFoAUuyDKRwv+1+Wc+Y8JKqOMN0WxvNgwMwYIKwYBBQUH
+AQEEJzAlMCMGCCsGAQUFBzAChhdodHRwOi8veWUxLmkubGVuY3Iub3JnLzAcBgNV
+HREEFTATghFjZXJ0LmNpcGhlci5pZC52bjATBgNVHSAEDDAKMAgGBmeBDAECATAu
+BgNVHR8EJzAlMCOgIaAfhh1odHRwOi8veWUxLmMubGVuY3Iub3JnLzY0LmNybDCC
+AQ0GCisGAQQB1nkCBAIEgf4EgfsA+QB3ANbVjanQF1Pzakqgx1dJAq/rx9ws04zZ
+92TIDIkZHp8CAAABoa8TK9IAAAQDAEgwRgIhAPwj5vcRzHCPHYpJEHrYfXqjLPlh
+fJaJKEIjNWXZbu5PAiEA/ZzVahDcj11wKkqzdVRAGY4VOZXUvphutBowoGbaUXUA
+fgCOykcLrN5q86IGsKR6hLdG/h/Gv5U+JeabTuQCSPPG6AAAAaGvEy3UAAgAAAUA
+Oe+inQQDAEcwRQIgTX9KQPzHhsbKqTxzib0nTBFzNZv2S+2JVXwUjBNpo9MCIQCl
+FRPZrHpqWoRdIn5rXeq1w9twKwj0+neRDeXdW8LrYDAKBggqhkjOPQQDAwNoADBl
+AjBOhfgpcNTz7SqtIC+/yA22YPBGYWxyVmIfKsmt8w0ge3gUyBeCLKhUbSStGzQ5
+LrICMQDCuN1v0Bjrdb/31GLjz1R/qPPh5HZYcNSf7m0eA+HBQPei0zExjMy6lh0h
+nG2YRWE=
+-----END CERTIFICATE-----
+PEM;
+
+// Luật: Đọc chứng chỉ chỉ kết nối tới địa chỉ công khai và cổng TLS trong danh sách; chặn nếu BẤT KỲ IP nào của tên miền là nội bộ.
+// Vì sao: VPS chạy chung dịch vụ chỉ nghe ở 127.0.0.1, không mật khẩu; không chặn thì người đăng nhập mượn web dò mạng nội bộ (SSRF).
+// Đỏ nghĩa là: Có một dạng địa chỉ nội bộ lọt qua (kể cả IPv4 viết trong IPv6), hoặc cổng ngoài danh sách được đọc.
+// Đừng: Chỉ kiểm IP đầu tiên của tên miền, hay tra DNS lần nữa lúc kết nối; kẻ xấu đổi bản ghi giữa hai lần tra.
+function test_doc_chung_chi_chan_dia_chi_noi_bo_va_cong_ngoai_danh_sach(PDO $pdo): void
+{
+    $noiBo = ['127.0.0.1', '127.8.8.8', '10.0.0.1', '172.16.0.1', '172.31.255.255', '192.168.1.1', '169.254.169.254',
+        '100.64.0.1', '0.0.0.0', '::1', '::', '::ffff:127.0.0.1', '::ffff:7f00:1', '::127.0.0.1', '64:ff9b::7f00:1',
+        '::ffff:10.0.0.1', 'fe80::1', 'fc00::1', 'fd12:3456::1', 'khong-phai-ip'];
+    foreach ($noiBo as $ip) {
+        kiem(laDiaChiNoiBo($ip), "$ip phải bị coi là nội bộ");
+    }
+    foreach (['8.8.8.8', '161.248.146.56', '2606:4700::1111', '::ffff:8.8.8.8'] as $ip) {
+        kiem(!laDiaChiNoiBo($ip), "$ip là địa chỉ công khai, phải được đọc");
+    }
+    kiem(kiemTraDiaChiDoc('a.example', 443, ['8.8.8.8']) === null, 'Địa chỉ công khai ở cổng 443 phải được đọc');
+    kiem(kiemTraDiaChiDoc('a.example', 443, ['8.8.8.8', '127.0.0.1']) !== null, 'Tên miền có một IP nội bộ phải bị chặn');
+    kiem(kiemTraDiaChiDoc('a.example', 8765, ['8.8.8.8']) !== null, 'Cổng ngoài danh sách (AnkiConnect 8765) phải bị chặn');
+    kiem(kiemTraDiaChiDoc('a.example', 22, ['8.8.8.8']) !== null, 'Cổng SSH phải bị chặn');
+    kiem(kiemTraDiaChiDoc('a.example', 443, []) !== null, 'Không tra được IP thì không đọc');
+    kiem(phanTichDiaChi('https://Cert.Cipher.id.vn:8443/duong-dan', 443) === ['host' => 'cert.cipher.id.vn', 'cong' => 8443], 'Phải tách tên máy và cổng từ địa chỉ dán vào');
+    kiem(isset(docChungChiTuMayChu('127.0.0.1:443', 443)['loi']), '127.0.0.1 phải bị chặn trước khi kết nối');
+    kiem(isset(docChungChiTuMayChu('[::1]', 443)['loi']), '::1 phải bị chặn trước khi kết nối');
+}
+
+// Luật: Chứng chỉ đọc được điền đúng từng ô của form: tên chính, ngày theo giờ Việt Nam, thuật toán, độ dài khoá, ký, fingerprint, serial.
+// Vì sao: User 08/11/2026 muốn đọc xong chỉ việc xem lại rồi Lưu; ô điền sai là lưu sai ngày hết hạn, sai cảnh báo.
+// Đỏ nghĩa là: Ngày lệch múi giờ (giờ UTC thay vì +07:00), thuật toán hay fingerprint lấy sai trường của chứng chỉ.
+// Đừng: Sửa giá trị mong đợi theo kết quả mới cho xanh; so lại với "openssl x509 -text" của chứng chỉ mẫu trước.
+function test_chung_chi_doc_duoc_dien_dung_cac_o(PDO $pdo): void
+{
+    $gt = giaTriTuChungChi(CHUNG_CHI_MAU_PEM);
+    $mong = [
+        'subject_cn' => 'cert.cipher.id.vn',
+        'san' => '', // Tên phụ duy nhất trùng tên chính nên không lặp lại.
+        'valid_from' => '2026-11-06 10:18:41', // 03:18:41 UTC
+        'valid_to' => '2027-02-04 10:18:40',
+        'key_algorithm' => 'ECDSA',
+        'key_size' => '256',
+        'signature_algorithm' => 'ecdsa-with-SHA384',
+        'fingerprint_sha256' => 'ee7a1d355685b88e42560a57530af572a77dd193e27ee7ba616c225869c55543',
+        'serial' => '066AB80900C6DC903BF7B822C7016F7BA3BF',
+        'ben_cap' => ["Let's Encrypt", 'YE1'],
+    ];
+    foreach ($mong as $o => $giaTri) {
+        kiem($gt[$o] === $giaTri, "Ô $o: mong " . json_encode($giaTri) . ', nhận ' . json_encode($gt[$o]));
+    }
+}
+
+// Luật: Đọc xong thì tên miền và tổ chức cấp được tự chọn khi trùng tên (tên miền cha cũng được), không trùng thì để trống; không bao giờ tự tạo bản ghi.
+// Vì sao: User 08/11/2026 chốt để trống kèm gợi ý; tự tạo sinh bản trùng kiểu "Let's Encrypt" và "Let's Encrypt R10", sai thống kê theo tổ chức cấp.
+// Đỏ nghĩa là: Chọn nhầm tên miền ngắn hơn khi có tên miền khớp dài hơn, phân biệt hoa thường, hoặc số bản ghi danh mục thay đổi.
+// Đừng: Thêm INSERT vào chonToChucCap()/idTheoTen() cho "tiện"; người dùng tự thêm qua trang Tổ chức cấp.
+function test_doc_xong_tu_chon_ten_mien_va_to_chuc_cap_khong_tu_tao(PDO $pdo): void
+{
+    $tenMien = [3 => 'cipher.id.vn', 4 => 'cert.cipher.id.vn', 5 => 'id.vn'];
+    kiem(chonTenMienChoDiaChi($tenMien, 'cert.cipher.id.vn') === 4, 'Trùng hẳn phải được chọn');
+    kiem(chonTenMienChoDiaChi($tenMien, 'mail.cipher.id.vn') === 3, 'Phải chọn tên miền cha dài nhất');
+    kiem(chonTenMienChoDiaChi($tenMien, 'xcipher.id.vn') === 5, '"xcipher.id.vn" không thuộc "cipher.id.vn"');
+    kiem(chonTenMienChoDiaChi($tenMien, 'example.com') === null, 'Không khớp thì để trống');
+
+    $toChuc = [1 => "Let's Encrypt", 2 => 'DigiCert'];
+    kiem(chonToChucCap($toChuc, ["let's encrypt", 'YE1']) === 1, 'Trùng tên không phân biệt hoa thường phải được chọn');
+    kiem(chonToChucCap($toChuc, ['Acme Corp', 'DigiCert']) === 2, 'Trùng CN của bên cấp cũng được');
+    kiem(chonToChucCap($toChuc, ['Google Trust Services', 'WR1']) === null, 'Không trùng thì để trống');
+
+    $truoc = (int) $pdo->query('SELECT (SELECT COUNT(*) FROM certificate_authorities) + (SELECT COUNT(*) FROM domains)')->fetchColumn();
+    $cacToChuc = array_column(danhSachToChuc($pdo), 'name', 'id');
+    $cacTenMien = array_column(danhSachTenMien($pdo), 'domain_name', 'id');
+    chonToChucCap($cacToChuc, ['Tổ chức chưa từng có']);
+    chonTenMienChoDiaChi($cacTenMien, 'chua-tung-co.example');
+    $sau = (int) $pdo->query('SELECT (SELECT COUNT(*) FROM certificate_authorities) + (SELECT COUNT(*) FROM domains)')->fetchColumn();
+    kiem($truoc === $sau, 'Tự chọn không được tạo thêm tổ chức cấp hay tên miền');
+}
+
+// Luật: Ô gõ Tên miền, Tổ chức cấp chỉ nhận tên có trong danh mục (không phân biệt hoa thường); tên lạ không lưu được.
+// Vì sao: Hai ô đổi từ ô chọn sang ô gõ có gợi ý (08/11/2026); gõ tự do mà lưu được thì danh mục và thống kê vỡ.
+// Đỏ nghĩa là: idTheoTen() trả về mã cho tên không có, hoặc luuChungChi() nhận chứng chỉ không có tên miền, tổ chức cấp.
+// Đừng: Chỉ dựa vào kiểm tra của trình duyệt (data-trong-danh-sach); tắt JavaScript là qua.
+function test_o_go_ten_mien_to_chuc_cap_chi_nhan_ten_co_trong_danh_muc(PDO $pdo): void
+{
+    $danhMuc = [7 => "Let's Encrypt", 9 => 'DigiCert'];
+    kiem(idTheoTen($danhMuc, "  LET'S ENCRYPT ") === 7, 'Tên có trong danh mục phải ra đúng mã');
+    kiem(idTheoTen($danhMuc, 'Lets Encrypt') === null, 'Tên gần giống không được tính là có');
+    kiem(idTheoTen($danhMuc, '') === null, 'Ô trống không ra mã nào');
+
+    $loi = luuChungChi($pdo, null, chungChiHopLe(['ca_id' => '', 'domain_id' => '']), 1);
+    kiem(isset($loi['ca_id'], $loi['domain_id']), 'Tên lạ (mã rỗng) phải bị từ chối ở cả hai ô');
+    kiem((int) $pdo->query("SELECT COUNT(*) FROM certificates WHERE cert_code = 'CERT-100'")->fetchColumn() === 0, 'Không được lưu');
 }
 
 $pdo = ketNoiCsdl('cipher_test');

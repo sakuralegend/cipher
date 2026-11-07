@@ -603,3 +603,243 @@ function moTaSoNgay(array $chungChi): string
     }
     return 'Còn ' . $soNgay . ' ngày';
 }
+
+// ---------- Đọc chứng chỉ từ máy chủ (chức năng mở rộng 2) ----------
+// Luồng: phanTichDiaChi() -> phanGiaiDiaChi() -> kiemTraDiaChiDoc() -> kết nối TLS tới đúng IP đã kiểm
+// -> giaTriTuChungChi(). Web chạy chung máy với dịch vụ chỉ nghe ở 127.0.0.1 và không có mật khẩu,
+// nên mọi địa chỉ nội bộ đều bị chặn, kể cả với người đã đăng nhập (SSRF: mượn máy chủ đi dò mạng nội bộ).
+
+// Chỉ các cổng TLS phổ biến (user chốt 08/11/2026): người đăng nhập không dùng được web để quét cổng tuỳ ý.
+// STARTTLS (25, 587) không có: phải nói giao thức thư trước khi bắt tay TLS.
+const CONG_DOC_CHUNG_CHI = [
+    443 => '443 · HTTPS', 8443 => '8443 · HTTPS phụ', 9443 => '9443 · HTTPS phụ', 465 => '465 · SMTP qua TLS',
+    993 => '993 · IMAP qua TLS', 995 => '995 · POP3 qua TLS', 636 => '636 · LDAP qua TLS', 853 => '853 · DNS qua TLS',
+    5061 => '5061 · SIP qua TLS',
+];
+const GIAY_CHO_DOC_CHUNG_CHI = 5;
+
+// true nếu không được kết nối tới IP này: nội bộ, loopback, link-local, dành riêng, CGNAT, hoặc không phải IP.
+// IPv6 có thể chứa IPv4 bên trong (::ffff:127.0.0.1, ::ffff:7f00:1, ::127.0.0.1, 64:ff9b::7f00:1): tách ra xét
+// như IPv4, vì kết nối tới các dạng đó có thể đi tới đúng IPv4 bên trong.
+function laDiaChiNoiBo(string $ip): bool
+{
+    $nhiPhan = @inet_pton($ip);
+    if ($nhiPhan === false) {
+        return true;
+    }
+    if (strlen($nhiPhan) === 16) {
+        if ($nhiPhan === str_repeat("\0", 16) || $nhiPhan === str_repeat("\0", 15) . "\1") {
+            return true; // :: và ::1
+        }
+        $dau12 = substr($nhiPhan, 0, 12);
+        if ($dau12 === str_repeat("\0", 10) . "\xff\xff" || $dau12 === str_repeat("\0", 12)
+            || $dau12 === "\x00\x64\xff\x9b" . str_repeat("\0", 8)) {
+            return laDiaChiNoiBo(inet_ntop(substr($nhiPhan, 12)));
+        }
+        // fe80::/10 (link-local): xét thẳng, không dựa vào việc bản PHP này có xếp nó vào "dành riêng" hay không.
+        if (ord($nhiPhan[0]) === 0xfe && (ord($nhiPhan[1]) & 0xc0) === 0x80) {
+            return true;
+        }
+    }
+    if (filter_var(inet_ntop($nhiPhan), FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE) === false) {
+        return true;
+    }
+    // 100.64.0.0/10 (CGNAT, mạng nội bộ của nhà mạng): filter_var không coi là nội bộ.
+    return strlen($nhiPhan) === 4 && ord($nhiPhan[0]) === 100 && (ord($nhiPhan[1]) & 0xc0) === 64;
+}
+
+// Tách "https://cert.cipher.id.vn:8443/abc", "cert.cipher.id.vn", "[2001:db8::1]" thành tên máy và cổng.
+// Cổng gõ kèm địa chỉ thắng cổng chọn trong danh sách. Trả về ['host' => ..., 'cong' => ...] hoặc ['loi' => ...].
+function phanTichDiaChi(string $nhap, int $congChon): array
+{
+    $nhap = trim($nhap);
+    if ($nhap === '') {
+        return ['loi' => 'Hãy nhập tên miền hoặc địa chỉ máy chủ.'];
+    }
+    // Không có "://" thì thêm vào, để parse_url hiểu phần đầu là tên máy chứ không phải đường dẫn.
+    $phan = parse_url(str_contains($nhap, '://') ? $nhap : 'tls://' . $nhap);
+    $host = strtolower(trim((string) ($phan['host'] ?? ''), '[]'));
+    $cong = isset($phan['port']) ? (int) $phan['port'] : $congChon;
+    $laIp = filter_var($host, FILTER_VALIDATE_IP) !== false;
+    if ($host === '' || (!$laIp && filter_var($host, FILTER_VALIDATE_DOMAIN, FILTER_FLAG_HOSTNAME) === false)) {
+        return ['loi' => 'Địa chỉ không hợp lệ. Ví dụ đúng: cert.cipher.id.vn'];
+    }
+    return ['host' => $host, 'cong' => $cong];
+}
+
+// Mọi IP (v4 trước, v6 sau) mà tên máy trỏ tới. Hỏi thẳng DNS, không qua file hosts của máy chủ.
+function phanGiaiDiaChi(string $host): array
+{
+    if (filter_var($host, FILTER_VALIDATE_IP) !== false) {
+        return [$host];
+    }
+    $v4 = [];
+    $v6 = [];
+    foreach (@dns_get_record($host, DNS_A | DNS_AAAA) ?: [] as $banGhi) {
+        if (isset($banGhi['ip'])) {
+            $v4[] = $banGhi['ip'];
+        } elseif (isset($banGhi['ipv6'])) {
+            $v6[] = $banGhi['ipv6'];
+        }
+    }
+    return [...$v4, ...$v6];
+}
+
+// Câu lỗi nếu không được đọc, null nếu được. Tách khỏi phần kết nối để test không cần mạng.
+// Chặn khi BẤT KỲ IP nào là nội bộ: tên miền trỏ cả IP công khai lẫn 127.0.0.1 vẫn bị chặn.
+function kiemTraDiaChiDoc(string $host, int $cong, array $cacIp): ?string
+{
+    if (!array_key_exists($cong, CONG_DOC_CHUNG_CHI)) {
+        return "Cổng $cong không nằm trong các cổng TLS được phép đọc: " . implode(', ', array_keys(CONG_DOC_CHUNG_CHI)) . '.';
+    }
+    if ($cacIp === []) {
+        return "Không tìm thấy địa chỉ IP của $host. Kiểm tra lại tên miền.";
+    }
+    foreach ($cacIp as $ip) {
+        if (laDiaChiNoiBo($ip)) {
+            return ($host === $ip ? "$ip là địa chỉ nội bộ." : "$host trỏ tới địa chỉ nội bộ ($ip).")
+                . ' Chỉ đọc được máy chủ có địa chỉ công khai.';
+        }
+    }
+    return null;
+}
+
+// Kết nối và lấy chứng chỉ máy chủ đang dùng. Trả về ['chung_chi' => OpenSSLCertificate, 'host', 'cong']
+// hoặc ['loi' => ...]. Kết nối tới đúng IP vừa kiểm, gửi tên miền qua SNI: nếu tra DNS lần nữa khi kết nối,
+// kẻ xấu có thể đổi bản ghi sang 127.0.0.1 ngay giữa hai lần tra (DNS rebinding).
+// Không kiểm chứng chỉ có hợp lệ không: hết hạn, tự ký, sai tên vẫn phải đọc được, vì đó là thứ cần theo dõi.
+function docChungChiTuMayChu(string $nhap, int $congChon): array
+{
+    $diaChi = phanTichDiaChi($nhap, $congChon);
+    if (isset($diaChi['loi'])) {
+        return $diaChi;
+    }
+    ['host' => $host, 'cong' => $cong] = $diaChi;
+    $cacIp = phanGiaiDiaChi($host);
+    $loi = kiemTraDiaChiDoc($host, $cong, $cacIp);
+    if ($loi !== null) {
+        return ['loi' => $loi];
+    }
+
+    $ip = $cacIp[0];
+    $ngucCanh = stream_context_create(['ssl' => [
+        'capture_peer_cert' => true,
+        'verify_peer' => false,
+        'verify_peer_name' => false,
+        'allow_self_signed' => true,
+        'SNI_enabled' => filter_var($host, FILTER_VALIDATE_IP) === false, // SNI chỉ nhận tên miền, không nhận IP.
+        'peer_name' => $host,
+    ]]);
+    $dich = str_contains($ip, ':') ? "[$ip]" : $ip;
+    $ketNoi = @stream_socket_client("ssl://$dich:$cong", $maLoi, $thongBaoLoi, GIAY_CHO_DOC_CHUNG_CHI,
+        STREAM_CLIENT_CONNECT, $ngucCanh);
+    if ($ketNoi === false) {
+        return ['loi' => "Không đọc được chứng chỉ ở $host:$cong. Máy chủ không trả lời trong "
+            . GIAY_CHO_DOC_CHUNG_CHI . ' giây, từ chối kết nối, hoặc không dùng TLS ở cổng này.'];
+    }
+    $chungChi = stream_context_get_params($ketNoi)['options']['ssl']['peer_certificate'] ?? null;
+    fclose($ketNoi);
+    if (!$chungChi instanceof OpenSSLCertificate) {
+        return ['loi' => "Máy chủ $host:$cong không gửi chứng chỉ."];
+    }
+    return ['chung_chi' => $chungChi, 'host' => $host, 'cong' => $cong];
+}
+
+// Giá trị các ô của form chứng chỉ, từ một chứng chỉ (đối tượng hoặc chuỗi PEM). Ngày theo giờ Việt Nam
+// (múi giờ đặt ở config/db.php). Thêm 'ben_cap': các tên của tổ chức cấp (O, CN) để tự chọn trong danh mục.
+// Thuật toán khoá ngoài RSA, ECDSA (Ed25519, GOST) để trống cho người dùng chọn: bản PHP này không báo được.
+function giaTriTuChungChi(OpenSSLCertificate|string $chungChi): array
+{
+    $p = openssl_x509_parse($chungChi);
+    $khoa = openssl_pkey_get_details(openssl_pkey_get_public($chungChi)) ?: [];
+    $thuatToan = match ($khoa['type'] ?? null) {
+        OPENSSL_KEYTYPE_RSA => 'RSA',
+        OPENSSL_KEYTYPE_EC => 'ECDSA',
+        default => '',
+    };
+
+    // Một chứng chỉ có thể có nhiều CN; lấy cái đầu. Không có CN (chứng chỉ mới hay vậy) thì lấy tên phụ đầu tiên.
+    $tenPhu = [];
+    foreach (explode(',', $p['extensions']['subjectAltName'] ?? '') as $muc) {
+        if (str_starts_with(trim($muc), 'DNS:')) {
+            $tenPhu[] = substr(trim($muc), 4);
+        }
+    }
+    $cn = $p['subject']['CN'] ?? ($tenPhu[0] ?? '');
+    $cn = is_array($cn) ? (string) reset($cn) : (string) $cn;
+    $benCap = array_values(array_filter([$p['issuer']['O'] ?? null, $p['issuer']['CN'] ?? null], 'is_string'));
+
+    return [
+        'subject_cn' => $cn,
+        'san' => implode(', ', array_values(array_diff($tenPhu, [$cn]))),
+        'valid_from' => date('Y-m-d H:i:s', $p['validFrom_time_t']),
+        'valid_to' => date('Y-m-d H:i:s', $p['validTo_time_t']),
+        'key_algorithm' => $thuatToan,
+        'key_size' => isset($khoa['bits']) ? (string) $khoa['bits'] : '',
+        'signature_algorithm' => (string) ($p['signatureTypeLN'] ?? ''),
+        'fingerprint_sha256' => openssl_x509_fingerprint($chungChi, 'sha256'),
+        'serial' => strtoupper((string) ($p['serialNumberHex'] ?? '')),
+        'ben_cap' => $benCap,
+    ];
+}
+
+// Tên miền quản lý cho địa chỉ vừa đọc: trùng hẳn, nếu không thì tên miền cha dài nhất
+// ("cert.cipher.id.vn" thuộc "cipher.id.vn"). $cacTenMien: [mã => tên]. Không có thì null.
+function chonTenMienChoDiaChi(array $cacTenMien, string $host): ?int
+{
+    $chon = null;
+    $doDai = -1;
+    foreach ($cacTenMien as $id => $ten) {
+        $ten = strtolower((string) $ten);
+        if (($host === $ten || str_ends_with($host, '.' . $ten)) && strlen($ten) > $doDai) {
+            $chon = (int) $id;
+            $doDai = strlen($ten);
+        }
+    }
+    return $chon;
+}
+
+// Tổ chức cấp trùng tên với O hoặc CN của bên cấp; không trùng thì null (để trống, không tự tạo).
+function chonToChucCap(array $cacToChuc, array $benCap): ?int
+{
+    foreach ($benCap as $ten) {
+        $id = idTheoTen($cacToChuc, $ten);
+        if ($id !== null) {
+            return $id;
+        }
+    }
+    return null;
+}
+
+// Việc của nút "Đọc chứng chỉ" ở form Thêm: đọc, chuyển thành giá trị các ô, tự chọn tên miền và tổ chức cấp,
+// rồi ghi một dòng Nhật ký dù đọc được hay không (để biết ai đã cho máy chủ kết nối đi đâu).
+// Trả về ['loi' => ...] hoặc ['gia_tri' => [ô => giá trị], 'host', 'cong', 'ben_cap', 'trung' => chứng chỉ trùng|null].
+function docChungChiChoForm(PDO $pdo, string $nhap, int $congChon, array $cacTenMien, array $cacToChuc): array
+{
+    $ketQua = docChungChiTuMayChu($nhap, $congChon);
+    if (isset($ketQua['loi'])) {
+        ghiNhatKy($pdo, 'doc_chung_chi', null, null, mb_substr(trim($nhap), 0, 200) . ': ' . $ketQua['loi']);
+        return $ketQua;
+    }
+    $doc = giaTriTuChungChi($ketQua['chung_chi']);
+    $giaTri = array_diff_key($doc, ['ben_cap' => true]);
+    $giaTri['domain_id'] = (string) (chonTenMienChoDiaChi($cacTenMien, $ketQua['host']) ?? '');
+    $giaTri['ca_id'] = (string) (chonToChucCap($cacToChuc, $doc['ben_cap']) ?? '');
+    ghiNhatKy($pdo, 'doc_chung_chi', null, null, "{$ketQua['host']}:{$ketQua['cong']}: {$doc['subject_cn']}, hết hạn "
+        . date('d/m/Y', strtotime($doc['valid_to'])));
+    return [
+        'gia_tri' => $giaTri,
+        'host' => $ketQua['host'],
+        'cong' => $ketQua['cong'],
+        'ben_cap' => $doc['ben_cap'],
+        'trung' => chungChiTheoFingerprint($pdo, $doc['fingerprint_sha256']),
+    ];
+}
+
+// Chứng chỉ đã lưu có fingerprint này (id, mã quản lý), null nếu chưa có: báo trước khi người dùng bấm Lưu.
+function chungChiTheoFingerprint(PDO $pdo, string $fingerprint): ?array
+{
+    $cau = $pdo->prepare('SELECT id, cert_code FROM certificates WHERE fingerprint_sha256 = ?');
+    $cau->execute([chuanHoaFingerprint($fingerprint)]);
+    return $cau->fetch() ?: null;
+}
