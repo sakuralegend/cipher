@@ -40,6 +40,11 @@ $nutGiaoDien = <<<'HTML'
     <svg class="icon hide-theme-light" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M3 12h1m8 -9v1m8 8h1m-9 8v1m-6.4 -15.4l.7 .7m12.1 -.7l-.7 .7m0 11.4l.7 .7m-12.1 -.7l-.7 .7"/></svg>
 </button>
 HTML;
+
+// Biểu tượng khiên đứng trước tên hệ thống ở landing, thanh quản trị và trang đăng nhập (hình của bộ Tabler Icons).
+$logo = <<<'HTML'
+<span class="logo-khien" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l8 4.5v4.5c0 4.5-3.2 8-8 9-4.8-1-8-4.5-8-9V7.5z"/><path d="M9 12l2 2 4-4"/></svg></span>
+HTML;
 ?>
 <!doctype html>
 <html lang="vi" data-bs-theme="light">
@@ -49,7 +54,7 @@ HTML;
     <title><?= e($tieuDe) ?> · Quản lý chứng chỉ số</title>
     <link rel="stylesheet" href="<?= e(url('assets/tabler/tabler.min.css')) ?>">
     <link rel="stylesheet" href="<?= e(url('assets/inter/inter.css')) ?>">
-    <link rel="stylesheet" href="<?= e(url('assets/app.css')) ?>">
+    <link rel="stylesheet" href="<?= e(urlTep('assets/app.css')) ?>">
     <!-- Đặt trong head và không defer: đổi màu trước khi vẽ trang, để không loé màu sáng. -->
     <script src="<?= e(url('assets/tabler/tabler-theme.min.js')) ?>"></script>
     <?php if ($coChuyenCanh): ?>
@@ -70,7 +75,7 @@ HTML;
                     <span class="navbar-toggler-icon"></span>
                 </button>
                 <?php // Tên hệ thống dẫn về landing; về Dashboard đã có mục Dashboard ngay bên cạnh. ?>
-                <a class="navbar-brand me-3 ten-he-thong-qt" href="<?= e(url('index.php')) ?>">Quản lý chứng chỉ số</a>
+                <a class="navbar-brand me-3 ten-he-thong-qt d-inline-flex align-items-center gap-2" href="<?= e(url('index.php')) ?>"><?= $logo ?>Quản lý chứng chỉ số</a>
                 <div class="navbar-nav flex-row order-md-last align-items-center thanh-tai-khoan">
                     <?= $nutGiaoDien ?>
                     <div class="nav-item dropdown">

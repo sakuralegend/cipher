@@ -20,6 +20,13 @@ function url(string $duongDan): string
     return substr($thuMucPublic, strlen($gocWeb)) . '/' . $duongDan;
 }
 
+// Địa chỉ file tĩnh hay sửa (app.css, app.js) kèm ?v=thời điểm sửa file: máy chủ không gửi Cache-Control,
+// nên không có số này thì trình duyệt có thể dùng bản cũ hàng giờ sau khi deploy. Sửa file là số tự đổi.
+function urlTep(string $duongDan): string
+{
+    return url($duongDan) . '?v=' . filemtime(__DIR__ . '/../public/' . $duongDan);
+}
+
 function chuyenHuong(string $duongDan): never
 {
     header('Location: ' . url($duongDan));

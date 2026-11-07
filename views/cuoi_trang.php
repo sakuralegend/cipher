@@ -7,6 +7,6 @@
     <?php if ($coBieuDo ?? false): ?>
         <script src="<?= e(url('assets/chartjs/chart.umd.min.js')) ?>"></script>
     <?php endif; ?>
-    <script src="<?= e(url('assets/app.js')) ?>"></script>
+    <script src="<?= e(urlTep('assets/app.js')) ?>"></script>
 </body>
 </html>

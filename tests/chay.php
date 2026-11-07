@@ -1479,6 +1479,32 @@ function test_chuyen_canh_chi_bat_o_landing_va_dang_nhap(PDO $pdo): void
     kiem($cacTrang === ['index.php', 'login.php'], 'Trang bật chuyển cảnh phải đúng là index.php và login.php, đang là: ' . implode(', ', $cacTrang));
 }
 
+// Luật: app.css và app.js được nạp qua urlTep(), địa chỉ kèm ?v= là thời điểm sửa file.
+// Vì sao: Máy chủ không gửi Cache-Control; sau lần deploy 07/11/2026 Safari trên iPhone có thể giữ CSS cũ hàng giờ, ghép với HTML mới là trang vỡ.
+// Đỏ nghĩa là: Có chỗ nạp hai file này bằng url() trần, hoặc urlTep() không còn gắn thời điểm sửa file.
+// Đừng: Gắn số phiên bản viết tay (?v=2); quên tăng là lỗi quay lại.
+function test_css_js_cua_he_thong_co_so_phien_ban_theo_file(PDO $pdo): void
+{
+    $giaoDien = file_get_contents(__DIR__ . '/../views/dau_trang.php') . file_get_contents(__DIR__ . '/../views/cuoi_trang.php');
+    foreach (['assets/app.css', 'assets/app.js'] as $tep) {
+        kiem(str_contains($giaoDien, "urlTep('$tep')"), "$tep phải nạp qua urlTep()");
+        kiem(!str_contains($giaoDien, "url('$tep')"), "$tep còn nạp bằng url() không có số phiên bản");
+    }
+    $khoiDong = codeKhongChuThich(__DIR__ . '/../src/khoi_dong.php');
+    kiem(preg_match('/function urlTep\(.*?filemtime/s', $khoiDong) === 1, 'urlTep() phải gắn thời điểm sửa file (filemtime)');
+}
+
+// Luật: Thanh quản trị thu gọn (nút nhỏ, tên nhỏ) ở mọi màn rộng dưới 400px, để iPhone 390px vẫn thấy thanh trên một hàng.
+// Vì sao: Đo 07/11/2026: ngưỡng cũ 23.75rem (380px) bỏ sót 390px, nút giao diện và tài khoản rớt xuống hàng hai trên iPhone.
+// Đỏ nghĩa là: Ngưỡng thu gọn của .thanh-tai-khoan bị hạ xuống dưới 24.375rem (390px).
+// Đừng: Hạ ngưỡng lại cho "đúng 320px"; đo lại ở 390px và 414px trước khi đổi.
+function test_thanh_quan_tri_thu_gon_o_man_390px(PDO $pdo): void
+{
+    $css = file_get_contents(__DIR__ . '/../public/assets/app.css');
+    kiem(preg_match('/@media \(max-width: ([\d.]+)rem\) \{\s*\.thanh-tai-khoan \{/', $css, $m) === 1, 'Không tìm thấy khối thu gọn của .thanh-tai-khoan');
+    kiem((float) $m[1] >= 24.375, "Ngưỡng thu gọn {$m[1]}rem nhỏ hơn 390px");
+}
+
 // Luật: Web có địa chỉ không đuôi cổng: cổng 80, Alt-Svc và cả địa chỉ gõ kèm :8443 đều dẫn về địa chỉ không đuôi, dữ liệu mẫu ghi cổng 443.
 // Vì sao: Caddy vẫn nghe 8443 nên tự quảng bá cổng này qua Alt-Svc, và người mở link cũ sẽ thấy lại đuôi nếu không bị đá về.
 // Đỏ nghĩa là: ai đó đã đưa đuôi :8443 trở lại, hoặc bỏ dòng xoá Alt-Svc trong cấu hình Caddy.
