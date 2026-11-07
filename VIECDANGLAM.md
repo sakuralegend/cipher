@@ -9,7 +9,7 @@
 **CỐ Ý KHÔNG làm:** đổi logic đăng nhập; đổi màu trang quản trị; nối tiếp đúng số ngày của thẻ khi bay sang (login luôn chạy từ 90 ngày).
 **Đã có sẵn:** v1 chia đôi ở commit 054d333 (chưa deploy); phim thẻ `veKhung`/`batTuChay` trong `app.js`; nền tối dùng chung một quy tắc trong `app.css`.
 
-**Trạng thái 07/11:** code xong, nghiệm thu xanh 74/74, đã commit, chưa deploy. Thêm theo user giữa chừng: biểu tượng trong ô nhập + nút hiện mật khẩu. CHỜ user duyệt ảnh và tự bấm thử chuyển cảnh, rồi deploy + đóng phiếu.
+**Trạng thái 07/11:** code xong, nghiệm thu xanh 74/74, đã deploy 4626b8c (user cho phép, đang xem bằng iPhone), bước kiem đạt. Thêm theo user giữa chừng: biểu tượng trong ô nhập + nút hiện mật khẩu. CHỜ user duyệt ảnh và tự bấm thử chuyển cảnh, rồi deploy + đóng phiếu.
 
 ### Kế hoạch (duyệt 07/11/2026)
 1. `views/the_chung_chi.php` (mới): HTML thẻ chứng chỉ chuyển từ `index.php` ra, landing và login cùng gọi, khỏi chép 30 dòng.
