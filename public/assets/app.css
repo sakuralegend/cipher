@@ -143,6 +143,23 @@
     line-height: 1.2;
 }
 
+/* Chấm "Còn hiệu lực": vòng sáng lan ra rồi tan, 2 giây một lần, như đèn "đang chạy" (user chốt 07/11/2026).
+   Vẽ bằng box-shadow nên không đẩy chữ bên cạnh; màu là màu xanh trạng thái của Tabler. */
+.cham-song {
+    animation: cham-song 2s ease-out infinite;
+}
+
+@keyframes cham-song {
+    0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--tblr-green) 70%, transparent); }
+    70%, 100% { box-shadow: 0 0 0 0.375rem transparent; }
+}
+
+@media print, (prefers-reduced-motion: reduce) {
+    .cham-song {
+        animation: none;
+    }
+}
+
 /* Bản in luôn nền sáng: trình duyệt bỏ màu nền khi in, nên giao diện tối sẽ thành chữ sáng trên giấy trắng. */
 @media print {
     html {

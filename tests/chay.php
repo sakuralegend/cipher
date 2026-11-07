@@ -1505,6 +1505,26 @@ function test_thanh_quan_tri_thu_gon_o_man_390px(PDO $pdo): void
     kiem((float) $m[1] >= 24.375, "Ngưỡng thu gọn {$m[1]}rem nhỏ hơn 390px");
 }
 
+// Luật: Chỉ chấm "Còn hiệu lực" trên thẻ số Dashboard có vòng sáng lan ra (cham-song); máy giảm chuyển động thì đứng yên.
+// Vì sao: User 07/11/2026 muốn chấm "đang hoạt động" có hiệu ứng; nhiều chấm cùng động thì rối và kéo mắt khỏi chứng chỉ cần xử lý (QD-21).
+// Đỏ nghĩa là: cham-song lan sang trang khác hoặc gắn cho trạng thái khác, hoặc mất phần tắt hiệu ứng khi giảm chuyển động.
+// Đừng: Gắn cham-song vào nhan_trang_thai.php cho "đồng bộ"; danh sách 50 dòng cùng nhấp nháy.
+function test_chi_cham_con_hieu_luc_tren_dashboard_co_vong_sang(PDO $pdo): void
+{
+    $cacTrang = [];
+    foreach (new RecursiveIteratorIterator(new RecursiveDirectoryIterator(realpath(__DIR__ . '/..'))) as $file) {
+        $duong = str_replace('\\', '/', $file->getPathname());
+        if ($file->getExtension() === 'php' && !str_contains($duong, '/tests/') && str_contains(codeKhongChuThich($file->getPathname()), 'cham-song')) {
+            $cacTrang[] = basename(dirname($duong)) . '/' . $file->getFilename();
+        }
+    }
+    kiem($cacTrang === ['admin/index.php'], 'cham-song chỉ được dùng ở Dashboard, đang ở: ' . implode(', ', $cacTrang));
+    kiem(preg_match("/\\\$khoa === 'valid' \\? ' cham-song'/", file_get_contents(__DIR__ . '/../public/admin/index.php')) === 1, 'cham-song phải chỉ gắn cho trạng thái valid');
+
+    $css = file_get_contents(__DIR__ . '/../public/assets/app.css');
+    kiem(preg_match('/prefers-reduced-motion: reduce\)\s*\{[^@]*\.cham-song/s', $css) === 1, 'Phải tắt vòng sáng khi máy bật giảm chuyển động');
+}
+
 // Luật: Web có địa chỉ không đuôi cổng: cổng 80, Alt-Svc và cả địa chỉ gõ kèm :8443 đều dẫn về địa chỉ không đuôi, dữ liệu mẫu ghi cổng 443.
 // Vì sao: Caddy vẫn nghe 8443 nên tự quảng bá cổng này qua Alt-Svc, và người mở link cũ sẽ thấy lại đuôi nếu không bị đá về.
 // Đỏ nghĩa là: ai đó đã đưa đuôi :8443 trở lại, hoặc bỏ dòng xoá Alt-Svc trong cấu hình Caddy.
