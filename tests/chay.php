@@ -1538,6 +1538,16 @@ function test_nut_giao_dien_tren_thanh_quan_tri_luon_can_giua(PDO $pdo): void
     }
 }
 
+// Luật: Đăng xuất xong thì về landing (index.php), không về trang đăng nhập.
+// Vì sao: User 07/11/2026: "Khi đăng xuất thì hãy về trang landing".
+// Đỏ nghĩa là: logout.php chuyển hướng đi chỗ khác, hoặc không còn gọi dangXuat() trước khi chuyển.
+// Đừng: Đổi về login.php vì "tiện đăng nhập lại"; landing đã có nút Đăng nhập.
+function test_dang_xuat_xong_ve_landing(PDO $pdo): void
+{
+    $code = codeKhongChuThich(__DIR__ . '/../public/logout.php');
+    kiem(preg_match("/dangXuat\(\);\s*chuyenHuong\('index\.php'\);/", $code) === 1, 'logout.php phải gọi dangXuat() rồi chuyển về index.php');
+}
+
 // Luật: Web có địa chỉ không đuôi cổng: cổng 80, Alt-Svc và cả địa chỉ gõ kèm :8443 đều dẫn về địa chỉ không đuôi, dữ liệu mẫu ghi cổng 443.
 // Vì sao: Caddy vẫn nghe 8443 nên tự quảng bá cổng này qua Alt-Svc, và người mở link cũ sẽ thấy lại đuôi nếu không bị đá về.
 // Đỏ nghĩa là: ai đó đã đưa đuôi :8443 trở lại, hoặc bỏ dòng xoá Alt-Svc trong cấu hình Caddy.
