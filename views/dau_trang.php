@@ -2,7 +2,7 @@
 // Đầu trang dùng chung. Trang gọi file này phải có $tieuDe.
 // $nguoi:          có thì hiện thanh menu quản trị.
 // $trangHienTai:   tên mục menu đang mở, để tô đậm ('dashboard', 'may_chu', 'nguoi_dung'...).
-// $coThanhRieng:   trang tự có thanh trên cùng (landing), nên không hiện nút giao diện nổi.
+// $coThanhRieng:   trang tự đặt nút giao diện (landing, đăng nhập), nên không hiện nút giao diện nổi.
 $nguoi ??= null;
 $trangHienTai ??= '';
 $coThanhRieng ??= false;
