@@ -1,19 +1,22 @@
 # 🎯 VIỆC ĐANG LÀM
 > Phiếu bị GHI ĐÈ ở việc kế tiếp. Xong việc thì để trống, chừa đúng dòng tiêu đề.
 
-## Làm trang đăng nhập đồng bộ với landing
+## Trang đăng nhập v2: chuyển cảnh từ landing, hiệu ứng như landing, màu navy + cyan
 
-**Một câu:** `public/login.php` đang là khung Tabler mặc định, nút xanh, nền sáng (chụp web thật 07/11/2026); đổi cho cùng phong cách landing.
-**User đã chốt:** muốn xử lý trang login; chưa chốt kiểu dáng.
-**Coi là XONG khi:** user duyệt qua ảnh sáng, tối, điện thoại; đăng nhập, sai mật khẩu, bị khoá tạm vẫn chạy đúng.
-**CỐ Ý KHÔNG làm:** đổi logic đăng nhập, chặn dò mật khẩu.
-**Đã có sẵn:** `.ld-nut-chinh`, `--ld-net` và nền tối của landing trong `app.css`.
+**Một câu:** bấm "Đăng nhập" ở landing thì thẻ chứng chỉ bay sang trang login; login có thẻ tự chạy vòng đời; phần tối của landing và login đổi sang navy + cyan.
+**User đã chốt (07/11/2026):** navy + cyan · áp cho landing + login, quản trị giữ nguyên (QD-21) · thẻ bay sang · cột form hẹp. Màu trạng thái xanh/vàng/cam/đỏ giữ nguyên.
+**Coi là XONG khi:** user duyệt ảnh sáng, tối, điện thoại và tự bấm thử chuyển cảnh; phim landing chạy như cũ; đăng nhập đúng/sai/tạm chặn vẫn đúng.
+**CỐ Ý KHÔNG làm:** đổi logic đăng nhập; đổi màu trang quản trị; nối tiếp đúng số ngày của thẻ khi bay sang (login luôn chạy từ 90 ngày).
+**Đã có sẵn:** v1 chia đôi ở commit 054d333 (chưa deploy); phim thẻ `veKhung`/`batTuChay` trong `app.js`; nền tối dùng chung một quy tắc trong `app.css`.
 
-### Kế hoạch (duyệt 07/11/2026, user chọn B)
-- A (đề xuất): cả trang luôn nền tối như hero (chấm lưới, quầng xanh), thẻ form giữa, nút `.ld-nut-chinh`; bỏ nút đổi giao diện ở trang này.
-- B: chia đôi, trái nền tối kèm khẩu hiệu, phải là form theo sáng/tối; điện thoại thì nửa trái thành dải mỏng. Thêm khoảng gấp đôi CSS.
-- Cả hai: góc trên trái có link "← Trang giới thiệu" về `index.php`; giữ nguyên tên ô, CSRF, `$loi`.
-- File: `public/login.php` (chỉ HTML), `app.css` (mục Đăng nhập, gộp nền chấm lưới đang lặp ở hero và dải cuối thành một quy tắc), `views/dau_trang.php` (chú thích `$coThanhRieng`).
-- Kiểm: ba lệnh nghiệm thu; chụp 1440 và 390 px, sáng và tối; đăng nhập đúng, sai mật khẩu, bị tạm chặn bằng trình duyệt thật. Không thêm test, không QD (chỉ đổi giao diện).
-- Lùi: `git revert` một commit, không đụng CSDL.
-- **Trạng thái 07/11:** code xong, nghiệm thu xanh, đã commit; đăng nhập đúng/sai/tạm chặn thử bằng curl đạt. CHỜ user duyệt ảnh, rồi deploy + đóng phiếu.
+**Trạng thái 07/11:** code xong, nghiệm thu xanh 74/74, đã commit, chưa deploy. Thêm theo user giữa chừng: biểu tượng trong ô nhập + nút hiện mật khẩu. CHỜ user duyệt ảnh và tự bấm thử chuyển cảnh, rồi deploy + đóng phiếu.
+
+### Kế hoạch (duyệt 07/11/2026)
+1. `views/the_chung_chi.php` (mới): HTML thẻ chứng chỉ chuyển từ `index.php` ra, landing và login cùng gọi, khỏi chép 30 dòng.
+2. `app.js`: tách phim thẻ khỏi khối landing thành hàm dùng chung; landing giữ cuộn như cũ, login chỉ tự chạy vòng 18 giây.
+3. `app.css`: nền tối navy `#060d1c`, chấm lưới và quầng cyan; nút chính trên nền tối chuyển cyan sang xanh dương; màu trạng thái dùng được ở cả hai trang; bố cục login cột form 30rem có đầu và chân.
+4. Chuyển cảnh: CSS `@view-transition` (có sẵn trong trình duyệt), chỉ bật ở landing và login qua cờ `$coChuyenCanh` trong `dau_trang.php`; thẻ mang cùng một tên ở hai trang nên bay sang. Firefox và máy giảm chuyển động thì chuyển trang thường.
+5. `login.php`, `index.php`: đổi HTML theo các bước trên. Sửa dòng QD-23 "chỉ ở landing" thành "landing và login".
+- Test: "Chuyển cảnh chỉ bật ở landing và đăng nhập, trang quản trị không" (QD-21).
+- Kiểm: ba lệnh nghiệm thu; chụp landing ở nhiều độ cuộn trước/sau để so; chụp login sáng/tối/390 px; thử đăng nhập đúng/sai/tạm chặn.
+- Lùi: `git revert` các commit của phiếu (cả 054d333 nếu bỏ hẳn), không đụng CSDL.

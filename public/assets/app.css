@@ -291,7 +291,7 @@ input[type="datetime-local"].is-invalid {
 .navbar.ld-thanh-tren {
     -webkit-backdrop-filter: blur(12px);
     backdrop-filter: blur(12px);
-    background: rgba(10, 14, 20, 0.72);
+    background: rgba(6, 13, 28, 0.72);
     border-bottom: 1px solid transparent;
     box-shadow: none;
     height: 3.75rem;
@@ -308,37 +308,63 @@ input[type="datetime-local"].is-invalid {
     border-bottom-color: var(--tblr-border-color);
 }
 
-/* Nền tối chấm lưới dùng chung: hero, dải cuối landing và nửa trái trang đăng nhập.
+/* Nền tối dùng chung cho hero, dải cuối landing và nửa trái trang đăng nhập: xanh đen (navy), chấm lưới
+   ánh cyan và một vệt sáng xanh dương ở góc trên, theo chủ đề màu công nghệ (user chốt 07/11/2026).
    Phải đặt lại color: chữ thừa hưởng màu đã tính ở body, tức màu tối của giao diện sáng. */
 .ld-san-khau,
 .ld-dai-cuoi,
 .dn-trai {
     background:
-        radial-gradient(rgba(255, 255, 255, 0.09) 1px, transparent 1px) 0 0 / 1.75rem 1.75rem,
-        #0a0e14;
+        radial-gradient(rgba(125, 211, 252, 0.12) 1px, transparent 1px) 0 0 / 1.75rem 1.75rem,
+        radial-gradient(60rem 36rem at 0% 0%, rgba(59, 130, 246, 0.16), transparent 70%),
+        #060d1c;
     color: var(--tblr-body-color);
 }
 
-/* Sân khấu hero. overflow: clip cắt được quầng sáng mà không làm hỏng position: sticky bên trong
-   (overflow: hidden thì có hỏng). Màu trạng thái --ld-mau đổi theo data-ld-muc do app.js đặt. */
-.ld-san-khau {
+/* Chữ tô sáng trong tiêu đề: dải cyan sang xanh dương. */
+.ld-chu-sang {
+    -webkit-background-clip: text;
+    background-clip: text;
+    background-image: linear-gradient(90deg, #67e8f9, #60a5fa);
+    color: transparent;
+}
+
+/* Giao diện tối của landing và trang đăng nhập: nền xanh đen cho liền với phần navy, thay màu xám của Tabler.
+   Trang quản trị không có hai lớp này nên giữ nguyên (QD-21). */
+[data-bs-theme="dark"] body:has(.ld-san-khau, .dn-trang) {
+    /* Ô nhập lấy màu từ --tblr-btn-input-bg; Tabler đã tính biến này sẵn ở thẻ gốc từ --tblr-bg-forms,
+       nên đổi --tblr-bg-forms ở đây không ăn, phải ghi đè chính nó. */
+    --tblr-btn-input-bg: #0b1527;
+    --tblr-bg-surface: #0d1729;
+    --tblr-body-bg: #08101f;
+    --tblr-border-color: #1c2840;
+}
+
+/* Khối bọc thẻ chứng chỉ (hero landing, nửa trái trang đăng nhập): màu trạng thái --ld-mau đổi theo
+   data-ld-muc do phim thẻ trong app.js đặt, thẻ và quầng sáng bên trong cùng đổi theo. */
+[data-ld-muc] {
     --ld-mau: #2fb344;
-    --ld-tap-trung: 0;
-    border-radius: 0 0 2rem 2rem;
-    overflow: clip;
     transition: --ld-mau 0.5s ease;
 }
 
 /* Trước khung hình đầu tiên không chạy hiệu ứng đổi màu, nếu không trang mở ra sẽ loé từ khung tĩnh
    (đỏ, 7 ngày) sang đầu phim (xanh, 90 ngày). Lớp ld-da-chay do app.js gắn sau khung đầu. */
-.ld-san-khau:not(.ld-da-chay),
-.ld-san-khau:not(.ld-da-chay) * {
+[data-ld-muc]:not(.ld-da-chay),
+[data-ld-muc]:not(.ld-da-chay) * {
     transition: none !important;
 }
 
-.ld-san-khau[data-ld-muc="vang"] { --ld-mau: #f5b301; }
-.ld-san-khau[data-ld-muc="cam"] { --ld-mau: #ff8a3d; }
-.ld-san-khau[data-ld-muc="do"] { --ld-mau: #ff5c5c; }
+[data-ld-muc="vang"] { --ld-mau: #f5b301; }
+[data-ld-muc="cam"] { --ld-mau: #ff8a3d; }
+[data-ld-muc="do"] { --ld-mau: #ff5c5c; }
+
+/* Sân khấu hero. overflow: clip cắt được quầng sáng mà không làm hỏng position: sticky bên trong
+   (overflow: hidden thì có hỏng). */
+.ld-san-khau {
+    --ld-tap-trung: 0;
+    border-radius: 0 0 2rem 2rem;
+    overflow: clip;
+}
 
 .ld-dinh {
     padding: 5.75rem 0 4.5rem;
@@ -442,38 +468,45 @@ input[type="datetime-local"].is-invalid {
     max-width: 34rem;
 }
 
-/* Nút chính của landing, thay màu xanh mặc định của Tabler: màu tương phản với nền đang đứng, tối trên
-   nền sáng, trắng trên nền tối. Ghi đè bằng biến của .btn để cả lúc rê chuột, lúc bấm cũng đúng màu. */
+/* Nút chính của landing, thay màu xanh mặc định của Tabler: xanh đen trên nền sáng, dải cyan sang xanh dương
+   trên nền tối (chữ tối trên dải màu đạt từ 5:1 trở lên). Ghi đè bằng biến của .btn để cả lúc rê chuột,
+   lúc bấm cũng đúng màu. */
 .ld-nut-chinh {
-    --ld-nut-bong: rgba(10, 14, 20, 0.25);
-    --tblr-btn-active-bg: #000;
+    --ld-nut-bong: rgba(11, 23, 48, 0.28);
+    --tblr-btn-active-bg: #050b17;
     --tblr-btn-active-border-color: transparent;
     --tblr-btn-active-color: #fff;
-    --tblr-btn-bg: #0a0e14;
+    --tblr-btn-bg: #0b1730;
     --tblr-btn-border-color: transparent;
     --tblr-btn-box-shadow: none;
     --tblr-btn-color: #fff;
-    --tblr-btn-hover-bg: #1c232e;
+    --tblr-btn-hover-bg: #16264a;
     --tblr-btn-hover-border-color: transparent;
     --tblr-btn-hover-color: #fff;
     font-weight: 600;
-    transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.3s ease, color 0.3s ease;
+    transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.3s ease, color 0.3s ease, filter 0.2s ease;
 }
 
 [data-bs-theme="dark"] .ld-nut-chinh {
-    --ld-nut-bong: rgba(255, 255, 255, 0.18);
-    --tblr-btn-active-bg: #d8dee6;
-    --tblr-btn-active-color: #0a0e14;
-    --tblr-btn-bg: #f0f6fc;
-    --tblr-btn-color: #0a0e14;
-    --tblr-btn-hover-bg: #fff;
-    --tblr-btn-hover-color: #0a0e14;
+    --ld-nut-bong: rgba(34, 211, 238, 0.35);
+    --tblr-btn-active-bg: #22d3ee;
+    --tblr-btn-active-color: #04111f;
+    --tblr-btn-bg: #22d3ee;
+    --tblr-btn-color: #04111f;
+    --tblr-btn-hover-bg: #22d3ee;
+    --tblr-btn-hover-color: #04111f;
+    background-image: linear-gradient(135deg, #22d3ee, #3b82f6);
 }
 
 .ld-nut-chinh:hover,
 .ld-nut-chinh:focus-visible {
     box-shadow: 0 0.5rem 1.75rem var(--ld-nut-bong);
     transform: translateY(-2px);
+}
+
+[data-bs-theme="dark"] .ld-nut-chinh:hover,
+[data-bs-theme="dark"] .ld-nut-chinh:focus-visible {
+    filter: brightness(1.1);
 }
 
 /* Chồng thẻ minh hoạ. --ld-nghieng (1 ở đầu phim, 0 khi đã phẳng) và --ld-troi do app.js đặt. */
@@ -487,7 +520,7 @@ input[type="datetime-local"].is-invalid {
 }
 
 .ld-the-sau {
-    background: #131922;
+    background: #0c1529;
     border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 1rem;
     color: var(--tblr-secondary);
@@ -503,8 +536,11 @@ input[type="datetime-local"].is-invalid {
 .ld-the-sau-1 { transform: translateY(calc(-0.875rem * var(--ld-troi))) scale(0.96); }
 .ld-the-sau-2 { opacity: 0.6; transform: translateY(calc(-1.75rem * var(--ld-troi))) scale(0.92); }
 
+/* view-transition-name: thẻ mang cùng tên ở landing và trang đăng nhập, nên khi chuyển trang (chỉ hai trang
+   này bật, xem $coChuyenCanh) trình duyệt cho thẻ bay từ chỗ cũ sang chỗ mới. */
 .ld-the {
-    background: #151b25;
+    background: #0e1830;
+    view-transition-name: the-chung-chi;
     border: 1px solid color-mix(in srgb, var(--ld-mau) 38%, rgba(255, 255, 255, 0.1));
     border-radius: 1rem;
     box-shadow: 0 1.5rem 4rem rgba(0, 0, 0, 0.5);
@@ -945,7 +981,7 @@ input[type="datetime-local"].is-invalid {
 /* Ba bước. Mỗi bước có một đoạn nối tới bước sau: ::before là đường nền, ::after là phần đã vẽ.
    --ld-doan (0 đến 1) do app.js đặt theo độ cuộn; mặc định 1 nên không có JavaScript vẫn đầy đủ. */
 .ld-cac-buoc {
-    --ld-net: #0a0e14;
+    --ld-net: #0b1730;
     --ld-net-chu: #fff;
     display: grid;
     gap: 2rem;
@@ -955,10 +991,10 @@ input[type="datetime-local"].is-invalid {
     padding: 0;
 }
 
-/* Cùng cặp màu với nút chính: tối trên nền sáng, trắng trên nền tối. */
+/* Cùng cặp màu với nút chính: xanh đen trên nền sáng, cyan trên nền tối. */
 [data-bs-theme="dark"] .ld-cac-buoc {
-    --ld-net: #f0f6fc;
-    --ld-net-chu: #0a0e14;
+    --ld-net: #22d3ee;
+    --ld-net-chu: #04111f;
 }
 
 .ld-buoc {
@@ -1037,9 +1073,11 @@ input[type="datetime-local"].is-invalid {
     }
 }
 
-/* Dải cuối: cùng nền với hero, quầng sáng xanh lớn dần theo độ cuộn (--ld-lan do app.js đặt). */
+/* Dải cuối: cùng nền với hero, quầng sáng lớn dần theo độ cuộn (--ld-lan do app.js đặt). Không có thẻ
+   chứng chỉ nên quầng sáng dùng màu cyan của chủ đề thay cho màu trạng thái. */
 .ld-dai-cuoi {
     --ld-lan: 1;
+    --ld-mau: #22d3ee;
     border-radius: 2rem 2rem 0 0;
     margin-top: clamp(3.5rem, 8vw, 6.5rem);
     overflow: clip;
@@ -1077,16 +1115,19 @@ input[type="datetime-local"].is-invalid {
     padding-bottom: 2rem;
 }
 
-/* Trang đăng nhập, kiểu chia đôi (user chọn 07/11/2026): nửa trái luôn tối như hero để nối tiếp landing,
-   nửa phải chứa form và theo nút sáng/tối. Màn hẹp: nửa trái thu thành dải trên cùng. Tên class bắt đầu bằng dn-. */
+/* Trang đăng nhập (user chốt 07/11/2026): nửa trái luôn tối như hero, có thẻ chứng chỉ tự chạy vòng đời;
+   cột form hẹp bên phải theo nút sáng/tối, có đầu (tên, nút giao diện) và chân. Màn hẹp: nửa trái thu thành
+   dải trên cùng chỉ còn link về landing. Tên class bắt đầu bằng dn-. */
 .dn-trang {
     display: grid;
-    grid-template-columns: minmax(0, 5fr) minmax(0, 6fr);
+    grid-template-columns: minmax(0, 1fr) 30rem;
     min-height: 100vh;
 }
 
+/* Viền sáng mảnh ở mép: giao diện tối, nền cột form gần giống nửa trái nên cần một đường tách. */
 .dn-trai {
     border-radius: 0 2rem 2rem 0;
+    box-shadow: 1px 0 0 rgba(125, 211, 252, 0.14);
     display: flex;
     flex-direction: column;
     overflow: clip;
@@ -1099,11 +1140,10 @@ input[type="datetime-local"].is-invalid {
     position: relative;
 }
 
-/* Quầng sáng dùng màu xanh mặc định của --ld-mau, đặt ở góc dưới để không chói sau chữ. */
+/* Quầng sáng mang màu trạng thái của thẻ, đặt sau thẻ. */
 .dn-trai .ld-anh-sang {
-    left: 20%;
-    opacity: 0.8;
-    top: 95%;
+    left: 72%;
+    top: 55%;
 }
 
 .dn-ve-landing {
@@ -1126,43 +1166,95 @@ input[type="datetime-local"].is-invalid {
     text-decoration: none;
 }
 
-.dn-loi-chao {
+/* Chữ và thẻ: hai cột khi đủ rộng; hẹp hơn thì bỏ thẻ, chỉ còn chữ. */
+.dn-giua {
+    align-items: center;
+    display: grid;
+    gap: clamp(2rem, 4vw, 4rem);
     margin-block: auto;
-    max-width: 32rem;
-    padding-block: 3rem;
+    padding-block: 2.5rem;
+}
+
+@media (min-width: 80rem) {
+    .dn-giua {
+        grid-template-columns: minmax(0, 1fr) minmax(0, 27rem);
+    }
+}
+
+@media (max-width: 79.98rem) {
+    .dn-phim {
+        display: none;
+    }
+
+    .dn-trai .ld-anh-sang {
+        left: 30%;
+        top: 95%;
+    }
+}
+
+.dn-loi-chao .ld-mo-ta {
+    margin-bottom: 0;
 }
 
 .dn-trai .ld-tieu-de {
-    font-size: clamp(2rem, 3.4vw, 3rem);
+    font-size: clamp(1.875rem, 2.4vw, 2.75rem);
 }
 
-.dn-moc {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.5rem;
+/* Cụm "hết hạn bất ngờ" đứng riêng một dòng, không bị cắt đôi giữa hai dòng. */
+.dn-trai .ld-chu-sang {
+    display: block;
 }
 
-.dn-trai .ld-chan-trang {
-    margin: 0;
-    padding: 0;
+/* Chia dòng tránh một chữ trơ lại ở dòng cuối. */
+.dn-loi-chao .ld-mo-ta {
+    text-wrap: pretty;
+}
+
+/* Thẻ hơi nghiêng và trôi nhẹ lên xuống, để nửa trái có chiều sâu. */
+.dn-phim .ld-chong-the {
+    --ld-nghieng: 0.45;
+    animation: dn-troi 6s ease-in-out infinite;
+}
+
+@keyframes dn-troi {
+    50% { translate: 0 -0.625rem; }
 }
 
 .dn-phai {
     display: flex;
     flex-direction: column;
-    padding: 1rem clamp(1.25rem, 4vw, 3rem) 2rem;
+    padding: 1.25rem 3rem 1.5rem;
+}
+
+[data-bs-theme="dark"] .dn-phai {
+    background: var(--tblr-body-bg);
 }
 
 .dn-phai-dau {
+    align-items: center;
     display: flex;
-    justify-content: flex-end;
+    justify-content: space-between;
+}
+
+.dn-ten {
+    align-items: center;
+    display: inline-flex;
+    font-weight: 600;
+    gap: 0.5rem;
+}
+
+/* Biểu tượng khiên lấy màu của nút chính: xanh đen trên nền sáng, cyan trên nền tối. */
+.dn-ten .icon {
+    color: #0b1730;
+}
+
+[data-bs-theme="dark"] .dn-ten .icon {
+    color: #22d3ee;
 }
 
 .dn-form {
-    margin: auto;
-    max-width: 24rem;
+    margin-block: auto;
     padding-block: 2rem;
-    width: 100%;
 }
 
 .dn-tieu-de {
@@ -1180,6 +1272,46 @@ input[type="datetime-local"].is-invalid {
     min-height: 2.75rem;
 }
 
+/* Chừa chỗ bên phải ô mật khẩu cho nút con mắt. */
+.dn-form .input-icon .form-control:not(:last-child) {
+    padding-right: 2.75rem;
+}
+
+.dn-hien-mat-khau {
+    align-items: center;
+    background: none;
+    border: 0;
+    border-radius: 0.375rem;
+    bottom: 0;
+    color: var(--tblr-secondary);
+    display: flex;
+    justify-content: center;
+    position: absolute;
+    right: 0.25rem;
+    top: 0;
+    width: 2.5rem;
+}
+
+.dn-hien-mat-khau[hidden] {
+    display: none;
+}
+
+.dn-hien-mat-khau:hover,
+.dn-hien-mat-khau:focus-visible {
+    color: var(--tblr-body-color);
+}
+
+.dn-hien-mat-khau[aria-pressed="true"] .dn-mat-mo,
+.dn-hien-mat-khau[aria-pressed="false"] .dn-mat-nham {
+    display: none;
+}
+
+.dn-chan {
+    color: var(--tblr-secondary);
+    font-size: 0.8125rem;
+    margin: 0;
+}
+
 @media (max-width: 61.99rem) {
     .dn-trang {
         grid-template-columns: minmax(0, 1fr);
@@ -1188,27 +1320,11 @@ input[type="datetime-local"].is-invalid {
 
     .dn-trai {
         border-radius: 0 0 1.5rem 1.5rem;
-        padding: 0.75rem 1.25rem 1.25rem;
+        padding: 0.75rem 1.25rem;
     }
 
-    .dn-loi-chao {
-        margin: 0.5rem 0 0;
-        padding: 0;
-    }
-
-    /* Dải trên chỉ giữ link về landing và tên hệ thống. */
-    .dn-trai .ld-tieu-de,
-    .dn-trai .ld-mo-ta,
-    .dn-moc,
-    .dn-trai .ld-chan-trang {
+    .dn-giua {
         display: none;
-    }
-
-    .dn-trai .ld-nhan-nho {
-        color: var(--tblr-body-color);
-        font-size: 1.125rem;
-        font-weight: 600;
-        margin: 0;
     }
 
     .dn-trai .ld-anh-sang {
@@ -1216,9 +1332,32 @@ input[type="datetime-local"].is-invalid {
         top: 100%;
     }
 
+    .dn-phai {
+        padding: 1rem 1.25rem 1.5rem;
+    }
+
     .dn-form {
         margin: 0 auto;
+        max-width: 24rem;
+        width: 100%;
     }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .dn-phim .ld-chong-the {
+        animation: none;
+    }
+}
+
+/* Chuyển cảnh landing ↔ đăng nhập: thẻ bay chậm hơn phần còn lại một chút để mắt kịp theo. */
+::view-transition-group(the-chung-chi) {
+    animation-duration: 0.6s;
+    animation-timing-function: cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+::view-transition-old(root),
+::view-transition-new(root) {
+    animation-duration: 0.4s;
 }
 
 @media (prefers-reduced-motion: reduce) {

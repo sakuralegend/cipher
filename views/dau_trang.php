@@ -6,6 +6,8 @@
 $nguoi ??= null;
 $trangHienTai ??= '';
 $coThanhRieng ??= false;
+// $coChuyenCanh:   bật chuyển cảnh giữa các trang có cờ này (landing, đăng nhập): thẻ chứng chỉ bay sang trang mới.
+$coChuyenCanh ??= false;
 
 // Số cảnh báo trên menu chỉ đếm, không tạo: việc tạo chạy ở Dashboard và trang Cảnh báo (docs/SPEC.md mục 5),
 // để mỗi lần mở trang không phải ghi CSDL. Trang quản trị nào cũng có sẵn $pdo.
@@ -50,6 +52,11 @@ HTML;
     <link rel="stylesheet" href="<?= e(url('assets/app.css')) ?>">
     <!-- Đặt trong head và không defer: đổi màu trước khi vẽ trang, để không loé màu sáng. -->
     <script src="<?= e(url('assets/tabler/tabler-theme.min.js')) ?>"></script>
+    <?php if ($coChuyenCanh): ?>
+        <!-- Chỉ chuyển cảnh khi cả trang cũ và trang mới cùng bật, nên trang quản trị vẫn chuyển tức thì (QD-21).
+             Trình duyệt chưa hỗ trợ hoặc máy bật giảm chuyển động thì chuyển trang như thường. -->
+        <style>@media (prefers-reduced-motion: no-preference) { @view-transition { navigation: auto; } }</style>
+    <?php endif; ?>
 </head>
 <body>
 <?php if ($nguoi === null && !$coThanhRieng): ?>

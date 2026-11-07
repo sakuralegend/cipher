@@ -11,6 +11,7 @@ $nutChinh = $daDangNhap
 
 $tieuDe = 'Giới thiệu';
 $coThanhRieng = true;
+$coChuyenCanh = true; // Bấm Đăng nhập: thẻ chứng chỉ bay sang trang đăng nhập.
 require __DIR__ . '/../views/dau_trang.php';
 ?>
 <header class="navbar navbar-expand d-print-none ld-thanh-tren" data-bs-theme="dark" data-ld-thanh-tren>
@@ -27,8 +28,7 @@ require __DIR__ . '/../views/dau_trang.php';
 <main>
     <?php
     // Sân khấu hero: kể vòng đời một chứng chỉ, app.js cho chạy theo tay cuộn (QD-23).
-    // HTML dưới đây sẵn là một khung hoàn chỉnh (còn 7 ngày, đủ 3 cảnh báo): tắt JavaScript hoặc
-    // bật giảm chuyển động thì người xem vẫn thấy trọn nội dung, chỉ là không chạy.
+    // Không có JavaScript thì thẻ và câu chú thích đứng yên ở khung "còn 7 ngày".
     // Luôn nền tối, không theo nút đổi giao diện (user chốt 07/11/2026).
     ?>
     <section class="ld-san-khau" data-bs-theme="dark" data-ld-san-khau data-ld-muc="do">
@@ -38,7 +38,7 @@ require __DIR__ . '/../views/dau_trang.php';
                 <div class="row align-items-center gy-5 gx-lg-5">
                     <div class="col-lg-6 ld-cot-chu">
                         <p class="ld-nhan-nho">Quản lý chứng chỉ số và thời hạn sử dụng</p>
-                        <h1 class="ld-tieu-de">Không để chứng chỉ nào hết hạn bất ngờ</h1>
+                        <h1 class="ld-tieu-de">Không để chứng chỉ nào <span class="ld-chu-sang">hết hạn bất ngờ</span></h1>
                         <p class="ld-mo-ta">
                             Theo dõi tập trung chứng chỉ SSL/TLS của website, máy chủ và dịch vụ trong tổ chức.
                             Hệ thống tự tính số ngày còn hiệu lực và cảnh báo ở các mốc 30, 15 và 7 ngày.
@@ -46,37 +46,7 @@ require __DIR__ . '/../views/dau_trang.php';
                         <a class="btn btn-lg ld-nut-chinh" href="<?= e($nutChinh['dich']) ?>"><?= e($nutChinh['nhan']) ?></a>
                     </div>
                     <div class="col-lg-6 ld-cot-phim">
-                        <div class="ld-chong-the" data-ld-chong-the>
-                            <!-- Hai thẻ phía sau chỉ để tạo chiều sâu: còn nhiều chứng chỉ khác. -->
-                            <div class="ld-the-sau ld-the-sau-2" aria-hidden="true"></div>
-                            <div class="ld-the-sau ld-the-sau-1" aria-hidden="true"></div>
-                            <figure class="ld-the" data-ld-the
-                                    aria-label="Minh hoạ: chứng chỉ của portal.congty.example đi qua các mốc cảnh báo 30, 15, 7 ngày rồi được gia hạn">
-                                <div class="ld-the-dau">
-                                    <span class="ma-so ld-the-ten">portal.congty.example</span>
-                                    <span class="ld-trang-thai"><i aria-hidden="true"></i><span data-ld-nhan>Mốc 7 ngày</span></span>
-                                </div>
-                                <div class="ld-dem">
-                                    <span class="ld-so" data-ld-so>7</span>
-                                    <span class="ld-don-vi">ngày còn lại</span>
-                                </div>
-                                <div class="ld-ray" aria-hidden="true" data-ld-ray style="--ld-ray: 0.84">
-                                    <div class="ld-ray-nen"><div class="ld-ray-day"></div></div>
-                                    <div class="ld-ray-con"><i></i></div>
-                                    <span class="ld-ray-moc" style="left: 40%">30</span>
-                                    <span class="ld-ray-moc" style="left: 62%">15</span>
-                                    <span class="ld-ray-moc" style="left: 84%">7</span>
-                                    <span class="ld-ray-moc ld-ray-het" style="left: 100%">Hết hạn</span>
-                                </div>
-                                <ul class="ld-nhat-ky">
-                                    <li class="ld-bat" data-ld-dong="30"><i aria-hidden="true"></i>Cảnh báo mốc 30 ngày</li>
-                                    <li class="ld-bat" data-ld-dong="15"><i aria-hidden="true"></i>Cảnh báo mốc 15 ngày</li>
-                                    <li class="ld-bat" data-ld-dong="7"><i aria-hidden="true"></i>Cảnh báo mốc 7 ngày</li>
-                                    <li data-ld-dong="gia-han"><i aria-hidden="true"></i>Đã gia hạn, bản cũ lưu vào lịch sử</li>
-                                </ul>
-                                <figcaption class="ld-the-chan">Minh hoạ</figcaption>
-                            </figure>
-                        </div>
+                        <?php require __DIR__ . '/../views/the_chung_chi.php'; ?>
                         <ol class="ld-chuong" data-ld-chuong>
                             <li>Mỗi ngày, hệ thống tự tính số ngày còn lại.</li>
                             <li>Còn 30 ngày: cảnh báo đầu tiên xuất hiện.</li>

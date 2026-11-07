@@ -1459,6 +1459,26 @@ function test_dau_trang_dung_yen_khi_chuyen_trang_nho_nhung_font_va_giu_cho_than
     kiem(str_contains($css, 'overflow-y: scroll'), 'app.css phải luôn giữ chỗ thanh cuộn');
 }
 
+// Luật: Chuyển cảnh giữa hai trang chỉ bật ở landing và trang đăng nhập; trang quản trị chuyển trang tức thì.
+// Vì sao: User 07/11/2026 muốn hiệu ứng khi bấm Đăng nhập; trang quản trị dùng hằng ngày nên ưu tiên nhanh, dễ nhìn (QD-21).
+// Đỏ nghĩa là: @view-transition lọt vào app.css (áp cho mọi trang), hoặc thêm/bớt trang bật $coChuyenCanh.
+// Đừng: Chuyển khối @view-transition vào app.css cho "gọn"; mỗi lần bấm menu quản trị sẽ chạy hiệu ứng.
+function test_chuyen_canh_chi_bat_o_landing_va_dang_nhap(PDO $pdo): void
+{
+    kiem(!str_contains(file_get_contents(__DIR__ . '/../public/assets/app.css'), '@view-transition'), 'app.css không được bật chuyển cảnh cho mọi trang');
+    kiem(str_contains(file_get_contents(__DIR__ . '/../views/dau_trang.php'), '@view-transition'), 'dau_trang.php phải có khối chuyển cảnh bật theo $coChuyenCanh');
+
+    $cacTrang = [];
+    $thuMuc = realpath(__DIR__ . '/../public');
+    foreach (new RecursiveIteratorIterator(new RecursiveDirectoryIterator($thuMuc)) as $file) {
+        if ($file->getExtension() === 'php' && preg_match('/\$coChuyenCanh\s*=\s*true/', codeKhongChuThich($file->getPathname()))) {
+            $cacTrang[] = str_replace('\\', '/', substr($file->getPathname(), strlen($thuMuc) + 1));
+        }
+    }
+    sort($cacTrang);
+    kiem($cacTrang === ['index.php', 'login.php'], 'Trang bật chuyển cảnh phải đúng là index.php và login.php, đang là: ' . implode(', ', $cacTrang));
+}
+
 // Luật: Web có địa chỉ không đuôi cổng: cổng 80, Alt-Svc và cả địa chỉ gõ kèm :8443 đều dẫn về địa chỉ không đuôi, dữ liệu mẫu ghi cổng 443.
 // Vì sao: Caddy vẫn nghe 8443 nên tự quảng bá cổng này qua Alt-Svc, và người mở link cũ sẽ thấy lại đuôi nếu không bị đá về.
 // Đỏ nghĩa là: ai đó đã đưa đuôi :8443 trở lại, hoặc bỏ dòng xoá Alt-Svc trong cấu hình Caddy.

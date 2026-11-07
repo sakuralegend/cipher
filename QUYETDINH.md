@@ -17,7 +17,7 @@
 ## 🗂️ Sổ
 | QD | Chọn | Thay vì | Vì | Hết hạn khi (trạng thái đo được, không dùng ngày tuyệt đối) |
 |---|---|---|---|---|
-| QD-23 | Chuyển động landing bằng CSS + JS thuần, chỉ ở landing | Thư viện Motion, GSAP | Hiệu ứng không cần thư viện; giữ tinh thần không CDN của QD-13 và không thêm thứ phải nuôi | Đã nộp và muốn hiệu ứng phức tạp hơn |
+| QD-23 | Chuyển động bằng CSS + JS thuần, chỉ ở landing và trang đăng nhập (chuyển cảnh qua `@view-transition` có sẵn) | Thư viện Motion, GSAP | Hiệu ứng không cần thư viện; giữ tinh thần không CDN của QD-13 và không thêm thứ phải nuôi | Đã nộp và muốn hiệu ứng phức tạp hơn |
 | QD-22 | Font Inter (OFL) tải về repo, màu chữ theo GitHub | Font hệ thống, Mona Sans, CDN | So trên nội dung thật 07/11/2026: Inter dễ đọc nhất với chữ nhỏ và tiếng Việt; không CDN như QD-13 | Đã nộp và muốn đổi font |
 | QD-21 | Khu quản trị ưu tiên dễ nhìn, mặc định sáng; phần đẹp dồn vào landing | Làm đẹp đều toàn web, mặc định tối | User chốt 07/11/2026: quản trị để dùng hằng ngày, landing để gây ấn tượng | Đã nộp và muốn đổi giao diện |
 | QD-20 | Chart.js 4.6.1 (MIT) tải về repo, không CDN | CDN, tự vẽ SVG | Cùng lý do QD-13: demo không phụ thuộc mạng; đề và SPEC đã ghi Chart.js | Đã nộp và muốn đổi thư viện |
