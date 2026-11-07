@@ -560,7 +560,9 @@ function dongCsv(array $cc): array
 {
     return array_map('oCsvAnToan', [
         $cc['cert_code'], $cc['subject_cn'], $cc['san'], $cc['ca_name'], $cc['domain_name'], $cc['server_name'],
-        date('d/m/Y H:i', strtotime($cc['valid_from'])), date('d/m/Y H:i', strtotime($cc['valid_to'])),
+        // Năm-tháng-ngày: mọi máy hiểu đúng, bảng tính tự hiện theo định dạng của máy đó. Dạng 09/11/2026
+        // bị máy định dạng Mỹ đọc thành 11 tháng 9. Không kèm giờ, vì ngày kèm giờ dài hơn cột và hiện #####.
+        date('Y-m-d', strtotime($cc['valid_from'])), date('Y-m-d', strtotime($cc['valid_to'])),
         moTaSoNgay($cc), TRANG_THAI[$cc['status']]['nhan'], $cc['key_algorithm'], (string) $cc['key_size'],
         $cc['signature_algorithm'], $cc['fingerprint_sha256'], $cc['serial'],
     ]);

@@ -1348,6 +1348,18 @@ function test_csv_vo_hieu_hoa_cong_thuc_va_giu_nguyen_du_lieu_thuong(PDO $pdo): 
     kiem($dong[9] === 'Còn hiệu lực', 'Trạng thái phải là chữ tiếng Việt');
 }
 
+// Luật: Ngày trong CSV ở dạng năm-tháng-ngày, không kèm giờ.
+// Vì sao: User mở CSV thấy ##### vì ngày kèm giờ dài hơn cột; dạng 09/11/2026 còn bị máy định dạng Mỹ đọc thành 11 tháng 9.
+// Đỏ nghĩa là: dongCsv() đã đổi dạng ngày, hạn chứng chỉ trong báo cáo có thể bị đọc sai mà không báo gì.
+// Đừng: đổi sang dạng ngày/tháng/năm cho quen mắt; bảng tính tự hiện theo định dạng của máy người mở.
+function test_csv_ngay_dang_nam_thang_ngay_khong_nham_ngay_thang(PDO $pdo): void
+{
+    $pdo->exec("UPDATE certificates SET valid_from = '2026-02-03 08:30:00', valid_to = '2027-09-11 23:59:59' WHERE cert_code = 'CERT-001'");
+    $dong = dongCsv(timDongBaoCao($pdo, 'CERT-001'));
+    kiem($dong[6] === '2026-02-03', 'Sai ngày bắt đầu: ' . $dong[6]);
+    kiem($dong[7] === '2027-09-11', 'Sai ngày hết hạn: ' . $dong[7]);
+}
+
 function timDongBaoCao(PDO $pdo, string $ma): array
 {
     foreach (tatCaChungChi($pdo) as $dong) {
