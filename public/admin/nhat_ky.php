@@ -88,6 +88,11 @@ require __DIR__ . '/../../views/tieu_de_trang.php';
                                         <?= e($dong['full_name']) ?>
                                         <div class="small text-secondary ma-so"><?= e($dong['username']) ?></div>
                                     <?php endif; ?>
+                                    <?php // Màn hẹp không có cột IP: IP nằm dưới người làm ("ai, từ đâu"). Không đặt ở ô Thời gian
+                                          // vì ô đó không xuống dòng, IPv6 dài sẽ đẩy bảng tràn ngang (iPhone 08/11/2026). ?>
+                                    <?php if ($dong['ip'] !== null): ?>
+                                        <div class="small text-secondary ma-so text-break d-lg-none">IP <?= e($dong['ip']) ?></div>
+                                    <?php endif; ?>
                                 </td>
                                 <td class="d-none d-md-table-cell"><span class="badge bg-<?= e($hd['mau']) ?>-lt"><?= e($hd['nhan']) ?></span></td>
                                 <td>

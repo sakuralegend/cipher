@@ -1864,6 +1864,18 @@ function test_caddy_nhan_proxy_protocol_chi_tu_xray(PDO $pdo): void
     kiem(!str_contains(codeKhongChuThich(__DIR__ . '/../src/nhat_ky.php'), 'X_FORWARDED_FOR'), 'Nhật ký không được đọc IP từ header khách tự gõ được');
 }
 
+// Luật: Trang Nhật ký hiện IP ở mọi độ rộng màn hình: cột IP chỉ có từ 992px, màn hẹp hơn thì IP nằm dưới người làm.
+// Vì sao: User 08/11/2026 trên iPhone không xem được IP: cột bị ẩn hẳn (d-none d-lg-table-cell), kéo bảng cũng không thấy.
+// Đỏ nghĩa là: Dòng IP cho màn hẹp bị xoá, hoặc nó và cột IP không cùng mốc lg nên có khoảng độ rộng không hiện IP.
+// Đừng: Bỏ d-none của cột IP cho "đơn giản"; bảng 5 cột tràn ngang trên điện thoại.
+function test_nhat_ky_hien_ip_o_moi_do_rong_man_hinh(PDO $pdo): void
+{
+    $trang = file_get_contents(__DIR__ . '/../public/admin/nhat_ky.php');
+    kiem(str_contains($trang, '<th class="d-none d-lg-table-cell">IP</th>'), 'Cột IP hiện từ mốc lg (992px)');
+    kiem(preg_match('/class="[^"]*\bd-lg-none\b[^"]*">IP <\?= e\(\$dong\[\'ip\'\]\) \?>/', $trang) === 1,
+        'Màn hẹp hơn lg phải có dòng IP thay cho cột IP');
+}
+
 $pdo = ketNoiCsdl('cipher_test');
 $soLoi = 0;
 $danhSachTest = array_filter(
