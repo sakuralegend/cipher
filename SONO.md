@@ -6,9 +6,9 @@
 | Nợ | Vì sao chưa trả | Hết hạn |
 |---|---|---|
 | Đọc cert thật phải chặn IP nội bộ, kể cả với người đã đăng nhập: VPS có AnkiConnect `127.0.0.1:8765` không mật khẩu, không chặn thì thành công cụ dò cổng | Chức năng mở rộng, chỉ làm nếu còn thời gian (QD-18) | Trước khi làm chức năng này; bỏ nếu không làm |
-| Self-SNI: chạy Xray thử ở cổng khác, đo xem Caddy chết có kéo VPN chết không; bật PROXY protocol trên cổng nội bộ riêng để web thấy IP thật (không thì chặn dò mật khẩu khoá tất cả); đổi 443; nhập lại link Shadowrocket, v2rayN; sửa `VPS_CHUNG.md` | Không làm trước khi nộp và chấm xong (QD-08) | 18–22/11/2026, hoặc ngay sau khi chấm nếu muộn hơn |
-| Đường vào quản trị VPS khi đang ở Nga, phòng VPN, SSH, Telegram cùng bị chặn | Đợi xong self-SNI (QD-08) | Trước ngày bay, cuối 11/2026 |
-| Đường dự phòng VPN: cổng khác với cấu hình kiểu cũ; quyết định có cần VPS thứ hai | Đợi xong self-SNI (QD-08) | Trước ngày bay, cuối 11/2026 |
+| Bỏ cửa phụ `cert.cipher.id.vn:8443`: đá về địa chỉ không đuôi. Cổng 8443 vẫn mở cho slushai | Giữ để vào được web nếu Xray lỗi lúc chấm (QD-08) | Ngay sau khi chấm, trước khi bay |
+| Đường vào quản trị VPS khi đang ở Nga, phòng VPN, SSH, Telegram cùng bị chặn | Chưa đến lượt, self-SNI vừa xong 07/11/2026 | Trước ngày bay, cuối 11/2026 |
+| Đường dự phòng VPN: cổng khác với cấu hình kiểu cũ; quyết định có cần VPS thứ hai | Chưa đến lượt, self-SNI vừa xong 07/11/2026 | Trước ngày bay, cuối 11/2026 |
 | Thử VPN từ mạng Nga thật; từ Việt Nam không đo được DPI Nga | Chưa ở Nga | Tuần đầu sau khi sang Nga |
 | Báo cáo phải nêu rõ phân chia nhiệm vụ từng thành viên (đề mục I.4): user cung cấp khi viết báo cáo | User làm hết, chốt cách chia sau | 14–15/11/2026 |
 | Sổ tay 1–2 trang: luồng chính và câu dễ bị hỏi, để user hiểu sơ bộ trước khi nộp | Chức năng chưa đủ | 16/11/2026 |

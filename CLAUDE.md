@@ -3,7 +3,7 @@
 Khởi tạo bằng skill `quy-trinh-lam-viec` v1.0 · Vai user: **DUYỆT** (QD-17) · Mức: **NHẸ**
 
 ## Dự án trong 3 dòng
-- Làm gì, cho ai: bài tập lớn đề 69 "Xây dựng hệ thống quản lý chứng chỉ số và thời hạn sử dụng" (tên này dùng trong báo cáo và trên web; `cipher` là tên repo và tên miền), cho quản trị viên trong tổ chức; sau khi nộp, web còn làm lớp ngụy trang self-SNI cho VPN (QD-08).
+- Làm gì, cho ai: bài tập lớn đề 69 "Xây dựng hệ thống quản lý chứng chỉ số và thời hạn sử dụng" (tên này dùng trong báo cáo và trên web; `cipher` là tên repo và tên miền), cho quản trị viên trong tổ chức; từ 07/11/2026 web còn làm lớp ngụy trang self-SNI cho VPN (QD-08).
 - Stack: PHP 8 thuần + PDO · MariaDB · HTML/CSS/JS, Tabler (trên Bootstrap 5, QD-13), Chart.js · Chạy: `C:\xampp\php\php.exe -S localhost:8000 -t public` (bật MySQL trong XAMPP) · Deploy: `git push`, rồi `ssh root@161.248.146.56 'bash -s -- cap_nhat' < deploy/dung_vps.sh` (user cho phép 06/11/2026: AI tự chạy đúng hai lệnh này sau mỗi phiếu rồi chạy bước `kiem`; đổi schema, cấu hình VPS vẫn phải hỏi)
 - Hạn / mốc: cổng tối 11/11/2026 (đủ 19 chức năng, chạy trên VPS) · nộp 17/11/2026 · user sang Nga khoảng cuối 11/2026. Đề và lịch: `docs/BAN_GIAO.md` (ảnh chụp, không cập nhật).
 
@@ -33,7 +33,7 @@ Phản biện trước khi tuân lệnh · thuật ngữ phải giải thích ·
 1. Xoá/ghi đè hàng loạt dữ liệu thật, đổi schema, migrate — việc đó đứng riêng, backup trước, kiểm sau.
 2. Thêm thư viện/framework mới.
 3. Đụng hạ tầng hay repo ngoài phạm vi việc được giao.
-4. 🔴 Bất cứ thay đổi nào trên VPS `161.248.146.56`: máy chạy chung VPN, bot Anki, slushai, bot Telegram. Đọc `D:\Desktop\slushai\VPS_CHUNG.md` trước; đo RAM trước và sau khi cài; chạy đủ lệnh kiểm trong đó sau mỗi lần đụng. Không đổi Xray hay cổng 443 trước khi bài đã nộp và chấm xong (QD-08).
+4. 🔴 Bất cứ thay đổi nào trên VPS `161.248.146.56`: máy chạy chung VPN, bot Anki, slushai, bot Telegram. Đọc `D:\Desktop\slushai\VPS_CHUNG.md` trước; đo RAM trước và sau khi cài; chạy đủ lệnh kiểm trong đó sau mỗi lần đụng. Khách vào web qua 443 của Xray, Xray chuyển sang Caddy (QD-08): khối `cert` trong `Caddyfile` hỏng thì VPN không nhận kết nối mới; chỉ `deploy/caddy-cipher.conf` đổi thì VPS chưa đổi. Đổi Xray hay cổng 443 phải hỏi.
 
 ## Lệnh nghiệm thu — chạy THẬT cuối mỗi việc
 Chạy trong Git Bash, từ thư mục gốc repo:

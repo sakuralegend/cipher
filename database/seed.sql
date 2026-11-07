@@ -21,7 +21,7 @@ INSERT INTO servers (id, hostname, ip_address, port, environment, owner) VALUES
     (2, 'mail-01', '192.0.2.20', 465, 'production', 'Phòng Hạ tầng'),
     (3, 'test-01', '192.0.2.30', 8443, 'staging', 'Phòng Phát triển'),
     (4, 'beta-01', '192.0.2.40', 8443, 'development', 'Phòng Phát triển'),
-    (5, 'cipher-vps', '161.248.146.56', 8443, 'production', 'Quản trị hệ thống');
+    (5, 'cipher-vps', '161.248.146.56', 443, 'production', 'Quản trị hệ thống');
 
 -- beta.congty.example không gắn chứng chỉ nào, để thử chặn xoá máy chủ chỉ còn tên miền.
 INSERT INTO domains (id, domain_name, server_id) VALUES

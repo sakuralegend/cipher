@@ -34,6 +34,9 @@ kiem() {
     df -h / | tail -1
     echo "--- Cổng 443 phải là xray, không phải caddy:"
     ss -tlnp | grep ':443 ' | grep -q xray && echo "OK xray giữ 443" || chet "443 KHÔNG còn là xray"
+    echo "--- Qua 443 phải ra web thật (Xray chuyển sang Caddy); hỏng là VPN cũng không nhận kết nối mới:"
+    [ "$(curl -s -m 15 -o /dev/null -w '%{http_code}' --resolve cert.cipher.id.vn:443:127.0.0.1 https://cert.cipher.id.vn/)" = 200 ] \
+        && echo "OK web qua 443" || chet "Web qua 443 KHÔNG trả 200"
     echo "--- Dịch vụ có sẵn:"
     systemctl is-active anki-bot slushai caddy
     docker ps --format '{{.Names}}' | grep -qx anki && echo "OK container anki" || chet "mất container anki"
@@ -218,6 +221,11 @@ cap_nhat() {
 }
 
 go() {
+    # Xray đang ngụy trang bằng chính web này: gỡ khối Caddy là VPN không nhận được kết nối mới.
+    if grep -q '127.0.0.1:8443' /usr/local/etc/xray/config.json; then
+        chet "Xray đang dùng web này làm dest. Đổi dest của Xray trước (repo vpn-xray), rồi mới gỡ web."
+    fi
+
     local ban_goc
     ban_goc=$(ls -1t "$CADDYFILE".truoc-cipher-* 2>/dev/null | tail -1 || true)
     [ -n "$ban_goc" ] || chet "Không tìm thấy bản sao lưu Caddyfile."

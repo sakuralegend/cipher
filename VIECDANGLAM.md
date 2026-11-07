@@ -1,13 +1,10 @@
 # 🎯 VIỆC ĐANG LÀM
 > Phiếu bị GHI ĐÈ ở việc kế tiếp. Xong việc thì để trống, chừa đúng dòng tiêu đề.
 
-## Làm trang đăng nhập đồng bộ với landing
+## Self-SNI: chờ user thử VPN bằng link mới rồi dọn VPS
 
-**Một câu:** `public/login.php` đang là khung Tabler mặc định, nút xanh, nền sáng (chụp web thật 07/11/2026); đổi cho cùng phong cách landing.
-**User đã chốt:** muốn xử lý trang login và đuôi `:8443` ở phiên sau; chưa chốt kiểu dáng login.
-**Coi là XONG khi:** user duyệt qua ảnh sáng, tối, điện thoại; đăng nhập, sai mật khẩu, bị khoá tạm vẫn chạy đúng.
-**CỐ Ý KHÔNG làm:** đổi logic đăng nhập, chặn dò mật khẩu · đụng 443 hay Xray (QD-08).
-**Câu đang chờ user:** đuôi `:8443`. Bỏ hẳn đuôi là phải có 443, mà Xray đang giữ: chỉ làm được bằng self-SNI, không trước khi nộp và chấm xong (QD-08, `VPS_CHUNG.md`). AI đề xuất: giữ `:8443` tới lúc chấm xong, làm theo nợ self-SNI 18-22/11. Muốn sớm hơn thì phải xét đưa `cert` qua dịch vụ trung gian đổi cổng: chưa đo, phải chuyển DNS khỏi pavietnam, cần hỏi trước.
-**Đã có sẵn:** cổng 80 đã đá sang 8443 (đo 07/11/2026), nên gõ `cert.cipher.id.vn` không đuôi vẫn vào được · `.ld-nut-chinh`, `--ld-net` và nền tối của landing trong `app.css`.
-
-### Kế hoạch — CHƯA TRÌNH, CẤM CODE. Việc đầu phiên mới: hỏi câu đang chờ, `kehoach.md`, chờ duyệt. Toàn cảnh: `git log --grep "Bàn giao phiên" -1`.
+**Một câu:** VPS đã chuyển 07/11/2026, `https://cert.cipher.id.vn` chạy không đuôi, phép kiểm trên VPS và từ ngoài đã đạt; còn phần thiết bị thật.
+**Coi là XONG khi:** user nhập `D:\Desktop\vpn-xray\secrets\vless-link.txt` hoặc quét `vless-qr.png` trên iPhone, Windows và báo chạy · đăng nhập được qua địa chỉ mới · bot Anki trả lời.
+**Còn lại:** (1) máy chủ `cipher-vps` trên VPS còn ghi cổng 8443: hệ thống quyền chặn lệnh sửa dữ liệu của AI; user sửa trong trang Máy chủ hoặc cho phép. (2) Xác nhận xong: xoá `/root/hoantac-self-sni.sh`. (3) `VPS_CHUNG.md` bên slushai đã sửa nhưng chưa commit, vì file có sẵn 48 dòng chưa commit từ trước.
+**Lùi lại:** `ssh root@161.248.146.56 bash /root/hoantac-self-sni.sh`, rồi nhập link cũ ở `secrets/vless-link.txt.bak` và đổi `database/seed.sql`, `deploy/caddy-cipher.conf` về như cũ.
+**Việc kế tiếp, chưa trình:** trang đăng nhập đồng bộ landing (`public/login.php`, dùng lại `.ld-nut-chinh`, `--ld-net`); user chưa chốt kiểu dáng.
