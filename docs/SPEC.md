@@ -125,8 +125,17 @@ Ngoài yêu cầu của đề, chỉ làm sau khi đủ 19 chức năng. Báo c�
 
 | Chức năng | Mô tả |
 |---|---|
-| Nhật ký hoạt động | Ai làm gì, lúc nào; không ai sửa hay xoá được nhật ký |
+| Nhật ký hoạt động | **Đã làm.** Ai làm gì, lúc nào; không ai sửa hay xoá được nhật ký (chi tiết ở 8.1) |
 | Đọc chứng chỉ thật | Nhập `tên miền:cổng`, hệ thống đọc rồi tự điền form; chặn địa chỉ IP nội bộ |
 | Chấm điểm an toàn | Cảnh báo SHA-1, RSA dưới 2048 bit, chứng chỉ tự ký, chuỗi thiếu; nhận diện thuật toán GOST |
+
+### 8.1. Nhật ký hoạt động
+
+- **Ghi những gì:** thêm, sửa, xoá chứng chỉ, máy chủ, tên miền, tổ chức cấp, người dùng; gia hạn và thu hồi chứng chỉ; khoá, mở khoá người dùng; đổi mật khẩu, đổi họ tên; đăng nhập, đăng xuất, đăng nhập sai (sai tên, sai mật khẩu, đang tạm chặn, tài khoản đã khoá).
+- **Mỗi dòng gồm:** thời điểm, người làm (để trống khi đăng nhập sai, vì chưa biết là ai), hành động, loại và mã đối tượng, tên đối tượng lúc đó (vẫn đọc được sau khi đối tượng bị xoá), địa chỉ IP.
+- **Ghi ở đâu:** ngay trong các hàm xử lý dữ liệu, sau khi thao tác thành công; gia hạn ghi trong cùng giao dịch. Nhờ vậy không trang nào quên ghi.
+- **Ai xem:** chỉ Admin, ở trang Nhật ký: lọc theo người làm, hành động, khoảng ngày; 50 dòng một trang; đối tượng còn tồn tại thì có link tới nó.
+- **Không sửa, xoá được:** web không có chức năng này, và CSDL có trigger từ chối mọi lệnh `UPDATE`, `DELETE` trên bảng nhật ký, kể cả lệnh gõ thẳng vào CSDL. Giới hạn: người quản trị CSDL vẫn dọn được cả bảng bằng `TRUNCATE` (dùng để làm sạch trước khi demo) hoặc gỡ trigger; bảng trống trơn thì nhìn là biết đã bị dọn.
+- **Hệ quả:** người dùng đã có dòng nhật ký đứng tên (kể cả chỉ đăng nhập) không xoá được nữa, chỉ khoá được; như vậy dấu vết luôn còn người làm.
 
 **Ngoài phạm vi:** tự gia hạn qua ACME, quét cả dải mạng, xác thực hai lớp, gửi cảnh báo qua email.

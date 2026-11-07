@@ -9,7 +9,10 @@
 **CỐ Ý KHÔNG làm:** lưu giá trị trước/sau từng trường; dữ liệu mẫu nhật ký; xuất CSV nhật ký; lấy IP thật trên VPS (khách đi qua lớp chuyển tiếp ở cổng 443 nên IP luôn là 127.0.0.1, đổi cấu hình 443 phải hỏi).
 **Đã có sẵn:** bảng `audit_logs` (không cần đổi cột); khoá ngoại tới `users` là RESTRICT nên ai đã có nhật ký thì chỉ khoá được, không xoá được (đã có test và thông báo).
 
-### Kế hoạch — CHỜ DUYỆT
+**Trạng thái 07/11:** code xong ở máy, nghiệm thu xanh 82/82, đã commit; `cipher_dev` đã có 2 trigger. CHỜ user đồng ý bước VPS (sao lưu CSDL → tạo trigger bằng root → cap_nhat → kiem).
+
+### Kế hoạch (duyệt 07/11/2026)
+- Dọn trước demo: `TRUNCATE TABLE audit_logs` (đo 07/11: trigger không chặn lệnh này, trigger vẫn còn sau đó), gộp vào việc làm mới dữ liệu VPS 16/11.
 1. `database/schema.sql`: 2 trigger từ chối UPDATE và DELETE trên `audit_logs` (mỗi trigger một câu, chạy được bằng bộ nạp của test).
 2. `src/nhat_ky.php` (mới, cùng kiểu các file nghiệp vụ auth/chung_chi/danh_muc/nguoi_dung): `ghiNhatKy()` tự đọc người dùng từ phiên và IP; bảng nhãn hành động tiếng Việt; `layNhatKy()` lọc theo người, hành động, khoảng ngày, phân trang 50 dòng.
 3. Gọi `ghiNhatKy()` ngay trong các hàm đang ghi dữ liệu ở `src/` (chứng chỉ, danh mục, người dùng, đăng nhập/đăng xuất), không rải ở từng trang, để không trang nào quên ghi. Đăng nhập sai: người để trống, chi tiết là tên đã gõ.

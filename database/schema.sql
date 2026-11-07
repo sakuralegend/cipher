@@ -132,6 +132,15 @@ CREATE TABLE audit_logs (
     CONSTRAINT fk_audit_user FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE RESTRICT
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+-- Nhật ký chỉ được thêm: CSDL từ chối mọi lệnh sửa, xoá từng dòng, kể cả lệnh gõ thẳng vào CSDL,
+-- để không ai lén xoá dấu vết việc mình làm. Dọn sạch trước khi demo thì dùng TRUNCATE TABLE audit_logs:
+-- lệnh này tạo lại bảng rỗng chứ không xoá từng dòng nên trigger không chặn. DROP TABLE ở đầu file xoá luôn trigger.
+-- Mỗi trigger viết trong một câu (không BEGIN...END) để chạy được mà không cần đổi DELIMITER.
+CREATE TRIGGER nhat_ky_cam_sua BEFORE UPDATE ON audit_logs FOR EACH ROW
+    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Nhật ký hoạt động không được sửa';
+CREATE TRIGGER nhat_ky_cam_xoa BEFORE DELETE ON audit_logs FOR EACH ROW
+    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Nhật ký hoạt động không được xoá';
+
 -- Số ngày còn lại và trạng thái được tính mỗi lần đọc, không lưu cứng, nên không thể bị cũ.
 -- Thứ tự CASE là thứ tự ưu tiên: chứng chỉ đã thu hồi thì dù còn hạn cũng không được tin.
 CREATE VIEW v_certificates AS

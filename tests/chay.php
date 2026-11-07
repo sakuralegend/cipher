@@ -11,6 +11,7 @@ if (PHP_SAPI !== 'cli') {
 
 require __DIR__ . '/../config/db.php';
 require __DIR__ . '/../src/auth.php';
+require __DIR__ . '/../src/nhat_ky.php';
 require __DIR__ . '/../src/nguoi_dung.php';
 require __DIR__ . '/../src/danh_muc.php';
 require __DIR__ . '/../src/chung_chi.php';
@@ -43,14 +44,14 @@ function kiem(bool $dieuKien, string $thongBao): void
     }
 }
 
-// Đạt khi CSDL từ chối vì vi phạm ràng buộc (SQLSTATE 23000). Lỗi loại khác, như sai cú pháp,
-// vẫn làm test đỏ, để test không xanh giả.
-function phaiBiTuChoi(PDO $pdo, string $sql, string $thongBao): void
+// Đạt khi CSDL từ chối vì vi phạm ràng buộc (SQLSTATE 23000), hoặc vì trigger chặn ($maLoi = '45000').
+// Lỗi loại khác, như sai cú pháp, vẫn làm test đỏ, để test không xanh giả.
+function phaiBiTuChoi(PDO $pdo, string $sql, string $thongBao, string $maLoi = '23000'): void
 {
     try {
         $pdo->exec($sql);
     } catch (PDOException $e) {
-        kiem($e->getCode() === '23000', "$thongBao: lỗi không phải ràng buộc: " . $e->getMessage());
+        kiem($e->getCode() === $maLoi, "$thongBao: lỗi không phải loại mong đợi ($maLoi): " . $e->getMessage());
         return;
     }
     throw new RuntimeException("$thongBao: CSDL không từ chối");
@@ -194,9 +195,11 @@ function test_khong_xoa_duoc_nguoi_dung_da_co_lich_su(PDO $pdo): void
     $pdo->exec("INSERT INTO audit_logs (user_id, action) VALUES (3, 'login')");
     phaiBiTuChoi($pdo, 'DELETE FROM users WHERE id = 3', 'Người có nhật ký');
 
-    $pdo->exec('DELETE FROM audit_logs WHERE user_id = 3');
-    $pdo->exec('DELETE FROM users WHERE id = 3');
-    kiem((int) $pdo->query('SELECT COUNT(*) FROM users WHERE id = 3')->fetchColumn() === 0, 'Người mới phải xoá được');
+    // Nhật ký không xoá được (trigger), nên thử xoá bằng một người khác chưa có nhật ký nào.
+    $pdo->exec("INSERT INTO users (id, username, password_hash, full_name, role_id)
+                VALUES (4, 'moi2', 'x', 'Người mới 2', 2)");
+    $pdo->exec('DELETE FROM users WHERE id = 4');
+    kiem((int) $pdo->query('SELECT COUNT(*) FROM users WHERE id = 4')->fetchColumn() === 0, 'Người chưa có lịch sử phải xoá được');
 }
 
 // Luật: Không xoá được vai trò, máy chủ, tên miền, CA khi còn dữ liệu phụ thuộc.
@@ -1545,7 +1548,127 @@ function test_nut_giao_dien_tren_thanh_quan_tri_luon_can_giua(PDO $pdo): void
 function test_dang_xuat_xong_ve_landing(PDO $pdo): void
 {
     $code = codeKhongChuThich(__DIR__ . '/../public/logout.php');
-    kiem(preg_match("/dangXuat\(\);\s*chuyenHuong\('index\.php'\);/", $code) === 1, 'logout.php phải gọi dangXuat() rồi chuyển về index.php');
+    kiem(preg_match("/dangXuat\(\\\$pdo\);\s*chuyenHuong\('index\.php'\);/", $code) === 1, 'logout.php phải gọi dangXuat() rồi chuyển về index.php');
+}
+
+// Dòng nhật ký mới nhất: [hành động, loại đối tượng, mã đối tượng, người làm].
+function dongNhatKyCuoi(PDO $pdo): array
+{
+    $dong = $pdo->query('SELECT action, object_type, object_id, user_id FROM audit_logs ORDER BY id DESC LIMIT 1')->fetch(PDO::FETCH_NUM);
+    if ($dong === false) {
+        return [];
+    }
+    return [$dong[0], $dong[1], $dong[2] === null ? null : (int) $dong[2], $dong[3] === null ? null : (int) $dong[3]];
+}
+
+function idTheoCot(PDO $pdo, string $bang, string $cot, string $giaTri): int
+{
+    $cau = $pdo->prepare("SELECT id FROM $bang WHERE $cot = ?");
+    $cau->execute([$giaTri]);
+    return (int) $cau->fetchColumn();
+}
+
+// Luật: Mọi thao tác thay đổi dữ liệu, đăng nhập đúng, đăng nhập sai và đăng xuất đều ghi một dòng nhật ký: ai, làm gì, với đối tượng nào.
+// Vì sao: Chức năng mở rộng 1, user chốt 07/11/2026 "ghi tất cả"; ghi ngay trong hàm ở src/ để không trang nào quên ghi.
+// Đỏ nghĩa là: một hàm ghi dữ liệu trong src/ không còn gọi ghiNhatKy(), hoặc ghi sai hành động, đối tượng, người làm.
+// Đừng: chuyển việc ghi ra từng trang trong public/; thêm trang mới là quên ghi.
+function test_moi_thao_tac_deu_ghi_nhat_ky(PDO $pdo): void
+{
+    $admin = ['id' => 1, 'role_name' => VAI_TRO_ADMIN];
+    $_SESSION['user_id'] = 1;
+    $mong = function (string $buoc, string $hanhDong, ?string $loai, ?int $idDoiTuong, ?int $nguoi) use ($pdo): void {
+        $dong = dongNhatKyCuoi($pdo);
+        kiem($dong === [$hanhDong, $loai, $idDoiTuong, $nguoi], "$buoc: nhật ký ghi " . json_encode($dong));
+        kiem(isset(HANH_DONG[$hanhDong]), "$buoc: hành động $hanhDong chưa có nhãn tiếng Việt");
+    };
+
+    kiem(luuChungChi($pdo, null, chungChiHopLe(), 1) === [], 'Thêm chứng chỉ phải thành công');
+    $idCc = idTheoCot($pdo, 'certificates', 'cert_code', 'CERT-100');
+    $mong('Thêm chứng chỉ', 'them', 'chung_chi', $idCc, 1);
+    kiem(luuChungChi($pdo, $idCc, chungChiHopLe(['subject_cn' => 'doi.congty.example']), 1) === [], 'Sửa chứng chỉ phải thành công');
+    $mong('Sửa chứng chỉ', 'sua', 'chung_chi', $idCc, 1);
+    kiem(giaHanChungChi($pdo, $idCc, duLieuGiaHan(), 1) === [], 'Gia hạn phải thành công');
+    $mong('Gia hạn', 'gia_han', 'chung_chi', $idCc, 1);
+    kiem(thuHoiChungChi($pdo, $idCc) === null, 'Thu hồi phải thành công');
+    $mong('Thu hồi', 'thu_hoi', 'chung_chi', $idCc, 1);
+    kiem(xoaChungChi($pdo, $idCc, $admin) === null, 'Xoá chứng chỉ phải thành công');
+    $mong('Xoá chứng chỉ', 'xoa', 'chung_chi', $idCc, 1);
+
+    kiem(luuMayChu($pdo, null, mayChuHopLe()) === [], 'Thêm máy chủ phải thành công');
+    $idMc = idTheoCot($pdo, 'servers', 'hostname', 'web-02');
+    $mong('Thêm máy chủ', 'them', 'may_chu', $idMc, 1);
+    kiem(luuMayChu($pdo, $idMc, mayChuHopLe(['owner' => 'Phòng khác'])) === [], 'Sửa máy chủ phải thành công');
+    $mong('Sửa máy chủ', 'sua', 'may_chu', $idMc, 1);
+    kiem(luuTenMien($pdo, null, ['domain_name' => 'moi.congty.example', 'server_id' => (string) $idMc]) === [], 'Thêm tên miền phải thành công');
+    $idTm = idTheoCot($pdo, 'domains', 'domain_name', 'moi.congty.example');
+    $mong('Thêm tên miền', 'them', 'ten_mien', $idTm, 1);
+    kiem(xoaTenMien($pdo, $idTm) === null, 'Xoá tên miền phải thành công');
+    $mong('Xoá tên miền', 'xoa', 'ten_mien', $idTm, 1);
+    kiem(xoaMayChu($pdo, $idMc) === null, 'Xoá máy chủ phải thành công');
+    $mong('Xoá máy chủ', 'xoa', 'may_chu', $idMc, 1);
+    kiem(luuToChuc($pdo, null, ['name' => 'CA Mới', 'country' => 'Việt Nam', 'is_trusted' => '1']) === [], 'Thêm tổ chức cấp phải thành công');
+    $idTc = idTheoCot($pdo, 'certificate_authorities', 'name', 'CA Mới');
+    $mong('Thêm tổ chức cấp', 'them', 'to_chuc_cap', $idTc, 1);
+    kiem(xoaToChuc($pdo, $idTc) === null, 'Xoá tổ chức cấp phải thành công');
+    $mong('Xoá tổ chức cấp', 'xoa', 'to_chuc_cap', $idTc, 1);
+
+    kiem(themNguoiDung($pdo, duLieuNguoiMoi()) === [], 'Thêm người dùng phải thành công');
+    $idNd = idTheoCot($pdo, 'users', 'username', 'nguoi.moi');
+    $mong('Thêm người dùng', 'them', 'nguoi_dung', $idNd, 1);
+    kiem(suaNguoiDung($pdo, $idNd, duLieuNguoiMoi(['full_name' => 'Tên Khác', 'password' => '', 'password2' => '']), 1) === [], 'Sửa người dùng phải thành công');
+    $mong('Sửa người dùng', 'sua', 'nguoi_dung', $idNd, 1);
+    kiem(khoaNguoiDung($pdo, $idNd, 1) === null, 'Khoá phải thành công');
+    $mong('Khoá', 'khoa', 'nguoi_dung', $idNd, 1);
+    moKhoaNguoiDung($pdo, $idNd);
+    $mong('Mở khoá', 'mo_khoa', 'nguoi_dung', $idNd, 1);
+    // Người mới chưa tự làm gì nên chưa có dòng nào đứng tên họ: vẫn xoá được.
+    kiem(xoaNguoiDung($pdo, $idNd, 1) === null, 'Xoá người dùng chưa có lịch sử phải thành công');
+    $mong('Xoá người dùng', 'xoa', 'nguoi_dung', $idNd, 1);
+    kiem(suaHoTen($pdo, 1, 'Quản trị viên') === [], 'Sửa họ tên phải thành công');
+    $mong('Sửa họ tên của mình', 'sua', 'nguoi_dung', 1, 1);
+    kiem(doiMatKhau($pdo, 1, 'Cipher@2026', 'MatKhauMoi@1', 'MatKhauMoi@1') === [], 'Đổi mật khẩu phải thành công');
+    $mong('Đổi mật khẩu', 'doi_mat_khau', 'nguoi_dung', 1, 1);
+
+    unset($_SESSION['user_id']);
+    dangNhap($pdo, 'nhanvien', 'mat-khau-sai');
+    $mong('Đăng nhập sai mật khẩu', 'dang_nhap_sai', 'nguoi_dung', 2, null);
+    dangNhap($pdo, 'khong-ton-tai', 'mat-khau-sai');
+    $mong('Đăng nhập sai tên', 'dang_nhap_sai', null, null, null);
+    kiem(isset(dangNhap($pdo, 'nhanvien', 'Cipher@2026')['id']), 'Đăng nhập đúng phải thành công');
+    $mong('Đăng nhập đúng', 'dang_nhap', 'nguoi_dung', 2, 2);
+
+    // dangXuat() còn xoá cookie và phiên của trình duyệt; ở dòng lệnh không có, nên bỏ qua cảnh báo của hai việc đó.
+    $_SESSION['user_id'] = 2;
+    @dangXuat($pdo);
+    $mong('Đăng xuất', 'dang_xuat', 'nguoi_dung', 2, 2);
+    unset($_SESSION['user_id']);
+}
+
+// Luật: CSDL từ chối UPDATE và DELETE trên audit_logs (trigger), kể cả lệnh gõ thẳng vào CSDL; chỉ TRUNCATE dọn được cả bảng.
+// Vì sao: User 07/11/2026 chọn chặn ở CSDL: không ai lén sửa hay xoá một dòng để giấu việc mình làm. Dọn trước demo dùng TRUNCATE (đo 07/11/2026: trigger không chặn lệnh này).
+// Đỏ nghĩa là: trigger trong schema.sql bị mất, đổi bảng, hoặc ai đó đã nới cho sửa/xoá.
+// Đừng: thêm nút xoá nhật ký trên web, hay sửa trigger để "cho Admin xoá".
+function test_csdl_tu_choi_sua_xoa_nhat_ky(PDO $pdo): void
+{
+    $pdo->exec("INSERT INTO audit_logs (user_id, action) VALUES (1, 'dang_nhap')");
+    phaiBiTuChoi($pdo, "UPDATE audit_logs SET action = 'khac'", 'Sửa nhật ký', '45000');
+    phaiBiTuChoi($pdo, 'DELETE FROM audit_logs', 'Xoá nhật ký', '45000');
+    $pdo->exec('TRUNCATE TABLE audit_logs');
+    kiem((int) $pdo->query('SELECT COUNT(*) FROM audit_logs')->fetchColumn() === 0, 'TRUNCATE phải dọn được nhật ký trước demo');
+}
+
+// Luật: Trang Nhật ký chỉ Admin vào được, và mục "Nhật ký" trên menu chỉ hiện với Admin.
+// Vì sao: User 07/11/2026 chốt chỉ Admin xem; nhân viên không được thấy việc của người khác.
+// Đỏ nghĩa là: nhat_ky.php không gọi yeuCauAdmin(), hoặc link Nhật ký nằm ngoài khối laAdmin() trong đầu trang.
+// Đừng: chỉ giấu link trên menu; người biết địa chỉ vẫn mở được trang.
+function test_trang_nhat_ky_chi_danh_cho_admin(PDO $pdo): void
+{
+    $trang = __DIR__ . '/../public/admin/nhat_ky.php';
+    kiem(is_file($trang), 'Chưa có trang admin/nhat_ky.php');
+    kiem(preg_match('/\byeuCauAdmin\(/', codeKhongChuThich($trang)) === 1, 'nhat_ky.php chưa gọi yeuCauAdmin()');
+    $dauTrang = file_get_contents(__DIR__ . '/../views/dau_trang.php');
+    kiem(substr_count($dauTrang, 'admin/nhat_ky.php') === 1, 'Đầu trang phải có đúng một link tới Nhật ký');
+    kiem(preg_match('/if \(laAdmin\(\$nguoi\)\): \?>((?:(?!endif).)*)admin\/nhat_ky\.php/s', $dauTrang) === 1, 'Link Nhật ký phải nằm trong khối laAdmin()');
 }
 
 // Luật: Web có địa chỉ không đuôi cổng: cổng 80, Alt-Svc và cả địa chỉ gõ kèm :8443 đều dẫn về địa chỉ không đuôi, dữ liệu mẫu ghi cổng 443.

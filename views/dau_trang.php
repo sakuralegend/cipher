@@ -128,6 +128,9 @@ HTML;
                             <li class="nav-item <?= $trangHienTai === 'nguoi_dung' ? 'active' : '' ?>">
                                 <a class="nav-link" href="<?= e(url('admin/nguoi_dung.php')) ?>">Người dùng</a>
                             </li>
+                            <li class="nav-item <?= $trangHienTai === 'nhat_ky' ? 'active' : '' ?>">
+                                <a class="nav-link" href="<?= e(url('admin/nhat_ky.php')) ?>">Nhật ký</a>
+                            </li>
                         <?php endif; ?>
                     </ul>
                 </div>

@@ -9,6 +9,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 }
 
 yeuCauCsrf();
-dangXuat();
+$pdo = ketNoiCsdl();
+dangXuat($pdo);
 // Về landing (user chốt 07/11/2026); muốn vào lại thì landing có sẵn nút Đăng nhập.
 chuyenHuong('index.php');

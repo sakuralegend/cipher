@@ -3,6 +3,8 @@
 
 require_once __DIR__ . '/../config/db.php';
 require_once __DIR__ . '/auth.php';
+// Các hàm ghi dữ liệu ở src/ đều gọi ghiNhatKy(), nên nạp sẵn cho mọi trang.
+require_once __DIR__ . '/nhat_ky.php';
 
 batDauPhien();
 

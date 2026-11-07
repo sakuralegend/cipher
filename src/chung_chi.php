@@ -139,6 +139,7 @@ function luuChungChi(PDO $pdo, ?int $id, array $d, int $idNguoiTao): array
                            WHERE id = ?')
                 ->execute([...$giaTri, $id]);
         }
+        ghiNhatKyLuu($pdo, $id, 'chung_chi');
     } catch (PDOException $e) {
         // Bảng có hai cột UNIQUE: tên khoá trong câu lỗi cho biết cột nào bị trùng.
         if (str_contains($e->getMessage(), 'fingerprint_sha256')) {
@@ -373,7 +374,11 @@ function thuHoiChungChi(PDO $pdo, int $id): ?string
 {
     $cau = $pdo->prepare('UPDATE certificates SET is_revoked = 1 WHERE id = ? AND is_revoked = 0');
     $cau->execute([$id]);
-    return $cau->rowCount() === 0 ? 'Chứng chỉ đã được thu hồi trước đó, hoặc không còn tồn tại.' : null;
+    if ($cau->rowCount() === 0) {
+        return 'Chứng chỉ đã được thu hồi trước đó, hoặc không còn tồn tại.';
+    }
+    ghiNhatKy($pdo, 'thu_hoi', 'chung_chi', $id, tenDoiTuong($pdo, 'chung_chi', $id));
+    return null;
 }
 
 // Quy tắc quyền nằm ngay trong hàm, để không trang nào gọi được mà bỏ qua. Nhân viên dùng Thu hồi,
@@ -383,7 +388,7 @@ function xoaChungChi(PDO $pdo, int $id, array $nguoi): ?string
     if (!laAdmin($nguoi)) {
         return 'Chỉ Admin được xoá chứng chỉ. Bạn có thể dùng Thu hồi.';
     }
-    return xoaHoacBaoConDuLieu($pdo, 'certificates', $id, 'Chứng chỉ này còn dữ liệu liên quan nên chưa xoá được.');
+    return xoaVaGhiNhatKy($pdo, 'chung_chi', $id, 'Chứng chỉ này còn dữ liệu liên quan nên chưa xoá được.');
 }
 
 // ---------- Gia hạn ----------
@@ -423,6 +428,8 @@ function giaHanChungChi(PDO $pdo, int $id, array $d, int $idNguoiThucHien): arra
         $pdo->prepare('UPDATE certificates SET valid_to = ?, fingerprint_sha256 = ?, serial = ? WHERE id = ?')
             ->execute([$hanMoi, $moi['fingerprint_sha256'] === '' ? null : $moi['fingerprint_sha256'], $moi['serial'] === '' ? null : $moi['serial'], $id]);
 
+        // Ghi trong cùng giao dịch: gia hạn hỏng thì nhật ký cũng không có dòng "đã gia hạn".
+        ghiNhatKy($pdo, 'gia_han', 'chung_chi', $id, tenDoiTuong($pdo, 'chung_chi', $id) . ', hạn mới ' . date('d/m/Y', strtotime($hanMoi)));
         $pdo->commit();
     } catch (PDOException $e) {
         $pdo->rollBack();

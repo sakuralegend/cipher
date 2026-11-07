@@ -97,6 +97,7 @@ function themNguoiDung(PDO $pdo, array $duLieu): array
                 $duLieu['full_name'],
                 $duLieu['role_id'],
             ]);
+        ghiNhatKyLuu($pdo, null, 'nguoi_dung');
     } catch (PDOException $e) {
         return loiTrungTenDangNhap($e);
     }
@@ -130,6 +131,7 @@ function suaNguoiDung(PDO $pdo, int $id, array $duLieu, int $idNguoiThucHien): a
     if ($duLieu['password'] !== '') {
         capNhatMatKhau($pdo, $id, $duLieu['password']);
     }
+    ghiNhatKyLuu($pdo, $id, 'nguoi_dung', $duLieu['password'] !== '' ? ', đặt mật khẩu mới' : '');
     return [];
 }
 
@@ -150,6 +152,7 @@ function khoaNguoiDung(PDO $pdo, int $id, int $idNguoiThucHien): ?string
         return 'Bạn không thể tự khoá tài khoản của mình.';
     }
     $pdo->prepare('UPDATE users SET is_locked = 1 WHERE id = ?')->execute([$id]);
+    ghiNhatKy($pdo, 'khoa', 'nguoi_dung', $id, tenDoiTuong($pdo, 'nguoi_dung', $id));
     return null;
 }
 
@@ -158,14 +161,16 @@ function moKhoaNguoiDung(PDO $pdo, int $id): void
     // Xoá luôn trạng thái tạm chặn, để người dùng vào được ngay sau khi Admin mở khoá.
     $pdo->prepare('UPDATE users SET is_locked = 0, failed_logins = 0, locked_until = NULL WHERE id = ?')
         ->execute([$id]);
+    ghiNhatKy($pdo, 'mo_khoa', 'nguoi_dung', $id, tenDoiTuong($pdo, 'nguoi_dung', $id));
 }
 
+// Ai đã có dòng nhật ký đứng tên (kể cả chỉ đăng nhập) thì khoá ngoại chặn xoá: dùng khoá tài khoản.
 function xoaNguoiDung(PDO $pdo, int $id, int $idNguoiThucHien): ?string
 {
     if ($id === $idNguoiThucHien) {
         return 'Bạn không thể tự xoá tài khoản của mình.';
     }
-    return xoaHoacBaoConDuLieu($pdo, 'users', $id, 'Người dùng này đã có lịch sử thao tác nên không xoá được, chỉ có thể khoá.');
+    return xoaVaGhiNhatKy($pdo, 'nguoi_dung', $id, 'Người dùng này đã có lịch sử thao tác nên không xoá được, chỉ có thể khoá.');
 }
 
 function suaHoTen(PDO $pdo, int $id, string $hoTen): array
@@ -175,6 +180,7 @@ function suaHoTen(PDO $pdo, int $id, string $hoTen): array
         return ['full_name' => $loi];
     }
     $pdo->prepare('UPDATE users SET full_name = ? WHERE id = ?')->execute([$hoTen, $id]);
+    ghiNhatKyLuu($pdo, $id, 'nguoi_dung', ', đổi họ tên');
     return [];
 }
 
@@ -195,5 +201,6 @@ function doiMatKhau(PDO $pdo, int $id, string $matKhauCu, string $matKhauMoi, st
     }
 
     capNhatMatKhau($pdo, $id, $matKhauMoi);
+    ghiNhatKy($pdo, 'doi_mat_khau', 'nguoi_dung', $id, tenDoiTuong($pdo, 'nguoi_dung', $id));
     return [];
 }

@@ -14,7 +14,7 @@
 | Đề đòi "file SQL tạo CSDL": hướng dẫn cài phải nói rõ tạo CSDL trước, hoặc thêm file cài một bước | `schema.sql` cố ý không `CREATE DATABASE` (QD-14) | Khi viết hướng dẫn cài, 14–15/11/2026 |
 | Đổi lại mật khẩu `admin` trên VPS thành mật khẩu mạnh: đang là `admin` để user dễ thử, web ra internet (QD-05) | User yêu cầu tạm thời 06/11/2026 | Trước khi nhập dữ liệu thật, muộn nhất trước khi nộp 17/11/2026 |
 | Có cách khởi tạo sạch cho vận hành thật (0 chứng chỉ, chỉ vai trò và một Admin): `seed.sql` đang trộn tài khoản với dữ liệu mẫu | Bài nộp cần dữ liệu mẫu trước; test 0 chứng chỉ đã có | Sau khi chấm, trước khi dùng thật |
-| Làm mới ngày dữ liệu mẫu trên VPS để đủ mốc 30/15/7: ngày tính lúc nạp nên lệch dần. Không chạy `schema.sql` trên VPS (mất tài khoản, QD-14); sao lưu trước. Bản sao lưu cũ `/root/cipher-truoc-demo-20261107.sql` xoá khi không cần | Chưa đến lúc nộp | 16/11/2026 |
+| Làm mới ngày dữ liệu mẫu trên VPS để đủ mốc 30/15/7: ngày tính lúc nạp nên lệch dần; dọn nhật ký bằng `TRUNCATE TABLE audit_logs` (trigger chặn DELETE, không chặn TRUNCATE). Không chạy `schema.sql` trên VPS (mất tài khoản, QD-14); sao lưu trước. Bản sao lưu cũ `/root/cipher-truoc-demo-20261107.sql` xoá khi không cần | Chưa đến lúc nộp | 16/11/2026 |
 | Đổi hoặc khoá tài khoản demo đã đưa giảng viên | Chưa chấm bài | Ngay sau khi chấm, trước khi bay |
 | Thử chạy web trong `htdocs` bằng Apache (cách giảng viên có thể cài) | Chưa có web | Ngày kiểm thử 14–15/11/2026 |
 | Chấm điểm chứng chỉ: bảng `security_findings` riêng hay tính từ cột thuật toán | Chức năng mở rộng, chỉ làm nếu còn thời gian (QD-18) | Trước khi làm chức năng này; bỏ nếu không làm |

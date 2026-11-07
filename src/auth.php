@@ -22,25 +22,38 @@ function dangNhap(PDO $pdo, string $ten, string $matKhau): array
 
     $dungMatKhau = password_verify($matKhau, $nguoi ? $nguoi['password_hash'] : MA_BAM_GIA);
 
+    // Lần sai nào cũng vào nhật ký với người làm để trống (chưa biết là ai). Tên đã gõ cắt ngắn
+    // và chỉ được in ra qua e(), nên gõ mã độc vào ô tên cũng không chạy được ở trang Nhật ký.
+    if (!$nguoi) {
+        ghiNhatKy($pdo, 'dang_nhap_sai', null, null, 'Tên đã gõ: ' . mb_substr($ten, 0, 100));
+        return ['loi' => LOI_DANG_NHAP];
+    }
+    $id = (int) $nguoi['id'];
+
     // Đang tạm chặn thì bỏ qua kết quả mật khẩu; nếu báo khác đi, kẻ dò vẫn thử tiếp được.
-    if (!$nguoi || $nguoi['dang_tam_chan']) {
+    if ($nguoi['dang_tam_chan']) {
+        ghiNhatKy($pdo, 'dang_nhap_sai', 'nguoi_dung', $id, $ten . ', đang bị tạm chặn');
         return ['loi' => LOI_DANG_NHAP];
     }
 
     if (!$dungMatKhau) {
-        ghiNhanSaiMatKhau($pdo, (int) $nguoi['id']);
+        ghiNhanSaiMatKhau($pdo, $id);
+        ghiNhatKy($pdo, 'dang_nhap_sai', 'nguoi_dung', $id, $ten . ', sai mật khẩu');
         return ['loi' => LOI_DANG_NHAP];
     }
 
     // Chỉ người nhập đúng mật khẩu mới biết tài khoản bị khoá.
     if ($nguoi['is_locked']) {
+        ghiNhatKy($pdo, 'dang_nhap_sai', 'nguoi_dung', $id, $ten . ', tài khoản đã bị khoá');
         return ['loi' => 'Tài khoản đã bị khoá. Hãy liên hệ Admin.'];
     }
 
     $pdo->prepare('UPDATE users SET failed_logins = 0, locked_until = NULL WHERE id = ?')
-        ->execute([$nguoi['id']]);
+        ->execute([$id]);
+    // Phiên chưa có người dùng ở bước này, nên truyền thẳng người làm.
+    ghiNhatKy($pdo, 'dang_nhap', 'nguoi_dung', $id, $ten, $id);
 
-    return ['id' => (int) $nguoi['id']];
+    return ['id' => $id];
 }
 
 function ghiNhanSaiMatKhau(PDO $pdo, int $id): void
@@ -77,8 +90,13 @@ function ghiNhanDangNhap(int $id): void
     unset($_SESSION['csrf']);
 }
 
-function dangXuat(): void
+// Ghi nhật ký trước khi xoá phiên, vì sau đó không còn biết ai đăng xuất.
+function dangXuat(PDO $pdo): void
 {
+    if (!empty($_SESSION['user_id'])) {
+        $id = (int) $_SESSION['user_id'];
+        ghiNhatKy($pdo, 'dang_xuat', 'nguoi_dung', $id, tenDoiTuong($pdo, 'nguoi_dung', $id));
+    }
     $_SESSION = [];
     $cookie = session_get_cookie_params();
     setcookie(session_name(), '', [

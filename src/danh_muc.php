@@ -62,12 +62,13 @@ function luuMayChu(PDO $pdo, ?int $id, array $d): array
         $pdo->prepare('UPDATE servers SET hostname = ?, ip_address = ?, port = ?, environment = ?, owner = ? WHERE id = ?')
             ->execute([...$giaTri, $id]);
     }
+    ghiNhatKyLuu($pdo, $id, 'may_chu');
     return [];
 }
 
 function xoaMayChu(PDO $pdo, int $id): ?string
 {
-    return xoaHoacBaoConDuLieu($pdo, 'servers', $id, 'Máy chủ này còn tên miền, hãy chuyển hoặc xoá tên miền trước.');
+    return xoaVaGhiNhatKy($pdo, 'may_chu', $id, 'Máy chủ này còn tên miền, hãy chuyển hoặc xoá tên miền trước.');
 }
 
 // ---------- Tên miền ----------
@@ -119,6 +120,7 @@ function luuTenMien(PDO $pdo, ?int $id, array $d): array
             $pdo->prepare('UPDATE domains SET domain_name = ?, server_id = ? WHERE id = ?')
                 ->execute([$ten, (int) $d['server_id'], $id]);
         }
+        ghiNhatKyLuu($pdo, $id, 'ten_mien');
     } catch (PDOException $e) {
         return loiNeuTrung($e, 'domain_name', 'Tên miền này đã tồn tại.');
     }
@@ -127,7 +129,7 @@ function luuTenMien(PDO $pdo, ?int $id, array $d): array
 
 function xoaTenMien(PDO $pdo, int $id): ?string
 {
-    return xoaHoacBaoConDuLieu($pdo, 'domains', $id, 'Tên miền này còn chứng chỉ, hãy chuyển hoặc xoá chứng chỉ trước.');
+    return xoaVaGhiNhatKy($pdo, 'ten_mien', $id, 'Tên miền này còn chứng chỉ, hãy chuyển hoặc xoá chứng chỉ trước.');
 }
 
 // ---------- Tổ chức cấp ----------
@@ -168,6 +170,7 @@ function luuToChuc(PDO $pdo, ?int $id, array $d): array
             $pdo->prepare('UPDATE certificate_authorities SET name = ?, country = ?, is_trusted = ? WHERE id = ?')
                 ->execute([$d['name'], $d['country'], $tinCay, $id]);
         }
+        ghiNhatKyLuu($pdo, $id, 'to_chuc_cap');
     } catch (PDOException $e) {
         return loiNeuTrung($e, 'name', 'Tên tổ chức này đã tồn tại.');
     }
@@ -176,5 +179,5 @@ function luuToChuc(PDO $pdo, ?int $id, array $d): array
 
 function xoaToChuc(PDO $pdo, int $id): ?string
 {
-    return xoaHoacBaoConDuLieu($pdo, 'certificate_authorities', $id, 'Tổ chức này còn chứng chỉ, hãy chuyển hoặc xoá chứng chỉ trước.');
+    return xoaVaGhiNhatKy($pdo, 'to_chuc_cap', $id, 'Tổ chức này còn chứng chỉ, hãy chuyển hoặc xoá chứng chỉ trước.');
 }
