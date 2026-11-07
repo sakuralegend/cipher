@@ -58,7 +58,7 @@ require __DIR__ . '/../../views/tieu_de_trang.php';
                 <div class="datagrid mb-4">
                     <div class="datagrid-item">
                         <div class="datagrid-title">Tên chính</div>
-                        <div class="datagrid-content ma-so"><?= e($cc['subject_cn']) ?></div>
+                        <div class="datagrid-content"><?= e($cc['subject_cn']) ?></div>
                     </div>
                     <div class="datagrid-item">
                         <div class="datagrid-title">Hạn hiện tại</div>

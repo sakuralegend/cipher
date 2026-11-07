@@ -25,12 +25,12 @@ $trangLoc = 'admin/chung_chi.php';
 $coLoc = array_filter($loc, fn(string $giaTri): bool => $giaTri !== '') !== [];
 
 // Tiêu đề cột bấm được: lần đầu xếp tăng dần, bấm lại đảo chiều. Đổi cách xếp thì về trang 1.
-$tieuDeCot = function (string $cot, string $nhan) use ($sapXep, $loc, $trangLoc): string {
+$tieuDeCot = function (string $cot, string $nhan, string $lop = '') use ($sapXep, $loc, $trangLoc): string {
     $dangXep = $sapXep['sap_xep'] === $cot;
     $chieuMoi = $dangXep && $sapXep['chieu'] === 'tang' ? 'giam' : 'tang';
     $muiTen = $dangXep ? ($sapXep['chieu'] === 'tang' ? ' ↑' : ' ↓') : '';
     $ariaSort = $dangXep ? ' aria-sort="' . ($sapXep['chieu'] === 'tang' ? 'ascending' : 'descending') . '"' : '';
-    return '<th' . $ariaSort . '><a class="cot-sap-xep" href="' . e(diaChiCoLoc($trangLoc, $loc, $sapXep, ['sap_xep' => $cot, 'chieu' => $chieuMoi]))
+    return '<th' . ($lop === '' ? '' : ' class="' . $lop . '"') . $ariaSort . '><a class="cot-sap-xep" href="' . e(diaChiCoLoc($trangLoc, $loc, $sapXep, ['sap_xep' => $cot, 'chieu' => $chieuMoi]))
         . '">' . e($nhan) . $muiTen . '</a></th>';
 };
 
@@ -51,11 +51,11 @@ require __DIR__ . '/../../views/tieu_de_trang.php';
                         <tr>
                             <?= $tieuDeCot('ma', 'Mã') ?>
                             <?= $tieuDeCot('ten', 'Tên chính') ?>
-                            <?= $tieuDeCot('to_chuc', 'Tổ chức cấp') ?>
-                            <?= $tieuDeCot('het_han', 'Hết hạn') ?>
+                            <?= $tieuDeCot('to_chuc', 'Tổ chức cấp', 'd-none d-md-table-cell') ?>
+                            <?= $tieuDeCot('het_han', 'Hết hạn', 'd-none d-md-table-cell') ?>
                             <?= $tieuDeCot('con_lai', 'Còn lại') ?>
                             <?= $tieuDeCot('trang_thai', 'Trạng thái') ?>
-                            <th class="w-1"><span class="visually-hidden">Thao tác</span></th>
+                            <th class="w-1 d-none d-md-table-cell"><span class="visually-hidden">Thao tác</span></th>
                         </tr>
                     </thead>
                     <tbody>
@@ -64,9 +64,9 @@ require __DIR__ . '/../../views/tieu_de_trang.php';
                                 <td class="ma-so text-nowrap">
                                     <a href="<?= e(url('admin/chung_chi_xem.php?id=' . (int) $dong['id'])) ?>"><?= e($dong['cert_code']) ?></a>
                                 </td>
-                                <td class="ma-so"><?= e($dong['subject_cn']) ?></td>
-                                <td><?= e($dong['ca_name']) ?></td>
-                                <td><?= e(date('d/m/Y', strtotime($dong['valid_to']))) ?></td>
+                                <td class="text-break"><?= e($dong['subject_cn']) ?></td>
+                                <td class="d-none d-md-table-cell"><?= e($dong['ca_name']) ?></td>
+                                <td class="d-none d-md-table-cell"><?= e(date('d/m/Y', strtotime($dong['valid_to']))) ?></td>
                                 <td><?= e(moTaSoNgay($dong)) ?></td>
                                 <td>
                                     <?php
@@ -74,7 +74,7 @@ require __DIR__ . '/../../views/tieu_de_trang.php';
                                     require __DIR__ . '/../../views/nhan_trang_thai.php';
                                     ?>
                                 </td>
-                                <td>
+                                <td class="d-none d-md-table-cell">
                                     <div class="btn-list flex-nowrap">
                                         <a class="btn btn-sm" href="<?= e(url('admin/chung_chi_xem.php?id=' . (int) $dong['id'])) ?>">Xem</a>
                                         <a class="btn btn-sm" href="<?= e(url('admin/chung_chi_form.php?id=' . (int) $dong['id'])) ?>">Sửa</a>

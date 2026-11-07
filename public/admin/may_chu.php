@@ -38,7 +38,7 @@ require __DIR__ . '/../../views/tieu_de_trang.php';
                     <tbody>
                         <?php foreach ($danhSach as $dong): ?>
                             <tr>
-                                <td class="ma-so"><?= e($dong['hostname']) ?></td>
+                                <td><?= e($dong['hostname']) ?></td>
                                 <td class="ma-so"><?= e($dong['ip_address']) ?>:<?= (int) $dong['port'] ?></td>
                                 <td><?= e(MOI_TRUONG[$dong['environment']]) ?></td>
                                 <td><?= e($dong['owner']) ?></td>

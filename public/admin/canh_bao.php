@@ -29,33 +29,33 @@ require __DIR__ . '/../../views/tieu_de_trang.php';
                 <table class="table table-vcenter card-table">
                     <thead>
                         <tr>
-                            <th>Mốc</th>
+                            <th class="d-none d-md-table-cell">Mốc</th>
                             <th>Chứng chỉ</th>
-                            <th>Tên chính</th>
-                            <th>Hết hạn</th>
+                            <th class="d-none d-md-table-cell">Tên chính</th>
+                            <th class="d-none d-md-table-cell">Hết hạn</th>
                             <th>Còn lại</th>
-                            <th>Trạng thái</th>
-                            <th>Cảnh báo</th>
+                            <th class="d-none d-md-table-cell">Trạng thái</th>
+                            <th class="d-none d-md-table-cell">Cảnh báo</th>
                             <th class="w-1"><span class="visually-hidden">Thao tác</span></th>
                         </tr>
                     </thead>
                     <tbody>
                         <?php foreach ($danhSach as $dong): ?>
                             <tr>
-                                <td><span class="badge bg-<?= e(MAU_MOC[(int) $dong['threshold_days']]) ?>-lt"><?= (int) $dong['threshold_days'] ?> ngày</span></td>
-                                <td class="ma-so">
+                                <td class="d-none d-md-table-cell"><span class="badge bg-<?= e(MAU_MOC[(int) $dong['threshold_days']]) ?>-lt"><?= (int) $dong['threshold_days'] ?> ngày</span></td>
+                                <td class="ma-so text-nowrap">
                                     <a href="<?= e(url('admin/chung_chi_xem.php?id=' . (int) $dong['certificate_id'])) ?>"><?= e($dong['cert_code']) ?></a>
                                 </td>
-                                <td class="ma-so"><?= e($dong['subject_cn']) ?></td>
-                                <td><?= e(date('d/m/Y', strtotime($dong['valid_to']))) ?></td>
-                                <td><?= e(moTaSoNgay($dong)) ?></td>
-                                <td>
+                                <td class="d-none d-md-table-cell"><?= e($dong['subject_cn']) ?></td>
+                                <td class="d-none d-md-table-cell"><?= e(date('d/m/Y', strtotime($dong['valid_to']))) ?></td>
+                                <td class="text-nowrap"><?= e(moTaSoNgay($dong)) ?></td>
+                                <td class="d-none d-md-table-cell">
                                     <?php
                                     $trangThaiHienThi = $dong['status'];
                                     require __DIR__ . '/../../views/nhan_trang_thai.php';
                                     ?>
                                 </td>
-                                <td><?= $dong['alert_status'] === 'new' ? '<span class="badge bg-blue-lt">Mới</span>' : '<span class="text-secondary">Đã xem</span>' ?></td>
+                                <td class="d-none d-md-table-cell"><?= $dong['alert_status'] === 'new' ? '<span class="badge bg-blue-lt">Mới</span>' : '<span class="text-secondary">Đã xem</span>' ?></td>
                                 <td>
                                     <div class="btn-list flex-nowrap">
                                         <?php if ($dong['alert_status'] === 'new'): ?>

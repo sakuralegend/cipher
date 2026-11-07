@@ -36,8 +36,8 @@ require __DIR__ . '/../../views/tieu_de_trang.php';
                     <tbody>
                         <?php foreach ($danhSach as $dong): ?>
                             <tr>
-                                <td class="ma-so"><?= e($dong['domain_name']) ?></td>
-                                <td class="ma-so"><?= e($dong['hostname']) ?></td>
+                                <td><?= e($dong['domain_name']) ?></td>
+                                <td><?= e($dong['hostname']) ?></td>
                                 <td><?= (int) $dong['so_chung_chi'] ?></td>
                                 <td>
                                     <div class="btn-list flex-nowrap">

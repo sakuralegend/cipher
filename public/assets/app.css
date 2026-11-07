@@ -11,14 +11,51 @@
     position: relative;
 }
 
+/* Màu chữ nhãn trạng thái: màu gốc của Tabler chỉ đạt 1.97-4.33:1 ở giao diện sáng và 2.80-4.35:1 ở
+   giao diện tối (đo 07/11/2026). Các màu dưới đây đạt ít nhất 4.5:1 trên đúng nền của nhãn đó. */
+.badge.bg-red-lt { color: #a82828 !important; }
+.badge.bg-yellow-lt { color: #7f5200 !important; }
+.badge.bg-green-lt { color: #1c6e2e !important; }
+.badge.bg-blue-lt { color: #0a5299 !important; }
+.badge.bg-secondary-lt { color: #5a5a5a !important; }
+.badge.bg-orange-lt { color: #a84600 !important; }
+
+[data-bs-theme="dark"] .badge.bg-red-lt { color: #ff9c9c !important; }
+[data-bs-theme="dark"] .badge.bg-yellow-lt { color: #f59f00 !important; }
+[data-bs-theme="dark"] .badge.bg-green-lt { color: #2fb344 !important; }
+[data-bs-theme="dark"] .badge.bg-blue-lt { color: #8cc0f5 !important; }
+[data-bs-theme="dark"] .badge.bg-secondary-lt { color: #a3a3a3 !important; }
+[data-bs-theme="dark"] .badge.bg-orange-lt { color: #ffa263 !important; }
+
+/* Số cảnh báo trên menu. */
+.so-canh-bao {
+    background: #c92a2a;
+    color: #fff;
+}
+
+/* Dòng bảng thấp hơn mặc định của Tabler (khoảng 57px), để một màn hình thấy được nhiều chứng chỉ hơn. */
+.card-table > tbody > tr > td {
+    padding-bottom: 0.4rem;
+    padding-top: 0.4rem;
+}
+
+/* Màn hẹp: cột gần nhau hơn, để các cột chính vừa khung mà không phải kéo ngang. */
+@media (max-width: 767.98px) {
+    .card-table > * > tr > td,
+    .card-table > * > tr > th {
+        padding-left: 0.5rem;
+        padding-right: 0.5rem;
+    }
+}
+
 /* Tiêu đề cột bấm để sắp xếp: giữ màu chữ của tiêu đề, không hiện như liên kết thường. */
 .cot-sap-xep {
     color: inherit;
     white-space: nowrap;
 }
 
-/* Dòng đã thu hồi nhạt đi, trừ cột trạng thái và nút thao tác để vẫn đọc và bấm được rõ. */
-.dong-thu-hoi td:nth-child(-n+5) {
+/* Dòng đã thu hồi nhạt đi, trừ cột mã (liên kết), trạng thái và nút thao tác để vẫn đọc và bấm được rõ. */
+.dong-thu-hoi td:nth-child(n+2):nth-child(-n+5) {
     opacity: 0.75;
 }
 

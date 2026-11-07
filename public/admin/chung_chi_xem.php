@@ -42,11 +42,11 @@ require __DIR__ . '/../../views/tieu_de_trang.php';
                             </div>
                             <div class="datagrid-item">
                                 <div class="datagrid-title">Tên chính</div>
-                                <div class="datagrid-content ma-so"><?= e($cc['subject_cn']) ?></div>
+                                <div class="datagrid-content"><?= e($cc['subject_cn']) ?></div>
                             </div>
                             <div class="datagrid-item">
                                 <div class="datagrid-title">Tên miền quản lý</div>
-                                <div class="datagrid-content ma-so"><?= e($cc['domain_name']) ?></div>
+                                <div class="datagrid-content"><?= e($cc['domain_name']) ?></div>
                             </div>
                             <div class="datagrid-item">
                                 <div class="datagrid-title">Tổ chức cấp</div>

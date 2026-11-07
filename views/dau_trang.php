@@ -7,6 +7,15 @@ $nguoi ??= null;
 $trangHienTai ??= '';
 $coThanhRieng ??= false;
 
+// Số cảnh báo trên menu chỉ đếm, không tạo: việc tạo chạy ở Dashboard và trang Cảnh báo (docs/SPEC.md mục 5),
+// để mỗi lần mở trang không phải ghi CSDL. Trang quản trị nào cũng có sẵn $pdo.
+$soCanhBaoMenu = 0;
+if ($nguoi !== null) {
+    require_once __DIR__ . '/../src/chung_chi.php';
+    $soCanhBaoMenu = demCanhBaoMoi($pdo);
+}
+$trongDanhMuc = in_array($trangHienTai, ['may_chu', 'ten_mien', 'to_chuc_cap'], true);
+
 $nutGiaoDien = <<<'HTML'
 <button type="button" class="nav-link px-2 bg-transparent border-0" data-doi-giao-dien
         title="Đổi giao diện sáng/tối" aria-label="Đổi giao diện sáng/tối">
@@ -16,7 +25,7 @@ $nutGiaoDien = <<<'HTML'
 HTML;
 ?>
 <!doctype html>
-<html lang="vi" data-bs-theme="dark">
+<html lang="vi" data-bs-theme="light">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -42,7 +51,9 @@ HTML;
                     <?= $nutGiaoDien ?>
                     <div class="nav-item dropdown">
                         <a href="#" class="nav-link px-2" data-bs-toggle="dropdown" aria-label="Mở menu tài khoản">
-                            <span>
+                            <?php // Màn hẹp chỉ hiện chữ cái đầu, để đầu trang gọn trên một hàng. ?>
+                            <span class="avatar avatar-sm d-md-none"><?= e(mb_substr($nguoi['full_name'], 0, 1)) ?></span>
+                            <span class="d-none d-md-block">
                                 <span class="d-block"><?= e($nguoi['full_name']) ?></span>
                                 <span class="d-block small text-secondary"><?= e($nguoi['role_name']) ?></span>
                             </span>
@@ -66,19 +77,23 @@ HTML;
                             <a class="nav-link" href="<?= e(url('admin/chung_chi.php')) ?>">Chứng chỉ</a>
                         </li>
                         <li class="nav-item <?= $trangHienTai === 'canh_bao' ? 'active' : '' ?>">
-                            <a class="nav-link" href="<?= e(url('admin/canh_bao.php')) ?>">Cảnh báo</a>
+                            <a class="nav-link" href="<?= e(url('admin/canh_bao.php')) ?>">
+                                Cảnh báo
+                                <?php if ($soCanhBaoMenu > 0): ?>
+                                    <span class="badge so-canh-bao ms-2"><?= $soCanhBaoMenu ?><span class="visually-hidden"> cảnh báo mới</span></span>
+                                <?php endif; ?>
+                            </a>
                         </li>
                         <li class="nav-item <?= $trangHienTai === 'thong_ke' ? 'active' : '' ?>">
                             <a class="nav-link" href="<?= e(url('admin/thong_ke.php')) ?>">Thống kê</a>
                         </li>
-                        <li class="nav-item <?= $trangHienTai === 'may_chu' ? 'active' : '' ?>">
-                            <a class="nav-link" href="<?= e(url('admin/may_chu.php')) ?>">Máy chủ</a>
-                        </li>
-                        <li class="nav-item <?= $trangHienTai === 'ten_mien' ? 'active' : '' ?>">
-                            <a class="nav-link" href="<?= e(url('admin/ten_mien.php')) ?>">Tên miền</a>
-                        </li>
-                        <li class="nav-item <?= $trangHienTai === 'to_chuc_cap' ? 'active' : '' ?>">
-                            <a class="nav-link" href="<?= e(url('admin/to_chuc_cap.php')) ?>">Tổ chức cấp</a>
+                        <li class="nav-item dropdown <?= $trongDanhMuc ? 'active' : '' ?>">
+                            <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown" role="button" aria-expanded="false">Danh mục</a>
+                            <div class="dropdown-menu">
+                                <a class="dropdown-item <?= $trangHienTai === 'may_chu' ? 'active' : '' ?>" href="<?= e(url('admin/may_chu.php')) ?>">Máy chủ</a>
+                                <a class="dropdown-item <?= $trangHienTai === 'ten_mien' ? 'active' : '' ?>" href="<?= e(url('admin/ten_mien.php')) ?>">Tên miền</a>
+                                <a class="dropdown-item <?= $trangHienTai === 'to_chuc_cap' ? 'active' : '' ?>" href="<?= e(url('admin/to_chuc_cap.php')) ?>">Tổ chức cấp</a>
+                            </div>
                         </li>
                         <?php if (laAdmin($nguoi)): ?>
                             <li class="nav-item <?= $trangHienTai === 'nguoi_dung' ? 'active' : '' ?>">
