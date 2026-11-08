@@ -95,28 +95,33 @@ Hệ thống xét lần lượt từ trên xuống và lấy dòng đầu tiên 
 Trạng thái và số ngày không lưu trong bảng, mà tính mỗi lần đọc, nên luôn đúng theo ngày hiện tại.
 
 Sơ đồ trạng thái UML: mũi tên là điều làm chứng chỉ đổi trạng thái. Thời gian trôi tự đẩy chứng chỉ sang
-trạng thái sau; người dùng chỉ tác động bằng hai việc: gia hạn và thu hồi.
+trạng thái sau; người dùng chỉ tác động bằng hai việc: gia hạn và thu hồi. Bốn trạng thái còn theo dõi được
+gom vào trạng thái lớn "Đang theo dõi", vì từ trạng thái nào trong đó cũng thu hồi được. Hình thoi là chỗ rẽ
+nhánh: chứng chỉ thêm vào rơi thẳng vào trạng thái đúng với ngày của nó.
 
 ```mermaid
 stateDiagram-v2
-    state "Chưa hiệu lực" as ChuaHL
-    state "Còn hiệu lực" as ConHL
-    state "Sắp hết hạn" as SapHH
-    state "Đã hết hạn" as HetHan
+    direction TB
+    state "Đang theo dõi" as TheoDoi {
+        state chon <<choice>>
+        state "Chưa hiệu lực" as ChuaHL
+        state "Còn hiệu lực" as ConHL
+        state "Sắp hết hạn" as SapHH
+        state "Đã hết hạn" as HetHan
+        [*] --> chon: Thêm chứng chỉ
+        chon --> ChuaHL: chưa tới ngày bắt đầu
+        chon --> ConHL: còn hơn 30 ngày
+        chon --> SapHH: còn tối đa 30 ngày
+        chon --> HetHan: đã qua ngày hết hạn
+        ChuaHL --> ConHL: tới ngày bắt đầu
+        ConHL --> SapHH: còn 30 ngày
+        SapHH --> HetHan: qua ngày hết hạn
+        SapHH --> ConHL: gia hạn
+        HetHan --> ConHL: gia hạn
+    }
     state "Đã thu hồi" as ThuHoi
-
-    [*] --> ChuaHL: Thêm, ngày bắt đầu ở tương lai
-    [*] --> ConHL: Thêm, còn hơn 30 ngày
-    [*] --> SapHH: Thêm, còn tối đa 30 ngày
-    ChuaHL --> ConHL: Tới ngày bắt đầu
-    ConHL --> SapHH: Còn 30 ngày
-    SapHH --> HetHan: Qua ngày hết hạn
-    SapHH --> ConHL: Gia hạn
-    HetHan --> ConHL: Gia hạn
-    ChuaHL --> ThuHoi: Thu hồi
-    ConHL --> ThuHoi: Thu hồi
-    SapHH --> ThuHoi: Thu hồi
-    HetHan --> ThuHoi: Thu hồi
+    [*] --> TheoDoi
+    TheoDoi --> ThuHoi: thu hồi
     ThuHoi --> [*]
 ```
 

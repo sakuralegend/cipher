@@ -533,21 +533,22 @@ sequenceDiagram
     participant DNS as DNS
     participant MC as Máy chủ bên ngoài
     participant DB as CSDL
-    ND->>F: Gõ địa chỉ, chọn cổng, bấm Đọc chứng chỉ
+    ND->>F: Gõ địa chỉ, bấm Đọc chứng chỉ
     F->>CC: docChungChiChoForm
     CC->>CC: Tách tên máy, cổng (phanTichDiaChi)
     CC->>DNS: Hỏi mọi IP của tên máy (phanGiaiDiaChi)
     DNS-->>CC: Danh sách IP
-    CC->>CC: Cổng có trong danh sách TLS, mọi IP công khai? (kiemTraDiaChiDoc)
+    CC->>CC: Kiểm cổng, kiểm IP (kiemTraDiaChiDoc)
     alt Không được phép
         CC->>DB: Ghi nhật ký kèm lý do
         CC-->>F: Câu lỗi
         F-->>ND: Hiện lỗi dưới ô địa chỉ
     else Được phép
-        CC->>MC: Kết nối TLS tới đúng IP đã kiểm, gửi tên miền
+        CC->>MC: Kết nối TLS tới IP đã kiểm
         MC-->>CC: Chứng chỉ
-        CC->>CC: Đổi thành giá trị các ô, tự chọn tên miền, tổ chức cấp
-        CC->>DB: Có chứng chỉ trùng fingerprint chưa? Ghi nhật ký "Đọc chứng chỉ"
+        CC->>CC: Điền các ô (giaTriTuChungChi)
+        CC->>DB: Tìm chứng chỉ trùng fingerprint
+        CC->>DB: Ghi nhật ký "Đọc chứng chỉ"
         CC-->>F: Giá trị các ô
         F-->>ND: Form đã điền sẵn, kèm tóm tắt
         ND->>F: Kiểm tra lại, bấm Lưu
@@ -589,23 +590,25 @@ sequenceDiagram
 
 ### 4.4. Cảnh báo (UC03, UC09)
 
+Dashboard (`index.php`) chạy đúng bước 2 như trang Cảnh báo. Nút Đã xem gửi tới `chung_chi_thao_tac.php`.
+
 ```mermaid
 sequenceDiagram
     autonumber
     actor ND as Người dùng
-    participant T as canh_bao.php hoặc index.php
+    participant T as canh_bao.php
     participant CC as src/chung_chi.php
     participant DB as CSDL
     ND->>T: Mở trang Cảnh báo hoặc Dashboard
     T->>CC: taoCanhBao
-    CC->>DB: INSERT INTO alerts SELECT ... FROM v_certificates WHERE status = 'expiring'
-    Note over CC,DB: Mỗi chứng chỉ lấy mốc gần nhất 7, 15 hoặc 30. UNIQUE (chứng chỉ, hạn, mốc) bỏ qua dòng đã có.
+    CC->>DB: Thêm cảnh báo cho chứng chỉ Sắp hết hạn
+    Note over CC,DB: Mốc gần nhất 7, 15 hoặc 30<br/>Dòng đã có thì bỏ qua (UNIQUE)
     T->>CC: danhSachCanhBao, demCanhBaoMoi
-    CC->>DB: Cảnh báo của chu kỳ hiện tại, bỏ chứng chỉ đã thu hồi
+    CC->>DB: Lấy cảnh báo của chu kỳ hiện tại
     DB-->>CC: Danh sách
     T-->>ND: Bảng cảnh báo, số cảnh báo mới trên menu
     ND->>T: Bấm Đã xem
-    T->>CC: danhDauDaXem (qua chung_chi_thao_tac.php)
+    T->>CC: danhDauDaXem
     CC->>DB: UPDATE alerts SET status = 'seen'
     T-->>ND: Số cảnh báo mới giảm đi một
 ```
