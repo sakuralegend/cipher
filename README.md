@@ -7,8 +7,12 @@ thống tự cảnh báo theo các mốc 30, 15, 7 ngày, có thống kê bằng
 - **Bản chạy thật:** <https://cert.cipher.id.vn> (tài khoản do nhóm cấp, không có trang tự đăng ký).
 - **Công nghệ:** PHP 8 thuần + PDO, MariaDB/MySQL (XAMPP), HTML/CSS/JavaScript, giao diện Tabler (dựa trên
   Bootstrap 5), biểu đồ Chart.js. Không dùng framework PHP.
-- **Tài liệu:** [Đặc tả chức năng](docs/SPEC.md) · [Use Case và đặc tả](docs/USECASE.md) ·
-  [ERD](docs/ERD.md) · [Báo cáo kiểm thử](docs/KIEM_THU.md)
+- **Tài liệu:** [Hiểu Cipher Cert từ con số 0](docs/HOC_TU_DAU.md) · [Đặc tả chức năng](docs/SPEC.md) ·
+  [Use Case và đặc tả](docs/USECASE.md) · [ERD](docs/ERD.md) · [Báo cáo kiểm thử](docs/KIEM_THU.md)
+
+**Chưa quen làm web?** Đọc [Hiểu Cipher Cert từ con số 0](docs/HOC_TU_DAU.md) trước: dạy từng khái niệm (chứng chỉ
+số, HTTP, PHP, CSDL, bảo mật), giải thích vì sao chọn cách làm này thay vì cách khác, rồi ghép thành toàn bộ hệ
+thống. Đọc trong khoảng một tuần, có câu hỏi tự kiểm tra cuối mỗi phần.
 
 **Đọc theo thứ tự này nếu bạn mới vào:** mục 1 (hệ thống làm gì) → mục 2 (cài để chạy thử) → mục 5 (sổ
 tay: mỗi luồng chạy qua file nào) → mục 6 (phần mình phụ trách).
