@@ -103,6 +103,16 @@ erDiagram
 | `certificates` → `renewals`, `alerts` | Xoá kèm | Không còn ý nghĩa khi không còn chứng chỉ |
 | Các quan hệ còn lại | Chặn | Không để mất dữ liệu hàng loạt, giữ dấu vết người thao tác |
 
+## Trigger
+
+| Trigger | Bảng | Làm gì |
+|---|---|---|
+| `nhat_ky_cam_sua` | `audit_logs` | Từ chối mọi lệnh `UPDATE` |
+| `nhat_ky_cam_xoa` | `audit_logs` | Từ chối mọi lệnh `DELETE` |
+
+Nhờ hai trigger này, nhật ký chỉ thêm được, kể cả khi ai đó gõ lệnh thẳng vào CSDL. `TRUNCATE TABLE audit_logs`
+vẫn dọn được cả bảng (dùng để làm sạch trước khi demo), nhưng bảng trống trơn thì nhìn là biết đã bị dọn.
+
 ## Dữ liệu tính ra, không lưu
 
 View `v_certificates` gồm mọi cột của `certificates`, cộng thêm:
