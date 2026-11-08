@@ -17,5 +17,4 @@
 | Đổi hoặc khoá tài khoản demo đã đưa giảng viên | Chưa chấm bài | Ngay sau khi chấm, trước khi bay |
 | Thử chạy web trong `htdocs` bằng Apache (cách giảng viên có thể cài); thử luôn đọc chứng chỉ thật ở đó (XAMPP có openssl, đo 08/11/2026) | Để chung ngày kiểm thử | Ngày kiểm thử 14–15/11/2026 |
 | Chấm điểm chứng chỉ: bảng `security_findings` riêng hay tính từ cột thuật toán | Chức năng mở rộng, chỉ làm nếu còn thời gian (QD-18) | Trước khi làm chức năng này; bỏ nếu không làm |
-| User thử VPN thật trên iPhone sau khi bật PROXY protocol (Xray `xver` 1, 08/11/2026); chạy thì xoá trên VPS `/root/xray-config.truoc-proxyproto-20261108-013729.json` (chứa khoá riêng Xray) và `/root/Caddyfile.truoc-proxyproto-20261108-013729`; hỏng thì lùi: chép lại bản sao lưu Xray, `systemctl restart xray` | Đổi lúc 01:40 sáng, user chưa thử | Đầu phiên sau, muộn nhất 10/11/2026 |
 | Nạp lại `cipher_dev` ở máy (`schema.sql` + `seed.sql` + `seed_demo.sql`) trước khi chụp ảnh cho tài liệu: đang có dữ liệu cũ (`cipher-vps` cổng 8443, dòng nhật ký thử, mật khẩu `admin` khác seed); `cipher_test` và VPS thì đúng | Chỉ ảnh hưởng ảnh chụp ở máy | Trước khi chụp ảnh tài liệu, 14/11/2026 |
