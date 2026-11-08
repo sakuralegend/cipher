@@ -1576,42 +1576,42 @@ Mã đối tượng không có khoá ngoại để xoá chứng chỉ vẫn gi�
                          NGƯỜI DÙNG (máy tính hoặc điện thoại)
                                        │
                  ┌─────────────────────┴─────────────────────┐
-                 │ Trình duyệt                                │
-                 │  HTML: nội dung   CSS (Tabler): hình thức  │
-                 │  JavaScript (app.js): kiểm form nhanh,     │
-                 │  hỏi lại trước khi xoá, vẽ biểu đồ         │
-                 │  (Chart.js), đổi sáng/tối                  │
-                 │  Cookie: chỉ giữ mã phiên cipher_sid       │
+                 │ Trình duyệt                               │
+                 │  HTML: nội dung   CSS (Tabler): hình thức │
+                 │  JavaScript (app.js): kiểm form nhanh,    │
+                 │  hỏi lại trước khi xoá, vẽ biểu đồ        │
+                 │  (Chart.js), đổi sáng/tối                 │
+                 │  Cookie: chỉ giữ mã phiên cipher_sid      │
                  └─────────────────────┬─────────────────────┘
                                        │ HTTPS (TLS, chứng chỉ Let's Encrypt)
                                        │ yêu cầu GET / POST, trả lời HTML
                  ┌─────────────────────┴─────────────────────┐
-                 │ Máy chủ web (Caddy trên máy chủ thật,      │
-                 │ php -S ở máy mình). Chỉ mở thư mục public/ │
+                 │ Máy chủ web (Caddy trên máy chủ thật,     │
+                 │ php -S ở máy mình). Chỉ mở thư mục public/│
                  └─────────────────────┬─────────────────────┘
                                        │ chạy file PHP
                  ┌─────────────────────┴─────────────────────┐
-                 │ PHP                                        │
-                 │  public/*.php   trang: nhận yêu cầu, gọi   │
-                 │                 hàm, in HTML               │
-                 │  src/khoi_dong  phiên, e(), url(), form    │
-                 │  src/auth       đăng nhập, quyền, CSRF     │
-                 │  src/chung_chi  chứng chỉ, cảnh báo, gia   │
-                 │                 hạn, thống kê, đọc cert    │
-                 │  src/danh_muc   máy chủ, tên miền, CA      │
-                 │  src/nguoi_dung người dùng, mật khẩu       │
-                 │  src/nhat_ky    ghi và đọc nhật ký         │
-                 │  views/         đầu trang, menu, bộ lọc    │
+                 │ PHP                                       │
+                 │  public/*.php   trang: nhận yêu cầu, gọi  │
+                 │                 hàm, in HTML              │
+                 │  src/khoi_dong  phiên, e(), url(), form   │
+                 │  src/auth       đăng nhập, quyền, CSRF    │
+                 │  src/chung_chi  chứng chỉ, cảnh báo, gia  │
+                 │                 hạn, thống kê, đọc cert   │
+                 │  src/danh_muc   máy chủ, tên miền, CA     │
+                 │  src/nguoi_dung người dùng, mật khẩu      │
+                 │  src/nhat_ky    ghi và đọc nhật ký        │
+                 │  views/         đầu trang, menu, bộ lọc   │
                  └─────────────────────┬─────────────────────┘
                                        │ PDO, prepared statement
                                        │ một cửa: config/db.php
                  ┌─────────────────────┴─────────────────────┐
-                 │ MariaDB                                    │
-                 │  9 bảng, khoá chính, khoá ngoại            │
-                 │  UNIQUE, CHECK: lớp chặn cuối              │
-                 │  view v_certificates: trạng thái, số ngày  │
-                 │  2 trigger: chặn sửa, xoá nhật ký          │
-                 └────────────────────────────────────────────┘
+                 │ MariaDB                                   │
+                 │  9 bảng, khoá chính, khoá ngoại           │
+                 │  UNIQUE, CHECK: lớp chặn cuối             │
+                 │  view v_certificates: trạng thái, số ngày │
+                 │  2 trigger: chặn sửa, xoá nhật ký         │
+                 └───────────────────────────────────────────┘
 
       Riêng chức năng đọc chứng chỉ thật: PHP ──TLS──► máy chủ bên ngoài (chỉ địa chỉ công khai)
 ```
