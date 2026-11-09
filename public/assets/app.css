@@ -1184,20 +1184,17 @@ body:has(> main.ld-vung) {
     }
 }
 
-/* Dải cuối: quầng sáng tím nằm ở mép dưới, sau chân trang. */
+/* Dải cuối, kiểu "cực quang" (user chọn 09/11/2026 trong 4 kiểu): hai vệt màu lạnh từ mép dưới, tím-chàm lệch trái và
+   tím hồng #a78bfa lệch phải, hoà vào nhau ở giữa; cân với vệt tím ở đầu trang. Chỉ gradient, không lưới chấm.
+   Viết đủ màu nền ở cuối: background gộp sẽ xoá màu nền mà .ld-vung đặt. */
 .ld-dai-cuoi {
+    background:
+        radial-gradient(36rem 22rem at 22% 100%, rgba(124, 135, 247, 0.24), transparent 70%),
+        radial-gradient(36rem 22rem at 80% 95%, rgba(167, 139, 250, 0.18), transparent 70%),
+        var(--cc-nen);
     padding-top: clamp(3.5rem, 8vw, 6.5rem);
-    overflow: clip;
     position: relative;
     text-align: center;
-}
-
-/* opacity thấp hơn hero: chữ chân trang nằm ngay trên quầng sáng, cần đủ tương phản. */
-.ld-dai-cuoi .ld-anh-sang {
-    left: 50%;
-    opacity: 0.6;
-    top: 100%;
-    transform: scale(1.2);
 }
 
 .ld-dai-cuoi-trong {

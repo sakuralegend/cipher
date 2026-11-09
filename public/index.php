@@ -171,11 +171,11 @@ $khungChoAnh = function (string $ten, string $loai = 'may'): string {
     </section>
 </main>
 
-<?php // Dải cuối luôn nền tối, chứa luôn chân trang. ?>
+<?php // Dải cuối luôn nền tối (nền cực quang trong app.css), chứa luôn chân trang. ?>
 <footer class="ld-dai-cuoi ld-vung" data-bs-theme="dark">
-    <div class="ld-anh-sang" aria-hidden="true"></div>
     <div class="container-xl ld-dai-cuoi-trong">
-        <h2 class="ld-dai-cuoi-chu">Sẵn sàng kiểm tra chứng chỉ của bạn?</h2>
+        <?php // Vế sau tô cùng dải màu với "hết hạn bất ngờ" ở tiêu đề đầu trang: đầu và cuối trang thành một cặp. ?>
+        <h2 class="ld-dai-cuoi-chu">Sẵn sàng kiểm tra <span class="ld-chu-sang">chứng chỉ của bạn?</span></h2>
         <a class="btn btn-lg ld-nut-chinh" href="<?= e($nutChinh['dich']) ?>"><?= e($nutChinh['nhan']) ?></a>
         <p class="ld-chan-trang">Đề tài 69: Xây dựng hệ thống quản lý chứng chỉ số và thời hạn sử dụng</p>
     </div>
