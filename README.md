@@ -32,7 +32,7 @@ thêm 2 chức năng mở rộng. Chi tiết từng chức năng ở [SPEC.md](d
 | Thống kê, báo cáo | Dashboard; 4 biểu đồ kèm bảng số; xuất CSV và bản in |
 | Người dùng | Đăng nhập, phân quyền Admin / Nhân viên quản trị, khoá tài khoản, chặn khi sai mật khẩu 5 lần |
 | **Mở rộng 1** | Nhật ký hoạt động: ai làm gì, lúc nào, từ IP nào; CSDL chặn sửa, xoá nhật ký |
-| **Mở rộng 2** | Đọc chứng chỉ thật từ máy chủ: gõ tên miền, hệ thống kết nối tới máy chủ, đọc chứng chỉ rồi tự điền form |
+| **Mở rộng 2** | Đọc chứng chỉ thật từ máy chủ: gõ tên miền (hoặc dán tối đa 50 địa chỉ), hệ thống kết nối tới máy chủ, đọc chứng chỉ, tự điền form và tự tạo tên miền, máy chủ, tổ chức cấp còn thiếu khi bấm Lưu |
 
 ## 2. Cài đặt và chạy thử trên máy (Windows + XAMPP)
 
@@ -86,7 +86,7 @@ C:\xampp\mysql\bin\mysql.exe -u root -e "CREATE DATABASE cipher_test CHARACTER S
 C:\xampp\php\php.exe tests\chay.php
 ```
 
-Dòng cuối phải là `XANH: 89 test`. Kết quả chi tiết ở [KIEM_THU.md](docs/KIEM_THU.md).
+Dòng cuối phải là `XANH: 96 test`. Kết quả chi tiết ở [KIEM_THU.md](docs/KIEM_THU.md).
 
 ### Cấu hình
 
@@ -215,8 +215,13 @@ Form sửa chỉ để sửa thông tin nhập sai, không ghi lịch sử. Ch�
 | Chặn cổng ngoài danh sách TLS, chặn nếu **bất kỳ** IP nào là nội bộ | `kiemTraDiaChiDoc()`, `laDiaChiNoiBo()` |
 | Kết nối TLS tới đúng IP vừa kiểm, lấy chứng chỉ | `docChungChiTuMayChu()` |
 | Đổi chứng chỉ thành giá trị các ô của form | `giaTriTuChungChi()` |
-| Tự chọn tên miền, tổ chức cấp nếu trùng tên; báo nếu đã có chứng chỉ cùng fingerprint | `chonTenMienChoDiaChi()`, `chonToChucCap()`, `chungChiTheoFingerprint()` |
+| Tên hãng gọn (GlobalSign nv-sa thành GlobalSign), quốc gia, hãng có đáng tin không (kiểm chuỗi với kho CA gốc) | `tenHang()`, `tenQuocGia()`, `laChuoiTinCay()` |
+| Kế hoạch danh mục: tên miền, máy chủ (theo IP), tổ chức cấp có sẵn thì chọn, chưa có thì ghi "sẽ tạo"; tên miền đã có mà IP khác thì chỉ ghi chú | `keHoachDanhMuc()`, `mayChuTheoIp()` (src/danh_muc.php) |
+| Báo nếu đã có chứng chỉ cùng fingerprint | `chungChiTheoFingerprint()` |
 | Gộp các bước trên và ghi nhật ký, đọc được hay không cũng ghi | `docChungChiChoForm()` |
+| Bấm Lưu: tạo phần danh mục còn thiếu cùng chứng chỉ trong **một giao dịch** (hỏng bước nào thì không bước nào được ghi) | `luuChungChiKemDanhMuc()` |
+| Nút "Cập nhật IP máy chủ" khi IP lúc đọc khác IP đã lưu; không có gì tự dò IP chạy ngầm | `capNhatIpMayChu()` |
+| Nhập hàng loạt ([chung_chi_nhap.php](public/admin/chung_chi_nhap.php)): tối đa 50 địa chỉ, xem trước có ô tick rồi mới lưu; kết quả đọc giữ trong phiên | `tachDanhSachDiaChi()` |
 
 Vì sao chặn địa chỉ nội bộ: web chạy chung máy với các dịch vụ khác. Không chặn thì người đăng nhập có thể
 nhờ web kết nối tới `127.0.0.1` hoặc mạng nội bộ để dò xem có gì (kiểu tấn công này gọi là SSRF). Kết nối tới
@@ -310,7 +315,7 @@ chưa hiệu lực, đã thu hồi. Hàng nút trạng thái có số đếm l�
 | Sao không có cron tạo cảnh báo? | Cảnh báo chỉ hiện trong web, nên tạo lúc có người mở trang là đủ; `UNIQUE` chặn tạo trùng | `taoCanhBao()` |
 | Hai người gia hạn cùng lúc thì sao? | Giao dịch + `SELECT ... FOR UPDATE`: người sau chờ người trước xong, rồi thấy hạn mới | `giaHanChungChi()` |
 | Kiểm tra dữ liệu bằng JS và PHP? | JS chỉ giúp báo lỗi nhanh (có thể bị tắt); PHP kiểm tra lại tất cả; CSDL chặn lần cuối | `app.js`, `src/`, `schema.sql` |
-| Sao tên miền, tổ chức cấp gõ được mà không tự tạo? | Gõ nhầm một chữ sẽ đẻ ra danh mục rác; chỉ nhận tên đã có, chưa có thì báo kèm link thêm | `idTheoTen()` |
+| Sao đọc chứng chỉ thì tự tạo tên miền, tổ chức cấp, còn gõ tay thì không? | Đọc từ máy chủ thì tên lấy từ chứng chỉ thật, không gõ nhầm được, và chỉ tạo khi bấm Lưu. Gõ tay thì nhầm một chữ là đẻ ra danh mục rác, nên chỉ nhận tên đã có | `keHoachDanhMuc()`, `idTheoTen()` |
 | Sao Nhân viên không xoá được chứng chỉ? | Xoá làm mất cả lịch sử gia hạn; Nhân viên dùng Thu hồi, dữ liệu vẫn còn | `xoaChungChi()` |
 
 ## 6. Phân công nhiệm vụ

@@ -173,6 +173,16 @@
     padding: 0.875rem 1rem;
 }
 
+/* Nhập hàng loạt: mỗi địa chỉ một khối chữ xếp chồng thay cho bảng nhiều cột, để khổ điện thoại không tràn ngang. */
+.ds-nhap > li {
+    border-top: 1px solid var(--tblr-border-color);
+    padding: 0.625rem 0;
+}
+.ds-nhap > li:first-child {
+    border-top: 0;
+    padding-top: 0;
+}
+
 /* Phần thu gọn chứa các ô đã đọc: dòng tiêu đề bấm được, có mũi tên mặc định của trình duyệt. */
 .chi-tiet-doc > summary {
     color: var(--tblr-link-color);

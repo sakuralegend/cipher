@@ -1620,7 +1620,7 @@ function test_moi_thao_tac_deu_ghi_nhat_ky(PDO $pdo): void
 
     // Đọc chứng chỉ bị chặn vẫn phải ghi: địa chỉ nội bộ bị từ chối trước khi kết nối, nên test không cần mạng.
     $_SESSION['user_id'] = 1;
-    kiem(isset(docChungChiChoForm($pdo, '127.0.0.1', 443, [], [])['loi']), 'Đọc 127.0.0.1 phải bị chặn');
+    kiem(isset(docChungChiChoForm($pdo, '127.0.0.1', 443)['loi']), 'Đọc 127.0.0.1 phải bị chặn');
     $mong('Đọc chứng chỉ bị chặn', 'doc_chung_chi', null, null, 1);
     unset($_SESSION['user_id']);
 }
@@ -1781,30 +1781,233 @@ function test_chung_chi_doc_duoc_dien_dung_cac_o(PDO $pdo): void
     }
 }
 
-// Luật: Đọc xong thì tên miền và tổ chức cấp được tự chọn khi trùng tên (tên miền cha cũng được), không trùng thì để trống; không bao giờ tự tạo bản ghi.
-// Vì sao: User 08/11/2026 chốt để trống kèm gợi ý; tự tạo sinh bản trùng kiểu "Let's Encrypt" và "Let's Encrypt R10", sai thống kê theo tổ chức cấp.
-// Đỏ nghĩa là: Chọn nhầm tên miền ngắn hơn khi có tên miền khớp dài hơn, phân biệt hoa thường, hoặc số bản ghi danh mục thay đổi.
-// Đừng: Thêm INSERT vào chonToChucCap()/idTheoTen() cho "tiện"; người dùng tự thêm qua trang Tổ chức cấp.
-function test_doc_xong_tu_chon_ten_mien_va_to_chuc_cap_khong_tu_tao(PDO $pdo): void
+// ISRG Root X1, CA gốc của Let's Encrypt (hết hạn 2035), lấy từ bộ CA của XAMPP ngày 09/11/2026; vân tay SHA-256
+// 96bcec06…df08c6 khớp bản công bố. Có trong kho CA gốc của mọi máy, nên làm mẫu "chuỗi tin cậy" không cần mạng.
+const CA_GOC_ISRG_PEM = <<<'PEM'
+-----BEGIN CERTIFICATE-----
+MIIFazCCA1OgAwIBAgIRAIIQz7DSQONZRGPgu2OCiwAwDQYJKoZIhvcNAQELBQAwTzELMAkGA1UE
+BhMCVVMxKTAnBgNVBAoTIEludGVybmV0IFNlY3VyaXR5IFJlc2VhcmNoIEdyb3VwMRUwEwYDVQQD
+EwxJU1JHIFJvb3QgWDEwHhcNMTUwNjA0MTEwNDM4WhcNMzUwNjA0MTEwNDM4WjBPMQswCQYDVQQG
+EwJVUzEpMCcGA1UEChMgSW50ZXJuZXQgU2VjdXJpdHkgUmVzZWFyY2ggR3JvdXAxFTATBgNVBAMT
+DElTUkcgUm9vdCBYMTCCAiIwDQYJKoZIhvcNAQEBBQADggIPADCCAgoCggIBAK3oJHP0FDfzm54r
+Vygch77ct984kIxuPOZXoHj3dcKi/vVqbvYATyjb3miGbESTtrFj/RQSa78f0uoxmyF+0TM8ukj1
+3Xnfs7j/EvEhmkvBioZxaUpmZmyPfjxwv60pIgbz5MDmgK7iS4+3mX6UA5/TR5d8mUgjU+g4rk8K
+b4Mu0UlXjIB0ttov0DiNewNwIRt18jA8+o+u3dpjq+sWT8KOEUt+zwvo/7V3LvSye0rgTBIlDHCN
+Aymg4VMk7BPZ7hm/ELNKjD+Jo2FR3qyHB5T0Y3HsLuJvW5iB4YlcNHlsdu87kGJ55tukmi8mxdAQ
+4Q7e2RCOFvu396j3x+UCB5iPNgiV5+I3lg02dZ77DnKxHZu8A/lJBdiB3QW0KtZB6awBdpUKD9jf
+1b0SHzUvKBds0pjBqAlkd25HN7rOrFleaJ1/ctaJxQZBKT5ZPt0m9STJEadao0xAH0ahmbWnOlFu
+hjuefXKnEgV4We0+UXgVCwOPjdAvBbI+e0ocS3MFEvzG6uBQE3xDk3SzynTnjh8BCNAw1FtxNrQH
+usEwMFxIt4I7mKZ9YIqioymCzLq9gwQbooMDQaHWBfEbwrbwqHyGO0aoSCqI3Haadr8faqU9GY/r
+OPNk3sgrDQoo//fb4hVC1CLQJ13hef4Y53CIrU7m2Ys6xt0nUW7/vGT1M0NPAgMBAAGjQjBAMA4G
+A1UdDwEB/wQEAwIBBjAPBgNVHRMBAf8EBTADAQH/MB0GA1UdDgQWBBR5tFnme7bl5AFzgAiIyBpY
+9umbbjANBgkqhkiG9w0BAQsFAAOCAgEAVR9YqbyyqFDQDLHYGmkgJykIrGF1XIpu+ILlaS/V9lZL
+ubhzEFnTIZd+50xx+7LSYK05qAvqFyFWhfFQDlnrzuBZ6brJFe+GnY+EgPbk6ZGQ3BebYhtF8GaV
+0nxvwuo77x/Py9auJ/GpsMiu/X1+mvoiBOv/2X/qkSsisRcOj/KKNFtY2PwByVS5uCbMiogziUwt
+hDyC3+6WVwW6LLv3xLfHTjuCvjHIInNzktHCgKQ5ORAzI4JMPJ+GslWYHb4phowim57iaztXOoJw
+TdwJx4nLCgdNbOhdjsnvzqvHu7UrTkXWStAmzOVyyghqpZXjFaH3pO3JLF+l+/+sKAIuvtd7u+Nx
+e5AW0wdeRlN8NwdCjNPElpzVmbUq4JUagEiuTDkHzsxHpFKVK7q4+63SM1N95R1NbdWhscdCb+ZA
+JzVcoyi3B43njTOQ5yOf+1CceWxG1bQVs5ZufpsMljq4Ui0/1lvh+wjChP4kqKOJ2qxq4RgqsahD
+YVvTH9w7jXbyLeiNdd8XM2w9U/t7y0Ff/9yi0GE44Za4rF2LN9d11TPAmRGunUHBcnWEvgJBQl9n
+JEiU0Zsnvgc/ubhPgXRR4Xq37Z0j4r7g1SgEEzwxA57demyPxgcYxn/eR44/KJ4EBs+lVDR3veyJ
+m+kXQ99b21/+jh5Xos1AnX5iItreGCc=
+-----END CERTIFICATE-----
+PEM;
+
+// Những gì một lần đọc trả về (nguonTuKetQuaDoc), dựng tay để test kế hoạch danh mục không cần mạng.
+// IP 203.0.113.x là dải dành riêng cho ví dụ, không trùng máy chủ nào trong seed.sql.
+function nguonMau(array $thayDoi = []): array
+{
+    return $thayDoi + ['host' => 'shop.example.org', 'cong' => 443, 'cac_ip' => ['203.0.113.5'], 'cn' => 'shop.example.org',
+        'ben_cap' => ['GlobalSign nv-sa', 'GlobalSign GCC R46 OV TLS CA 2025'], 'hang' => 'GlobalSign', 'quoc_gia' => 'Bỉ',
+        'tin_cay' => true, 'chu' => 'Shop JSC'];
+}
+
+function demDanhMuc(PDO $pdo): int
+{
+    return (int) $pdo->query('SELECT (SELECT COUNT(*) FROM servers) + (SELECT COUNT(*) FROM domains)
+                                   + (SELECT COUNT(*) FROM certificate_authorities)')->fetchColumn();
+}
+
+// Luật: Đọc xong chỉ tính kế hoạch: tên miền (trùng hẳn hoặc tên miền cha), tổ chức cấp có sẵn thì chọn, chưa có thì ghi "sẽ tạo"; trước khi bấm Lưu không bản ghi nào được tạo.
+// Vì sao: User 09/11/2026 lật chốt "không tự tạo" của 08/11 để nhập 50 site thật cho nhanh, nhưng đọc thử rồi bỏ thì danh mục vẫn phải sạch.
+// Đỏ nghĩa là: Chọn nhầm tên miền ngắn hơn khi có tên khớp dài hơn, phân biệt hoa thường, đổi ô gõ mà vẫn tạo theo tên cũ, hoặc keHoachDanhMuc() đã INSERT.
+// Đừng: Tạo bản ghi ngay trong keHoachDanhMuc() hay idTheoTen() cho "tiện"; chỉ luuChungChiKemDanhMuc() được tạo.
+function test_doc_roi_bo_khong_tao_gi_va_tu_chon_danh_muc_co_san(PDO $pdo): void
 {
     $tenMien = [3 => 'cipher.id.vn', 4 => 'cert.cipher.id.vn', 5 => 'id.vn'];
     kiem(chonTenMienChoDiaChi($tenMien, 'cert.cipher.id.vn') === 4, 'Trùng hẳn phải được chọn');
     kiem(chonTenMienChoDiaChi($tenMien, 'mail.cipher.id.vn') === 3, 'Phải chọn tên miền cha dài nhất');
     kiem(chonTenMienChoDiaChi($tenMien, 'xcipher.id.vn') === 5, '"xcipher.id.vn" không thuộc "cipher.id.vn"');
     kiem(chonTenMienChoDiaChi($tenMien, 'example.com') === null, 'Không khớp thì để trống');
-
     $toChuc = [1 => "Let's Encrypt", 2 => 'DigiCert'];
     kiem(chonToChucCap($toChuc, ["let's encrypt", 'YE1']) === 1, 'Trùng tên không phân biệt hoa thường phải được chọn');
-    kiem(chonToChucCap($toChuc, ['Acme Corp', 'DigiCert']) === 2, 'Trùng CN của bên cấp cũng được');
-    kiem(chonToChucCap($toChuc, ['Google Trust Services', 'WR1']) === null, 'Không trùng thì để trống');
+    kiem(chonToChucCap($toChuc, ['Acme Corp', 'DigiCert']) === 2, 'Trùng tên thứ hai cũng được');
 
-    $truoc = (int) $pdo->query('SELECT (SELECT COUNT(*) FROM certificate_authorities) + (SELECT COUNT(*) FROM domains)')->fetchColumn();
-    $cacToChuc = array_column(danhSachToChuc($pdo), 'name', 'id');
-    $cacTenMien = array_column(danhSachTenMien($pdo), 'domain_name', 'id');
-    chonToChucCap($cacToChuc, ['Tổ chức chưa từng có']);
-    chonTenMienChoDiaChi($cacTenMien, 'chua-tung-co.example');
-    $sau = (int) $pdo->query('SELECT (SELECT COUNT(*) FROM certificate_authorities) + (SELECT COUNT(*) FROM domains)')->fetchColumn();
-    kiem($truoc === $sau, 'Tự chọn không được tạo thêm tổ chức cấp hay tên miền');
+    $truoc = demDanhMuc($pdo);
+    $kh = keHoachDanhMuc($pdo, nguonMau());
+    kiem($kh['ten_mien_moi'] === 'shop.example.org' && $kh['may_chu_moi']['ip_address'] === '203.0.113.5'
+        && $kh['hang_moi']['name'] === 'GlobalSign', 'Chưa có thì kế hoạch phải ghi sẽ tạo tên miền, máy chủ, hãng');
+    $co = keHoachDanhMuc($pdo, nguonMau(['host' => 'cert.cipher.id.vn', 'cac_ip' => ['161.248.146.56'], 'hang' => "Let's Encrypt"]));
+    kiem($co['domain_id'] === 6 && $co['ca_id'] === 1 && moTaSeTao($co) === [], 'Có sẵn thì chọn, không định tạo gì');
+    kiem(demDanhMuc($pdo) === $truoc, 'Đọc (tính kế hoạch) không được tạo bản ghi nào');
+
+    $doiO = keHoachTheoONhap($kh, 'cert.cipher.id.vn', "Let's Encrypt");
+    kiem($doiO['ten_mien_moi'] === null && $doiO['may_chu_moi'] === null && $doiO['hang_moi'] === null,
+        'Người dùng đổi ô sang tên có sẵn thì không tạo theo tên cũ');
+    kiem(keHoachTheoONhap($kh, ' Shop.Example.org ', 'globalsign')['hang_moi'] !== null, 'Giữ đúng tên (khác hoa thường) thì vẫn tạo');
+}
+
+// Luật: Tổ chức cấp ghi ở tầng hãng: mọi cách viết ô O (và ô CN) của cùng một hãng ra một tên gọn; hãng lạ giữ nguyên ô O.
+// Vì sao: User 09/11/2026: "Let's Encrypt chỉ có một"; ghi theo chứng chỉ trung gian (YE1, R10) hay theo biến thể (SSL Corp và SSL Corporation, đo 72 site) thì Thống kê theo tổ chức cấp tách cột vô nghĩa.
+// Đỏ nghĩa là: Một biến thể đã đo bị tách thành hãng riêng, hoặc mẫu khớp giữa chữ ("Pineapple" thành Apple).
+// Đừng: Khớp bằng str_contains, hay đổi tên các hãng người dùng đã nhập trong danh mục.
+function test_ten_hang_gom_ve_tang_hang(PDO $pdo): void
+{
+    $mong = [
+        ["Let's Encrypt", 'YE1', "Let's Encrypt"],
+        ['GlobalSign nv-sa', 'GlobalSign GCC R46 OV TLS CA 2025', 'GlobalSign'],
+        ['SSL Corp', 'SSL.com SSL Intermediate CA ECC R2', 'SSL.com'],
+        ['SSL Corporation', 'SSL.com TLS Issuing RSA CA R1', 'SSL.com'],
+        ['COMODO CA Limited', 'COMODO RSA Domain Validation Secure Server CA', 'Sectigo'],
+        ['Sectigo Limited', 'Sectigo Public Server Authentication CA DV E36', 'Sectigo'],
+        ['DigiCert Inc', 'GeoTrust TLS RSA CA G1', 'DigiCert'],
+        ['Google Trust Services', 'WE2', 'Google Trust Services'],
+        ['The Ministry of Digital Development and Communications', 'Russian Trusted Sub CA', 'Russian Trusted CA'],
+        ['Pineapple Hosting', 'PH CA', 'Pineapple Hosting'],
+        ['', 'R3', 'R3'],
+        ['', '', 'Không rõ'],
+    ];
+    foreach ($mong as [$o, $cn, $hang]) {
+        kiem(tenHang($o, $cn) === $hang, "O=\"$o\", CN=\"$cn\": mong \"$hang\", nhận \"" . tenHang($o, $cn) . '"');
+    }
+    kiem(tenQuocGia('be') === 'Bỉ' && tenQuocGia('US') === 'Hoa Kỳ' && tenQuocGia('ZZ') === 'ZZ' && tenQuocGia('') === 'Không rõ',
+        'Mã quốc gia phải ra tên tiếng Việt, mã lạ giữ nguyên');
+}
+
+// Luật: Hãng mới tạo là tin cậy khi có chứng chỉ bên cấp (không tính chứng chỉ lá) trong chuỗi kiểm được với kho CA gốc của máy; chỉ có chứng chỉ lá thì không tin cậy.
+// Vì sao: User 09/11/2026 chọn tự đoán thay cho mặc định "có": sberbank.ru (CA của Nga), tự ký, gốc lạ phải ra không tin cậy (đo VPS và XAMPP 09/11/2026).
+// Đỏ nghĩa là: Kiểm cả chứng chỉ lá (lá hết hạn làm hãng đáng tin ra không tin), bỏ openssl.cafile (XAMPP ra không tin hết), hoặc máy chạy test không có kho CA gốc.
+// Đừng: Kiểm bằng verify_peer lúc kết nối: chứng chỉ hết hạn, sai tên vẫn phải đọc được.
+function test_hang_tin_cay_khi_chuoi_kiem_duoc_voi_kho_ca_goc(PDO $pdo): void
+{
+    kiem(laChuoiTinCay([CHUNG_CHI_MAU_PEM, CA_GOC_ISRG_PEM]), 'Chuỗi có CA gốc trong kho phải tin cậy');
+    kiem(!laChuoiTinCay([CHUNG_CHI_MAU_PEM]), 'Chỉ có chứng chỉ lá thì không tin cậy');
+    kiem(!laChuoiTinCay([CHUNG_CHI_MAU_PEM, CHUNG_CHI_MAU_PEM]), 'Bên cấp không tới được CA gốc thì không tin cậy');
+    kiem(!laChuoiTinCay([CA_GOC_ISRG_PEM]), 'Chứng chỉ lá không được tính, kể cả khi nó nằm trong kho');
+}
+
+// Luật: Bấm Lưu thì tạo đủ máy chủ, tên miền, tổ chức cấp còn thiếu cùng chứng chỉ, mỗi thứ một dòng nhật ký; hỏng ở bước nào thì không bước nào được ghi.
+// Vì sao: User 09/11/2026 muốn đọc xong bấm Lưu là xong; tạo dở dang để lại tên miền mồ côi, lần sau đọc lại thì tưởng đã có.
+// Đỏ nghĩa là: Thiếu giao dịch hoặc rollBack, hay một bước không qua hàm lưu có sẵn (mất kiểm tra hoặc mất nhật ký).
+// Đừng: INSERT thẳng vào bảng trong luuChungChiKemDanhMuc(); dùng luuMayChu/luuTenMien/luuToChuc/luuChungChi.
+function test_luu_tao_du_chuoi_trong_mot_giao_dich(PDO $pdo): void
+{
+    $_SESSION['user_id'] = 1;
+    $loi = luuChungChiKemDanhMuc($pdo, keHoachDanhMuc($pdo, nguonMau()), chungChiHopLe(['domain_id' => '', 'ca_id' => '']), 1);
+    kiem($loi === [], 'Lưu phải thành công: ' . json_encode($loi, JSON_UNESCAPED_UNICODE));
+    $dong = $pdo->query("SELECT d.domain_name, s.ip_address, s.port, s.owner, a.name, a.country, a.is_trusted
+                         FROM certificates c JOIN domains d ON d.id = c.domain_id JOIN servers s ON s.id = d.server_id
+                         JOIN certificate_authorities a ON a.id = c.ca_id WHERE c.cert_code = 'CERT-100'")->fetch();
+    kiem($dong === ['domain_name' => 'shop.example.org', 'ip_address' => '203.0.113.5', 'port' => 443, 'owner' => 'Shop JSC',
+        'name' => 'GlobalSign', 'country' => 'Bỉ', 'is_trusted' => 1], 'Chứng chỉ phải gắn đúng chuỗi vừa tạo: ' . json_encode($dong, JSON_UNESCAPED_UNICODE));
+    $nhatKy = $pdo->query("SELECT object_type FROM audit_logs WHERE action = 'them' ORDER BY id")->fetchAll(PDO::FETCH_COLUMN);
+    kiem($nhatKy === ['may_chu', 'ten_mien', 'to_chuc_cap', 'chung_chi'], 'Mỗi thứ tạo ra một dòng nhật ký: ' . implode(', ', $nhatKy));
+
+    $truoc = demDanhMuc($pdo) + (int) $pdo->query('SELECT COUNT(*) FROM audit_logs')->fetchColumn();
+    $hong = nguonMau(['host' => 'hong.example.org', 'cac_ip' => ['203.0.113.9'], 'hang' => 'Hãng Thử', 'ben_cap' => ['Hãng Thử']]);
+    // Mã quản lý trùng CERT-100 vừa thêm: chứng chỉ, bước cuối cùng, bị từ chối sau khi đã tạo máy chủ, tên miền, hãng.
+    $loi = luuChungChiKemDanhMuc($pdo, keHoachDanhMuc($pdo, $hong), chungChiHopLe(['domain_id' => '', 'ca_id' => '']), 1);
+    kiem(isset($loi['cert_code']), 'Mã trùng phải bị từ chối');
+    $sau = demDanhMuc($pdo) + (int) $pdo->query('SELECT COUNT(*) FROM audit_logs')->fetchColumn();
+    kiem($sau === $truoc, 'Hỏng ở bước chứng chỉ thì máy chủ, tên miền, hãng, nhật ký phải được trả lại hết');
+    unset($_SESSION['user_id']);
+}
+
+// Luật: Tên miền mới tìm máy chủ theo IP: trùng IP với máy chủ có sẵn thì dùng chung, không tạo máy chủ mới.
+// Vì sao: User 09/11/2026 chọn "mỗi IP một máy chủ": nhiều tên miền trên một IP (như VPS này) là một máy chủ thật.
+// Đỏ nghĩa là: Mỗi tên miền đẻ một máy chủ, hoặc tra máy chủ chỉ theo IP đầu mà bỏ các IP còn lại của tên miền.
+// Đừng: Gộp theo tên máy chủ; tên máy chủ tự tạo lấy theo tên miền nên luôn khác nhau.
+function test_hai_ten_mien_cung_ip_chi_mot_may_chu(PDO $pdo): void
+{
+    $kh = keHoachDanhMuc($pdo, nguonMau(['host' => 'a.example.org', 'cac_ip' => ['203.0.113.1', '192.0.2.10']]));
+    kiem($kh['server_id'] === 1 && $kh['may_chu_moi'] === null, 'IP trùng máy chủ web-01 (dù không phải IP đầu) thì dùng chung');
+
+    $soMayChu = fn(): int => (int) $pdo->query('SELECT COUNT(*) FROM servers')->fetchColumn();
+    $truoc = $soMayChu();
+    $_SESSION['user_id'] = 1;
+    foreach (['b.example.org' => 'CERT-101', 'c.example.org' => 'CERT-102'] as $host => $ma) {
+        $kh = keHoachDanhMuc($pdo, nguonMau(['host' => $host]));
+        $loi = luuChungChiKemDanhMuc($pdo, $kh, chungChiHopLe(['cert_code' => $ma, 'domain_id' => '', 'ca_id' => '']), 1);
+        kiem($loi === [], "Lưu $host phải thành công: " . json_encode($loi, JSON_UNESCAPED_UNICODE));
+    }
+    unset($_SESSION['user_id']);
+    kiem($soMayChu() === $truoc + 1, 'Hai tên miền mới cùng IP 203.0.113.5 chỉ được tạo một máy chủ');
+    kiem((int) $pdo->query("SELECT COUNT(*) FROM certificate_authorities WHERE name = 'GlobalSign'")->fetchColumn() === 1,
+        'Dòng sau phải dùng lại hãng dòng trước vừa tạo');
+}
+
+// Luật: Đọc lại tên miền đã có mà IP khác: dùng tên miền và máy chủ cũ, chỉ ghi chú ip_khac; IP máy chủ chỉ đổi khi người dùng bấm Cập nhật.
+// Vì sao: Chứng chỉ gắn với tên miền, không với IP; site sau CDN đổi IP theo phút (shopee.vn đổi trong 40 giây, đo 09/11/2026). User chốt không có dịch vụ chạy ngầm dò IP.
+// Đỏ nghĩa là: IP mới đẻ máy chủ hoặc tên miền mới, hoặc IP máy chủ bị tự sửa lúc đọc.
+// Đừng: Đề xuất xoá máy chủ cũ khi IP đổi; chứng chỉ, gia hạn, cảnh báo đều gắn vào nó.
+function test_doc_lai_ten_mien_da_co_ip_khac_chi_ghi_chu(PDO $pdo): void
+{
+    $nguon = nguonMau(['host' => 'cert.cipher.id.vn', 'cac_ip' => ['203.0.113.77'], 'hang' => "Let's Encrypt"]);
+    $truoc = demDanhMuc($pdo);
+    $kh = keHoachDanhMuc($pdo, $nguon);
+    kiem($kh['domain_id'] === 6 && $kh['server_id'] === 5 && $kh['ten_mien_moi'] === null && $kh['may_chu_moi'] === null,
+        'Tên miền đã có thì dùng luôn tên miền và máy chủ của nó');
+    kiem($kh['ip_khac'] === ['server_id' => 5, 'hostname' => 'cipher-vps', 'ip_cu' => '161.248.146.56', 'ip_moi' => '203.0.113.77'],
+        'IP khác phải được ghi chú: ' . json_encode($kh['ip_khac']));
+    $ip = fn(): string => (string) $pdo->query('SELECT ip_address FROM servers WHERE id = 5')->fetchColumn();
+    kiem($ip() === '161.248.146.56' && demDanhMuc($pdo) === $truoc, 'Đọc không được sửa IP hay tạo gì');
+    kiem(keHoachDanhMuc($pdo, nguonMau(['host' => 'cert.cipher.id.vn', 'cac_ip' => ['203.0.113.77', '161.248.146.56']]))['ip_khac'] === null,
+        'IP đã lưu vẫn nằm trong các IP vừa tra thì không ghi chú');
+
+    $_SESSION['user_id'] = 1;
+    kiem(capNhatIpMayChu($pdo, 5, '203.0.113.77') === null && $ip() === '203.0.113.77', 'Bấm Cập nhật thì IP máy chủ đổi');
+    kiem(keHoachDanhMuc($pdo, $nguon)['ip_khac'] === null, 'Cập nhật rồi thì hết ghi chú');
+    unset($_SESSION['user_id']);
+}
+
+// Luật: Hãng đã có trong danh mục (tên gọn hoặc tên gốc O/CN, không phân biệt hoa thường) thì dùng lại; không tạo bản mới, không đổi mức tin cậy người dùng đã đặt.
+// Vì sao: Danh mục nhập tay trước 09/11/2026 có thể ghi "GlobalSign nv-sa"; tạo thêm "GlobalSign" là tách đôi một hãng trong Thống kê.
+// Đỏ nghĩa là: Chỉ tra theo tên gọn, hoặc lúc lưu ghi đè is_trusted theo kết quả kiểm chuỗi.
+// Đừng: Sửa hãng có sẵn cho khớp tên gọn; đó là dữ liệu của người dùng.
+function test_hang_co_san_duoc_dung_lai_khong_doi_tin_cay(PDO $pdo): void
+{
+    $pdo->exec("INSERT INTO certificate_authorities (name, country, is_trusted) VALUES ('globalsign NV-SA', 'Bỉ', 0)");
+    $id = (int) $pdo->query("SELECT id FROM certificate_authorities WHERE name = 'globalsign NV-SA'")->fetchColumn();
+    $kh = keHoachDanhMuc($pdo, nguonMau());
+    kiem($kh['ca_id'] === $id && $kh['hang_moi'] === null, 'Tên gốc O trùng (khác hoa thường) thì dùng lại hãng có sẵn');
+    kiem(keHoachDanhMuc($pdo, nguonMau(['hang' => 'DigiCert', 'ben_cap' => ['DigiCert Inc']]))['ca_id'] === 2, 'Tên gọn trùng thì dùng lại');
+    $_SESSION['user_id'] = 1;
+    kiem(luuChungChiKemDanhMuc($pdo, $kh, chungChiHopLe(['domain_id' => '', 'ca_id' => (string) $id]), 1) === [], 'Lưu phải thành công');
+    unset($_SESSION['user_id']);
+    kiem((int) $pdo->query("SELECT is_trusted FROM certificate_authorities WHERE id = $id")->fetchColumn() === 0,
+        'Mức tin cậy người dùng đặt phải giữ nguyên dù chuỗi kiểm được');
+}
+
+// Luật: Nhập hàng loạt nhận tối đa 50 địa chỉ (tách theo xuống dòng, dấu cách, phẩy, chấm phẩy; bỏ trùng); bước Lưu chỉ nhận số thứ tự dòng, dữ liệu chứng chỉ lấy từ phiên.
+// Vì sao: User 09/11/2026 chọn xem trước rồi mới lưu; nếu bước Lưu nhận dữ liệu từ trình duyệt thì ai cũng gửi được chứng chỉ, IP, "tin cậy" giả. Trần 50 để một lượt không treo PHP quá vài phút.
+// Đỏ nghĩa là: Trang đọc thêm ô POST nào ngoài hanh_dong, dia_chi, cong, chon; hoặc trần, cách tách địa chỉ bị đổi.
+// Đừng: Gửi kết quả đọc qua ô ẩn trong form cho "khỏi dùng phiên".
+function test_nhap_hang_loat_chi_luu_du_lieu_doc_trong_phien(PDO $pdo): void
+{
+    kiem(tachDanhSachDiaChi("a.vn\r\nB.vn, b.vn;c.vn  d.vn:465\n\n") === ['dia_chi' => ['a.vn', 'B.vn', 'c.vn', 'd.vn:465']],
+        'Phải tách đúng và bỏ trùng không phân biệt hoa thường');
+    kiem(isset(tachDanhSachDiaChi(" \n ")['loi']), 'Ô trống phải báo lỗi');
+    $nhieu = array_map(fn(int $i): string => "s$i.example.org", range(1, 51));
+    kiem(isset(tachDanhSachDiaChi(implode("\n", $nhieu))['loi']), '51 địa chỉ phải bị từ chối');
+    kiem(count(tachDanhSachDiaChi(implode("\n", array_slice($nhieu, 0, 50)))['dia_chi'] ?? []) === 50, '50 địa chỉ được nhận');
+
+    $trang = codeKhongChuThich(__DIR__ . '/../public/admin/chung_chi_nhap.php');
+    preg_match_all('/\$_POST\[\'(\w+)\'\]/', $trang, $post);
+    preg_match_all('/chuoiPost\(\'(\w+)\'\)/', $trang, $chuoi);
+    $o = array_values(array_unique([...$post[1], ...$chuoi[1]]));
+    sort($o);
+    kiem($o === ['chon', 'cong', 'dia_chi', 'hanh_dong'], 'Trang chỉ được nhận các ô hanh_dong, dia_chi, cong, chon; đang nhận: ' . implode(', ', $o));
+    kiem(str_contains($trang, '$daDoc = $_SESSION[\'nhap_hang_loat\'];'), 'Bước Lưu phải lấy kết quả đọc từ phiên');
 }
 
 // Luật: Ô gõ Tên miền, Tổ chức cấp chỉ nhận tên có trong danh mục (không phân biệt hoa thường); tên lạ không lưu được.

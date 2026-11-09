@@ -1262,6 +1262,9 @@ kê) sai theo.
 | Ô gõ tự do, tên mới thì tự tạo danh mục | Nhanh | Gõ nhầm một chữ là đẻ ra một tên miền rác; danh mục bẩn dần |
 | **Ô gõ có gợi ý, chỉ nhận tên đã có** | Nhanh như gõ, chắc như chọn | Tên mới phải thêm vào danh mục trước (có link ngay dưới ô) |
 
+Riêng khi **đọc chứng chỉ từ máy chủ** (H12) thì hệ thống được tạo tên mới: tên đó lấy từ chứng chỉ thật nên không
+có chuyện gõ nhầm.
+
 **Sửa không ghi lịch sử, gia hạn mới ghi.** Form Sửa là để sửa chỗ **nhập sai**. Chứng chỉ được **cấp lại** thì dùng
 Gia hạn (H5) để giữ lịch sử. Tách hai việc này để lịch sử gia hạn chỉ chứa những lần gia hạn thật.
 
@@ -1504,9 +1507,19 @@ forgery, mượn máy chủ gửi yêu cầu).
 **Cố ý không kiểm chứng chỉ có hợp lệ không.** Trình duyệt từ chối chứng chỉ hết hạn, tự ký, sai tên. Nhưng chức năng
 này **phải** đọc được cả những chứng chỉ đó, vì chúng chính là thứ cần đưa vào theo dõi.
 
-**Tự chọn tên miền và tổ chức cấp nếu trùng tên, nhưng không tự tạo.** Cùng lý do với H2: tự tạo là đẻ ra danh mục rác.
-Chưa có thì để trống, kèm gợi ý thêm vào danh mục. Tên miền cha cũng được nhận: đọc `cert.cipher.id.vn` mà danh mục có
-`cipher.id.vn` thì tự chọn `cipher.id.vn`.
+**Có sẵn thì chọn, chưa có thì tạo khi bấm Lưu.** Ban đầu (08/11) hệ thống không tự tạo gì. Đến lúc nhập 50 site thật
+mới thấy phải tạo tay máy chủ, tên miền, tổ chức cấp cho từng site thì mất cả giờ, nên từ 09/11 hệ thống tự lo:
+đọc xong thì ghi "Sẽ tạo mới: …", bấm Lưu mới tạo, cả chuỗi trong **một giao dịch**. Đọc thử rồi bỏ thì danh
+mục vẫn sạch. Tên miền cha cũng được nhận: đọc `cert.cipher.id.vn` mà danh mục có `cipher.id.vn` thì dùng luôn.
+
+**Chứng chỉ gắn với tên miền, không gắn với IP.** Một IP chứa được nhiều chứng chỉ (trình duyệt gửi kèm tên miền,
+máy chủ nhìn tên đó mà chọn chứng chỉ), và một chứng chỉ chạy trên hàng trăm IP của CDN. Vì vậy hệ thống tra tên
+miền trước; IP đổi (shopee.vn đổi IP sau chưa tới một phút) thì chỉ ghi chú kèm nút cập nhật, không đẻ máy chủ mới.
+
+**Tổ chức cấp ghi theo hãng.** `YE1`, `R10`, `WE2` là chứng chỉ trung gian của Let's Encrypt, Google, không phải
+hãng. Ghi theo chúng thì biểu đồ "Theo tổ chức cấp" vỡ thành hàng chục cột. `tenHang()` gộp các cách viết của
+một hãng về một tên gọn. Hãng có đáng tin không thì `laChuoiTinCay()` kiểm chuỗi chứng chỉ với kho CA gốc mà
+hệ điều hành tin sẵn.
 
 **Báo trùng ngay.** Chứng chỉ vừa đọc đã có trong hệ thống (cùng fingerprint) thì báo trước, kèm link, khỏi bấm Lưu rồi
 mới bị từ chối.

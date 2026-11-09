@@ -718,7 +718,8 @@ function kiemTraDiaChiDoc(string $host, int $cong, array $cacIp): ?string
     return null;
 }
 
-// Kết nối và lấy chứng chỉ máy chủ đang dùng. Trả về ['chung_chi' => OpenSSLCertificate, 'host', 'cong']
+// Kết nối và lấy chứng chỉ máy chủ đang dùng. Trả về ['chung_chi' => OpenSSLCertificate, 'chuoi' => [lá, bên cấp...],
+// 'host', 'cong', 'cac_ip' => mọi IP vừa tra]
 // hoặc ['loi' => ...]. Kết nối tới đúng IP vừa kiểm, gửi tên miền qua SNI: nếu tra DNS lần nữa khi kết nối,
 // kẻ xấu có thể đổi bản ghi sang 127.0.0.1 ngay giữa hai lần tra (DNS rebinding).
 // Không kiểm chứng chỉ có hợp lệ không: hết hạn, tự ký, sai tên vẫn phải đọc được, vì đó là thứ cần theo dõi.
@@ -738,6 +739,7 @@ function docChungChiTuMayChu(string $nhap, int $congChon): array
     $ip = $cacIp[0];
     $ngucCanh = stream_context_create(['ssl' => [
         'capture_peer_cert' => true,
+        'capture_peer_cert_chain' => true, // Cả chứng chỉ bên cấp, để kiểm hãng có đáng tin không (laChuoiTinCay).
         'verify_peer' => false,
         'verify_peer_name' => false,
         'allow_self_signed' => true,
@@ -751,12 +753,14 @@ function docChungChiTuMayChu(string $nhap, int $congChon): array
         return ['loi' => "Không đọc được chứng chỉ ở $host:$cong. Máy chủ không trả lời trong "
             . GIAY_CHO_DOC_CHUNG_CHI . ' giây, từ chối kết nối, hoặc không dùng TLS ở cổng này.'];
     }
-    $chungChi = stream_context_get_params($ketNoi)['options']['ssl']['peer_certificate'] ?? null;
+    $thamSo = stream_context_get_params($ketNoi)['options']['ssl'];
     fclose($ketNoi);
+    $chungChi = $thamSo['peer_certificate'] ?? null;
     if (!$chungChi instanceof OpenSSLCertificate) {
         return ['loi' => "Máy chủ $host:$cong không gửi chứng chỉ."];
     }
-    return ['chung_chi' => $chungChi, 'host' => $host, 'cong' => $cong];
+    return ['chung_chi' => $chungChi, 'chuoi' => $thamSo['peer_certificate_chain'] ?? [$chungChi],
+        'host' => $host, 'cong' => $cong, 'cac_ip' => $cacIp];
 }
 
 // Giá trị các ô của form chứng chỉ, từ một chứng chỉ (đối tượng hoặc chuỗi PEM). Ngày theo giờ Việt Nam
@@ -813,7 +817,7 @@ function chonTenMienChoDiaChi(array $cacTenMien, string $host): ?int
     return $chon;
 }
 
-// Tổ chức cấp trùng tên với O hoặc CN của bên cấp; không trùng thì null (để trống, không tự tạo).
+// Tổ chức cấp trùng tên (không phân biệt hoa thường) với một trong các tên đưa vào; không trùng thì null.
 function chonToChucCap(array $cacToChuc, array $benCap): ?int
 {
     foreach ($benCap as $ten) {
@@ -825,10 +829,251 @@ function chonToChucCap(array $cacToChuc, array $benCap): ?int
     return null;
 }
 
-// Việc của nút "Đọc chứng chỉ" ở form Thêm: đọc, chuyển thành giá trị các ô, tự chọn tên miền và tổ chức cấp,
-// rồi ghi một dòng Nhật ký dù đọc được hay không (để biết ai đã cho máy chủ kết nối đi đâu).
-// Trả về ['loi' => ...] hoặc ['gia_tri' => [ô => giá trị], 'host', 'cong', 'ben_cap', 'trung' => chứng chỉ trùng|null].
-function docChungChiChoForm(PDO $pdo, string $nhap, int $congChon, array $cacTenMien, array $cacToChuc): array
+// ---------- Đọc xong thì tự lo danh mục (user chốt 09/11/2026, thay cho "không tự tạo" của 08/11) ----------
+// Đọc chỉ ghi lại "nguồn" (những gì vừa đọc được) rồi tính "kế hoạch": cái gì đã có trong danh mục thì dùng,
+// cái gì chưa có thì SẼ tạo. Chỉ khi bấm Lưu mới tạo, trong một giao dịch: đọc thử rồi bỏ thì danh mục sạch.
+
+// Tổ chức cấp ghi ở tầng HÃNG, không theo từng chứng chỉ trung gian (YE1, R10, WE2...), để Thống kê theo tổ chức
+// cấp gom đúng (user chốt 09/11/2026). Một hãng có nhiều cách viết ô O: gộp về một tên gọn; hãng không có ở đây
+// giữ nguyên ô O. Mẫu khớp từ đầu một từ, không phân biệt hoa thường. GeoTrust, RapidSSL, Thawte là thương hiệu
+// của DigiCert; COMODO, USERTrust là tên cũ và gốc của Sectigo; Starfield của GoDaddy (đo 72 site thật 09/11/2026).
+// Tên gọn dài quá 24 ký tự bị rút gọn trên trục biểu đồ (app.js), nên giữ ngắn.
+const HANG_CHUNG_CHI = [
+    "Let's Encrypt" => ["let's encrypt", 'internet security research group'],
+    'Google Trust Services' => ['google trust services'],
+    'DigiCert' => ['digicert', 'geotrust', 'rapidssl', 'thawte', 'symantec'],
+    'GlobalSign' => ['globalsign'],
+    'Sectigo' => ['sectigo', 'comodo', 'usertrust'],
+    'SSL.com' => ['ssl corp', 'ssl.com'],
+    'Entrust' => ['entrust'],
+    'GoDaddy' => ['godaddy', 'starfield'],
+    'Amazon' => ['amazon'],
+    'Microsoft' => ['microsoft'],
+    'Apple' => ['apple'],
+    'Cloudflare' => ['cloudflare'],
+    'ZeroSSL' => ['zerossl'],
+    'Certum' => ['certum', 'unizeto', 'asseco'],
+    'Buypass' => ['buypass'],
+    // CA nhà nước Nga (sberbank.ru, gosuslugi một phần): ô O là tên bộ, dài và không ai nhận ra.
+    'Russian Trusted CA' => ['the ministry of digital development', 'russian trusted'],
+];
+
+// Mã quốc gia trong chứng chỉ (ô C) ra tên tiếng Việt, cùng cách ghi với danh mục ("Hoa Kỳ"). Mã lạ giữ nguyên.
+const TEN_QUOC_GIA = [
+    'US' => 'Hoa Kỳ', 'BE' => 'Bỉ', 'GB' => 'Anh', 'DE' => 'Đức', 'FR' => 'Pháp', 'NL' => 'Hà Lan', 'PL' => 'Ba Lan',
+    'NO' => 'Na Uy', 'ES' => 'Tây Ban Nha', 'IT' => 'Ý', 'CH' => 'Thuỵ Sĩ', 'AT' => 'Áo', 'SE' => 'Thuỵ Điển',
+    'RU' => 'Nga', 'CN' => 'Trung Quốc', 'JP' => 'Nhật Bản', 'KR' => 'Hàn Quốc', 'TW' => 'Đài Loan', 'HK' => 'Hồng Kông',
+    'SG' => 'Singapore', 'IN' => 'Ấn Độ', 'VN' => 'Việt Nam', 'CA' => 'Canada', 'AU' => 'Úc', 'TR' => 'Thổ Nhĩ Kỳ',
+    'BM' => 'Bermuda',
+];
+
+// Tên hãng gọn từ ô O, rồi ô CN, của bên cấp. Không khớp hãng nào thì lấy nguyên ô O, không có O thì CN.
+function tenHang(string $o, string $cn = ''): string
+{
+    foreach ([$o, $cn] as $ten) {
+        foreach (HANG_CHUNG_CHI as $hang => $cacMau) {
+            foreach ($cacMau as $mau) {
+                if (preg_match('/(^|\W)' . preg_quote($mau, '/') . '/iu', $ten) === 1) {
+                    return $hang;
+                }
+            }
+        }
+    }
+    $ten = trim($o) !== '' ? trim($o) : trim($cn);
+    return $ten !== '' ? mb_substr($ten, 0, 100) : 'Không rõ';
+}
+
+function tenQuocGia(string $ma): string
+{
+    $ma = strtoupper(trim($ma));
+    return TEN_QUOC_GIA[$ma] ?? ($ma !== '' ? $ma : 'Không rõ');
+}
+
+// Hãng đáng tin khi có ít nhất một chứng chỉ BÊN CẤP trong chuỗi (bỏ chứng chỉ lá, phần tử 0) kiểm được tới một
+// CA gốc trong kho của máy: kho của hệ điều hành trên VPS, hoặc openssl.cafile (XAMPP có sẵn bộ của curl).
+// Không kiểm chứng chỉ lá: lá hết hạn (expired.badssl.com) vẫn do hãng đáng tin cấp. Tự ký, gốc lạ, CA của Bộ
+// Phát triển số Nga không có trong kho nên ra không tin cậy (đo 11 site trên VPS và XAMPP, 09/11/2026).
+// Site chỉ gửi chứng chỉ lá thì ra không tin cậy dù hãng đáng tin: hiếm, sửa tay được ở trang Tổ chức cấp.
+function laChuoiTinCay(array $chuoi): bool
+{
+    $kho = (string) ini_get('openssl.cafile');
+    foreach (array_slice(array_values($chuoi), 1) as $chungChi) {
+        if (openssl_x509_checkpurpose($chungChi, X509_PURPOSE_ANY, $kho !== '' ? [$kho] : []) === true) {
+            return true;
+        }
+    }
+    return false;
+}
+
+// Những gì vừa đọc được, đủ để tính kế hoạch danh mục mà không phải kết nối lại. Giữ trong phiên từ lúc Đọc tới
+// lúc Lưu, không nhận lại từ trình duyệt: không ai sửa được "IP vừa đọc" hay "hãng đáng tin" bằng cách gửi form giả.
+function nguonTuKetQuaDoc(array $ketQua, array $doc): array
+{
+    $p = openssl_x509_parse($ketQua['chung_chi']);
+    // Một ô có thể lặp (hai O): lấy giá trị đầu.
+    $o = fn(array $phan, string $khoa): string => is_array($phan[$khoa] ?? null) ? (string) reset($phan[$khoa]) : (string) ($phan[$khoa] ?? '');
+    $chu = trim($o($p['subject'], 'O'));
+    return [
+        'host' => $ketQua['host'],
+        'cong' => $ketQua['cong'],
+        'cac_ip' => $ketQua['cac_ip'],
+        'cn' => strtolower($doc['subject_cn']),
+        'ben_cap' => $doc['ben_cap'],
+        'hang' => tenHang($o($p['issuer'], 'O'), $o($p['issuer'], 'CN')),
+        'quoc_gia' => tenQuocGia($o($p['issuer'], 'C')),
+        'tin_cay' => laChuoiTinCay($ketQua['chuoi']),
+        'chu' => $chu !== '' ? mb_substr($chu, 0, 100) : 'Bên ngoài',
+    ];
+}
+
+// Kế hoạch danh mục cho một lần đọc, tính theo CSDL lúc gọi (nhập hàng loạt tính lại từng dòng lúc Lưu, nên dòng sau
+// dùng lại cái dòng trước vừa tạo). Tên miền tra trước: đã có (trùng hẳn hoặc tên miền cha) thì dùng luôn cùng máy
+// chủ của nó. Chứng chỉ gắn với tên miền, không gắn với IP: site sau CDN đổi IP theo phút và theo nơi hỏi (đo
+// 09/11/2026), nên IP khác chỉ ghi vào 'ip_khac' để người dùng tự quyết, không tạo gì. Chỉ khi tên miền chưa có
+// mới tìm máy chủ theo IP: trùng thì dùng chung, không thì tạo (mỗi IP một máy chủ, user chốt 09/11/2026).
+// Trả về: 'domain_id', 'server_id', 'ca_id' là mã có sẵn hoặc null; 'ten_mien_moi', 'may_chu_moi', 'hang_moi' là
+// cái sẽ tạo hoặc null; 'ip_khac' => ['server_id', 'hostname', 'ip_cu', 'ip_moi'] hoặc null.
+function keHoachDanhMuc(PDO $pdo, array $nguon): array
+{
+    $kh = ['domain_id' => null, 'server_id' => null, 'ca_id' => null,
+        'ten_mien_moi' => null, 'may_chu_moi' => null, 'hang_moi' => null, 'ip_khac' => null];
+    $ipDau = $nguon['cac_ip'][0] ?? '';
+    // Đọc bằng IP thì không có tên miền: lấy tên chính của chứng chỉ.
+    $ten = filter_var($nguon['host'], FILTER_VALIDATE_IP) === false ? $nguon['host'] : $nguon['cn'];
+
+    $kh['domain_id'] = chonTenMienChoDiaChi(array_column(danhSachTenMien($pdo), 'domain_name', 'id'), $ten);
+    if ($kh['domain_id'] !== null) {
+        $mayChu = timMayChu($pdo, (int) timTenMien($pdo, $kh['domain_id'])['server_id']);
+        $kh['server_id'] = (int) $mayChu['id'];
+        if ($ipDau !== '' && !in_array($mayChu['ip_address'], $nguon['cac_ip'], true)) {
+            $kh['ip_khac'] = ['server_id' => (int) $mayChu['id'], 'hostname' => $mayChu['hostname'],
+                'ip_cu' => $mayChu['ip_address'], 'ip_moi' => $ipDau];
+        }
+    } elseif (tenMienHopLe($ten)) {
+        $kh['ten_mien_moi'] = $ten;
+        $mayChu = mayChuTheoIp($pdo, $nguon['cac_ip']);
+        if ($mayChu !== null) {
+            $kh['server_id'] = (int) $mayChu['id'];
+        } else {
+            $kh['may_chu_moi'] = ['hostname' => preg_replace('/^\*\./', '', $ten), 'ip_address' => $ipDau,
+                'port' => (string) $nguon['cong'], 'environment' => 'production', 'owner' => $nguon['chu']];
+        }
+    }
+
+    // Tra cả tên hãng gọn lẫn tên gốc: danh mục nhập tay trước đây có thể ghi "DigiCert Inc" hay "YE1".
+    $kh['ca_id'] = chonToChucCap(array_column(danhSachToChuc($pdo), 'name', 'id'), [$nguon['hang'], ...$nguon['ben_cap']]);
+    if ($kh['ca_id'] === null) {
+        $kh['hang_moi'] = ['name' => $nguon['hang'], 'country' => $nguon['quoc_gia'], 'is_trusted' => $nguon['tin_cay']];
+    }
+    return $kh;
+}
+
+// Các dòng "sẽ tạo mới" để người dùng đọc trước khi bấm Lưu (form một site và bảng xem trước hàng loạt).
+function moTaSeTao(array $keHoach): array
+{
+    $ds = [];
+    if ($keHoach['ten_mien_moi'] !== null) {
+        $mc = $keHoach['may_chu_moi'];
+        $ds[] = 'Tên miền ' . $keHoach['ten_mien_moi'] . ($mc === null ? ', trên máy chủ có sẵn cùng IP' : '');
+        if ($mc !== null) {
+            $ds[] = "Máy chủ {$mc['hostname']} ({$mc['ip_address']}, cổng {$mc['port']}, phụ trách: {$mc['owner']})";
+        }
+    }
+    if ($keHoach['hang_moi'] !== null) {
+        $h = $keHoach['hang_moi'];
+        $ds[] = "Tổ chức cấp {$h['name']} ({$h['country']}, " . ($h['is_trusted'] ? 'tin cậy' : 'không tin cậy') . ')';
+    }
+    return $ds;
+}
+
+// Form một site: người dùng có thể đổi ô Tên miền, Tổ chức cấp sau khi đọc. Chỉ giữ việc tạo mới khi ô còn đúng tên
+// kế hoạch định tạo; đổi sang tên có sẵn thì dùng tên đó, đổi sang tên lạ khác thì không tạo (luuChungChi báo lỗi).
+// Mã có sẵn trong kế hoạch bị bỏ: ô người dùng gõ quyết định, không để kết quả đọc lặng lẽ thay chữ họ gõ.
+function keHoachTheoONhap(array $keHoach, string $tenMienGo, string $toChucGo): array
+{
+    $keHoach['domain_id'] = null;
+    $keHoach['ca_id'] = null;
+    if ($keHoach['ten_mien_moi'] === null || strtolower(trim($tenMienGo)) !== $keHoach['ten_mien_moi']) {
+        $keHoach['ten_mien_moi'] = null;
+        $keHoach['may_chu_moi'] = null;
+    }
+    if ($keHoach['hang_moi'] === null || mb_strtolower(trim($toChucGo)) !== mb_strtolower($keHoach['hang_moi']['name'])) {
+        $keHoach['hang_moi'] = null;
+    }
+    return $keHoach;
+}
+
+// Lưu chứng chỉ cùng những gì kế hoạch nói sẽ tạo, trong MỘT giao dịch: hỏng ở bước nào thì không bước nào được
+// ghi, kể cả dòng nhật ký. Dùng lại các hàm lưu của từng danh mục, nên kiểm tra và nhật ký y như khi thêm tay.
+// $d là các ô chứng chỉ. Ô domain_id, ca_id còn trống thì lấy mã có sẵn trong kế hoạch, hoặc mã bản vừa tạo.
+// Trả về mảng lỗi như luuChungChi().
+function luuChungChiKemDanhMuc(PDO $pdo, array $keHoach, array $d, int $idNguoiTao): array
+{
+    $d['domain_id'] = ($d['domain_id'] ?? '') !== '' ? $d['domain_id'] : (string) ($keHoach['domain_id'] ?? '');
+    $d['ca_id'] = ($d['ca_id'] ?? '') !== '' ? $d['ca_id'] : (string) ($keHoach['ca_id'] ?? '');
+    // Hàm lưu ghi nhật ký ngay sau INSERT, nên lastInsertId() lúc đó là của nhật ký: tra mã theo tên vừa lưu.
+    $pdo->beginTransaction();
+    try {
+        if ($keHoach['ten_mien_moi'] !== null) {
+            if ($keHoach['may_chu_moi'] !== null) {
+                $loi = luuMayChu($pdo, null, $keHoach['may_chu_moi']);
+                if ($loi !== []) {
+                    $pdo->rollBack();
+                    return ['ten_mien' => "Không tạo được máy chủ {$keHoach['may_chu_moi']['hostname']}: " . implode(' ', $loi)];
+                }
+                $cau = $pdo->prepare('SELECT MAX(id) FROM servers WHERE hostname = ? AND ip_address = ?');
+                $cau->execute([$keHoach['may_chu_moi']['hostname'], $keHoach['may_chu_moi']['ip_address']]);
+                $keHoach['server_id'] = (int) $cau->fetchColumn();
+            }
+            $loi = luuTenMien($pdo, null, ['domain_name' => $keHoach['ten_mien_moi'], 'server_id' => (string) $keHoach['server_id']]);
+            if ($loi !== []) {
+                $pdo->rollBack();
+                return ['ten_mien' => "Không tạo được tên miền {$keHoach['ten_mien_moi']}: " . implode(' ', $loi)];
+            }
+            $cau = $pdo->prepare('SELECT id FROM domains WHERE domain_name = ?');
+            $cau->execute([$keHoach['ten_mien_moi']]);
+            $d['domain_id'] = (string) $cau->fetchColumn();
+        }
+        if ($keHoach['hang_moi'] !== null) {
+            $loi = luuToChuc($pdo, null, $keHoach['hang_moi']);
+            if ($loi !== []) {
+                $pdo->rollBack();
+                return ['to_chuc_cap' => "Không tạo được tổ chức cấp {$keHoach['hang_moi']['name']}: " . implode(' ', $loi)];
+            }
+            $cau = $pdo->prepare('SELECT id FROM certificate_authorities WHERE name = ?');
+            $cau->execute([$keHoach['hang_moi']['name']]);
+            $d['ca_id'] = (string) $cau->fetchColumn();
+        }
+        $loi = luuChungChi($pdo, null, $d, $idNguoiTao);
+        if ($loi !== []) {
+            $pdo->rollBack();
+            return $loi;
+        }
+        $pdo->commit();
+        return [];
+    } catch (Throwable $e) {
+        $pdo->rollBack();
+        throw $e;
+    }
+}
+
+// Nút "Cập nhật IP máy chủ" khi đọc lại tên miền đã có mà IP khác: sửa đúng dòng máy chủ đó, có ghi nhật ký.
+// Chỉ chạy khi người dùng bấm; không có gì tự dò IP định kỳ (user chốt 09/11/2026: không dịch vụ chạy ngầm).
+function capNhatIpMayChu(PDO $pdo, int $idMayChu, string $ipMoi): ?string
+{
+    $mayChu = timMayChu($pdo, $idMayChu);
+    if ($mayChu === null) {
+        return 'Máy chủ không còn tồn tại.';
+    }
+    $loi = luuMayChu($pdo, $idMayChu, ['ip_address' => $ipMoi, 'port' => (string) $mayChu['port']] + $mayChu);
+    return $loi === [] ? null : implode(' ', $loi);
+}
+
+// Việc của nút "Đọc chứng chỉ" (form Thêm và Nhập hàng loạt): đọc, chuyển thành giá trị các ô, tính kế hoạch danh
+// mục, rồi ghi một dòng Nhật ký dù đọc được hay không (để biết ai đã cho máy chủ kết nối đi đâu).
+// Trả về ['loi' => ...] hoặc ['gia_tri' => [ô => giá trị], 'host', 'cong', 'ben_cap', 'nguon', 'ke_hoach',
+// 'trung' => chứng chỉ trùng fingerprint|null].
+function docChungChiChoForm(PDO $pdo, string $nhap, int $congChon): array
 {
     $ketQua = docChungChiTuMayChu($nhap, $congChon);
     if (isset($ketQua['loi'])) {
@@ -836,9 +1081,11 @@ function docChungChiChoForm(PDO $pdo, string $nhap, int $congChon, array $cacTen
         return $ketQua;
     }
     $doc = giaTriTuChungChi($ketQua['chung_chi']);
+    $nguon = nguonTuKetQuaDoc($ketQua, $doc);
+    $keHoach = keHoachDanhMuc($pdo, $nguon);
     $giaTri = array_diff_key($doc, ['ben_cap' => true]);
-    $giaTri['domain_id'] = (string) (chonTenMienChoDiaChi($cacTenMien, $ketQua['host']) ?? '');
-    $giaTri['ca_id'] = (string) (chonToChucCap($cacToChuc, $doc['ben_cap']) ?? '');
+    $giaTri['domain_id'] = (string) ($keHoach['domain_id'] ?? '');
+    $giaTri['ca_id'] = (string) ($keHoach['ca_id'] ?? '');
     ghiNhatKy($pdo, 'doc_chung_chi', null, null, "{$ketQua['host']}:{$ketQua['cong']}: {$doc['subject_cn']}, hết hạn "
         . date('d/m/Y', strtotime($doc['valid_to'])));
     return [
@@ -846,8 +1093,50 @@ function docChungChiChoForm(PDO $pdo, string $nhap, int $congChon, array $cacTen
         'host' => $ketQua['host'],
         'cong' => $ketQua['cong'],
         'ben_cap' => $doc['ben_cap'],
+        'nguon' => $nguon,
+        'ke_hoach' => $keHoach,
         'trung' => chungChiTheoFingerprint($pdo, $doc['fingerprint_sha256']),
     ];
+}
+
+// Nhập hàng loạt: tối đa 50 địa chỉ mỗi lượt, mỗi địa chỉ chờ tối đa GIAY_CHO_DOC_CHUNG_CHI giây (tệ nhất ~4 phút).
+const SO_DIA_CHI_TOI_DA = 50;
+
+// Tách ô dán thành danh sách địa chỉ: cách nhau bởi xuống dòng, dấu cách, phẩy hoặc chấm phẩy; bỏ dòng trống,
+// bỏ trùng (không phân biệt hoa thường). Trả về ['dia_chi' => [...]] hoặc ['loi' => ...].
+function tachDanhSachDiaChi(string $nhap): array
+{
+    $ds = [];
+    foreach (preg_split('/[\s,;]+/u', $nhap, -1, PREG_SPLIT_NO_EMPTY) as $diaChi) {
+        $ds[strtolower($diaChi)] ??= $diaChi;
+    }
+    if ($ds === []) {
+        return ['loi' => 'Hãy dán ít nhất một địa chỉ.'];
+    }
+    if (count($ds) > SO_DIA_CHI_TOI_DA) {
+        return ['loi' => 'Có ' . count($ds) . ' địa chỉ; mỗi lượt đọc tối đa ' . SO_DIA_CHI_TOI_DA . '. Hãy chia làm nhiều lượt.'];
+    }
+    return ['dia_chi' => array_values($ds)];
+}
+
+// Thanh tab của trang Thêm chứng chỉ, dùng chung cho form một site và trang Nhập hàng loạt.
+// Tab là link thường: đổi tab là tải trang khác, không cần JavaScript.
+function tabThemChungChi(string $dangMo): string
+{
+    $cacTab = [
+        'tu_dong' => ['admin/chung_chi_form.php?che_do=tu_dong', 'Đọc từ máy chủ', 'Máy chủ'],
+        'hang_loat' => ['admin/chung_chi_nhap.php', 'Nhập hàng loạt', 'Hàng loạt'],
+        'thu_cong' => ['admin/chung_chi_form.php?che_do=thu_cong', 'Nhập thủ công', 'Thủ công'],
+    ];
+    // Màn hẹp hơn 576px dùng nhãn ngắn: ba nhãn đầy đủ rớt xuống hai dòng ở khổ iPhone 390px (chụp 09/11/2026).
+    $html = '<div class="card-header"><ul class="nav nav-tabs card-header-tabs">';
+    foreach ($cacTab as $ma => [$duongDan, $nhan, $nhanNgan]) {
+        $mo = $ma === $dangMo;
+        $html .= '<li class="nav-item"><a class="nav-link' . ($mo ? ' active' : '') . '" href="' . e(url($duongDan)) . '"'
+            . ($mo ? ' aria-current="page"' : '') . '><span class="d-none d-sm-inline">' . e($nhan) . '</span>'
+            . '<span class="d-sm-none">' . e($nhanNgan) . '</span></a></li>';
+    }
+    return $html . '</ul></div>';
 }
 
 // Chứng chỉ đã lưu có fingerprint này (id, mã quản lý), null nếu chưa có: báo trước khi người dùng bấm Lưu.

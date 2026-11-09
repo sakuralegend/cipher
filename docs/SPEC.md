@@ -15,7 +15,7 @@ dùng trên logo, menu và tab trình duyệt.
 
 | Mã | Chức năng | Người dùng | Đầu vào | Kiểm tra | Kết quả |
 |---|---|---|---|---|---|
-| D1 | Quản lý danh sách chứng chỉ | Admin, Nhân viên; chỉ Admin được xoá | Mã quản lý, fingerprint, serial, tên chính, tên phụ, tổ chức cấp, tên miền, thuật toán, độ dài khoá. Form Thêm có 2 tab: Đọc từ máy chủ (mục 8.2) và Nhập thủ công | Xem mục 3.1 | Chứng chỉ được thêm, sửa hoặc xoá; danh sách có phân trang |
+| D1 | Quản lý danh sách chứng chỉ | Admin, Nhân viên; chỉ Admin được xoá | Mã quản lý, fingerprint, serial, tên chính, tên phụ, tổ chức cấp, tên miền, thuật toán, độ dài khoá. Form Thêm có 3 tab: Đọc từ máy chủ, Nhập hàng loạt (mục 8.2) và Nhập thủ công | Xem mục 3.1 | Chứng chỉ được thêm, sửa hoặc xoá; danh sách có phân trang |
 | D2 | Quản lý tên miền và máy chủ | Admin, Nhân viên | Máy chủ: tên, IP, cổng, môi trường, người phụ trách. Tên miền: tên, máy chủ | Xem mục 3.2 | Bản ghi được thêm, sửa, xoá; danh sách tên miền kèm số chứng chỉ, lọc danh sách chứng chỉ theo tên miền để xem từng cái |
 | D3 | Lưu thông tin tổ chức cấp | Admin, Nhân viên | Tên, quốc gia, có được tin cậy không | Tên không trùng; không xoá khi còn chứng chỉ | Danh sách tổ chức cấp để chọn khi thêm chứng chỉ |
 | D4 | Quản lý ngày cấp và ngày hết hạn | Admin, Nhân viên | Ngày bắt đầu, ngày hết hạn | Ngày hết hạn phải sau ngày bắt đầu | Hiển thị hai ngày và số ngày còn hiệu lực, tự tính |
@@ -57,7 +57,7 @@ dùng trên logo, menu và tab trình duyệt.
 | Mã quản lý | Bắt buộc, tối đa 30 ký tự, không trùng |
 | Fingerprint SHA-256 | Không bắt buộc. Bỏ dấu `:` và khoảng trắng, đổi về chữ thường, phải đúng 64 ký tự hex, không trùng |
 | Tên chính | Bắt buộc, tối đa 255 ký tự |
-| Tổ chức cấp, tên miền | Bắt buộc. Ô gõ có gợi ý, nhưng chỉ nhận tên đã có trong danh mục (không phân biệt hoa thường); tên lạ bị từ chối kèm link thêm vào danh mục, hệ thống không tự tạo |
+| Tổ chức cấp, tên miền | Bắt buộc. Ô gõ có gợi ý, nhưng chỉ nhận tên đã có trong danh mục (không phân biệt hoa thường); tên lạ bị từ chối kèm link thêm vào danh mục. Ngoại lệ duy nhất: đúng tên mà lần đọc chứng chỉ vừa rồi định tạo (mục 8.2) |
 | Ngày bắt đầu, ngày hết hạn | Bắt buộc, ngày hết hạn phải sau ngày bắt đầu |
 | Thuật toán khoá, độ dài khoá, thuật toán ký | Bắt buộc; độ dài khoá là số dương |
 
@@ -183,7 +183,8 @@ Ngoài yêu cầu của đề, chỉ làm sau khi đủ 19 chức năng. Báo c�
 
 ### 8.2. Đọc chứng chỉ thật từ máy chủ
 
-- **Ở đâu:** form Thêm chứng chỉ có 2 tab. Tab **Đọc từ máy chủ** mở trước; tab **Nhập thủ công** là form trống.
+- **Ở đâu:** form Thêm chứng chỉ có 3 tab. Tab **Đọc từ máy chủ** mở trước; tab **Nhập hàng loạt** đọc nhiều địa chỉ
+  một lượt; tab **Nhập thủ công** là form trống.
   Form Sửa chỉ có nhập thủ công. Không cần JavaScript: nút Đọc gửi form về chính trang đó.
 - **Nhập:** tên miền hoặc IP, có thể kèm `https://`, `:cổng`, đường dẫn; cổng chọn trong danh sách. Cổng gõ kèm
   địa chỉ thắng cổng chọn.
@@ -196,10 +197,24 @@ Ngoài yêu cầu của đề, chỉ làm sau khi đủ 19 chức năng. Báo c�
 - **Đọc gì:** tên chính (không có CN thì lấy tên phụ đầu tiên), tên phụ, ngày bắt đầu và hết hạn theo giờ Việt
   Nam, thuật toán khoá (RSA, ECDSA; loại khác để trống cho người dùng chọn), độ dài khoá, thuật toán ký,
   fingerprint SHA-256, serial. Chứng chỉ hết hạn, tự ký, sai tên vẫn đọc được, vì đó là thứ cần theo dõi.
-- **Tự chọn danh mục:** tên miền trùng hẳn, hoặc tên miền cha dài nhất; tổ chức cấp trùng tên với O hoặc CN của
-  bên cấp. Không trùng thì để trống kèm gợi ý; không bao giờ tự tạo bản ghi danh mục.
+- **Tự lo danh mục** (user chốt 09/11/2026): đọc xong, thẻ tóm tắt ghi "Sẽ tạo mới: …"; bấm Lưu thì tạo phần còn
+  thiếu cùng chứng chỉ trong một giao dịch. Đọc rồi bỏ thì không tạo gì.
+  - *Tên miền:* trùng hẳn, hoặc tên miền cha dài nhất, thì dùng luôn cùng máy chủ của nó. Chưa có thì tạo.
+  - *Máy chủ:* chỉ tìm khi tên miền mới: trùng IP với máy chủ có sẵn thì dùng chung, không thì tạo (tên = tên miền,
+    IP và cổng vừa đọc, môi trường Đang chạy thật, người phụ trách = tổ chức ghi trong chứng chỉ).
+  - *IP đổi:* chứng chỉ gắn với tên miền, không với IP; site dùng CDN đổi IP theo phút. Tên miền đã có mà IP lúc
+    đọc khác thì chỉ ghi chú, kèm nút **Cập nhật IP máy chủ**. Không có gì chạy ngầm để dò IP.
+  - *Tổ chức cấp ở tầng hãng:* YE1, R10, WE2 là chứng chỉ trung gian, không phải hãng. Các cách viết của một hãng
+    gộp về một tên gọn (GlobalSign nv-sa → GlobalSign, SSL Corp → SSL.com, COMODO → Sectigo); hãng lạ giữ nguyên.
+    Hãng có sẵn (tên gọn hoặc tên gốc) thì dùng lại, không đổi mức tin cậy người dùng đã đặt.
+  - *Tin cậy* của hãng mới: có chứng chỉ bên cấp trong chuỗi kiểm được với kho CA gốc của máy. Tự ký, gốc lạ, CA
+    nhà nước Nga ra không tin cậy.
+- **Nhập hàng loạt:** dán tối đa 50 địa chỉ (xuống dòng, dấu cách hoặc phẩy). Hệ thống đọc lần lượt (50 site thật
+  mất 41 giây, đo 09/11/2026) rồi hiện bảng xem trước: đọc được, trùng chứng chỉ đã có, trùng dòng khác, lỗi vì sao.
+  Dòng lưu được tick sẵn; bấm Lưu thì thêm các dòng đã tick. Kết quả đọc giữ trong phiên, bước Lưu chỉ nhận số thứ
+  tự dòng, nên không gửi được dữ liệu giả.
 - **Báo trùng:** chứng chỉ vừa đọc đã có trong hệ thống (cùng fingerprint) thì báo ngay kèm link, trước khi bấm Lưu.
-- **Giới hạn:** chờ tối đa 5 giây. Không đọc được qua STARTTLS. Chỉ điền form, người dùng vẫn phải kiểm tra rồi
+- **Giới hạn:** chờ tối đa 5 giây mỗi địa chỉ. Không đọc được qua STARTTLS. Chỉ điền form, người dùng vẫn phải kiểm tra rồi
   bấm Lưu; mọi quy tắc ở mục 3.1 vẫn áp dụng.
 
 ## 9. Giao diện

@@ -184,13 +184,14 @@ không nhắc lại ở từng use case.
 
 - **Tác nhân:** Nhân viên quản trị, Admin.
 - **Mục đích:** đưa một chứng chỉ vào hệ thống để theo dõi, hoặc sửa thông tin nhập sai.
-- **Điều kiện trước:** tên miền và tổ chức cấp của chứng chỉ đã có trong danh mục (UC08).
+- **Điều kiện trước:** nhập thủ công thì tên miền và tổ chức cấp đã có trong danh mục (UC08); đọc từ máy chủ thì
+  hệ thống tạo phần còn thiếu (UC05a).
 - **Kết quả:** chứng chỉ được lưu, trạng thái và số ngày còn lại tự tính; một dòng nhật ký "Thêm" hoặc "Sửa".
 
 **Luồng chính** (thêm bằng tay)
 
 1. Người dùng bấm **Thêm chứng chỉ** ở trang danh sách.
-2. Hệ thống mở form có 2 tab, tab **Đọc từ máy chủ** mở trước. Người dùng chọn tab **Nhập thủ công**.
+2. Hệ thống mở form có 3 tab, tab **Đọc từ máy chủ** mở trước. Người dùng chọn tab **Nhập thủ công**.
 3. Hệ thống điền sẵn mã quản lý kế tiếp (ví dụ `CERT-051`).
 4. Người dùng nhập: tên chính, tên phụ, tên miền, tổ chức cấp (gõ có gợi ý), ngày bắt đầu, ngày hết hạn,
    thuật toán khoá, độ dài khoá, thuật toán ký; fingerprint SHA-256 và serial nếu có. Bấm **Lưu**.
@@ -214,7 +215,7 @@ không nhắc lại ở từng use case.
 - 6b. Mã quản lý hoặc fingerprint đã có ở chứng chỉ khác (kể cả viết khác dạng như `AB:CD` và `abcd`): báo
   "Mã quản lý này đã tồn tại." hoặc "Fingerprint này đã có ở chứng chỉ khác."
 - 6c. Gõ tên miền hoặc tổ chức cấp chưa có trong danh mục: báo "Chưa có tên miền "…" trong danh mục.", kèm link
-  thêm mới. Hệ thống không tự tạo bản ghi danh mục.
+  thêm mới. Nhập thủ công thì hệ thống không tự tạo bản ghi danh mục.
 - 6d. Ngày hết hạn không sau ngày bắt đầu (bằng nhau cũng không được): báo dưới ô ngày hết hạn.
 
 ### UC05a. Đọc chứng chỉ từ máy chủ (mở rộng của UC05)
@@ -223,6 +224,7 @@ không nhắc lại ở từng use case.
 - **Mục đích:** lấy thông tin chứng chỉ đang chạy thật trên máy chủ, khỏi gõ tay và gõ sai.
 - **Điều kiện trước:** đang ở form Thêm chứng chỉ; máy chủ web có mạng ra ngoài.
 - **Kết quả:** các ô của form được điền sẵn; một dòng nhật ký "Đọc chứng chỉ" ghi địa chỉ đã đọc và kết quả.
+  Bấm Lưu thì tên miền, máy chủ, tổ chức cấp còn thiếu được tạo cùng chứng chỉ, mỗi thứ một dòng nhật ký "Thêm".
 
 **Luồng chính**
 
@@ -233,17 +235,24 @@ không nhắc lại ở từng use case.
 4. Hệ thống kết nối TLS tới đúng IP vừa kiểm, gửi tên miền kèm theo, và nhận chứng chỉ máy chủ trả về. Chứng
    chỉ hết hạn, tự ký hay sai tên vẫn đọc được, vì đó chính là thứ cần theo dõi.
 5. Hệ thống điền sẵn: tên chính, tên phụ, ngày bắt đầu, ngày hết hạn (giờ Việt Nam), thuật toán khoá, độ dài
-   khoá, thuật toán ký, fingerprint, serial. Tên miền và tổ chức cấp được tự chọn nếu trùng tên với danh mục
+   khoá, thuật toán ký, fingerprint, serial. Tên miền và tổ chức cấp (tên hãng gọn) được tự chọn nếu đã có
    (tên miền cha cũng được: `cert.cipher.id.vn` khớp `cipher.id.vn`). Hệ thống hiện tóm tắt chứng chỉ vừa đọc,
-   kèm số ngày còn lại.
+   kèm số ngày còn lại, IP và danh sách "Sẽ tạo mới".
 6. Hệ thống ghi nhật ký "Đọc chứng chỉ".
-7. Người dùng kiểm tra lại, bấm **Lưu**. Tiếp tục từ bước 5 của UC05.
+7. Người dùng kiểm tra lại, bấm **Lưu**. Tiếp tục từ bước 5 của UC05; ở bước 7 hệ thống tạo phần danh mục còn
+   thiếu cùng chứng chỉ trong một giao dịch.
 
 **Luồng thay thế**
 
-- 5a. Chưa có tên miền nào khớp: ô tên miền để trống, kèm gợi ý "Chưa có tên miền nào khớp … Thêm tên miền mới
-  rồi đọc lại."
-- 5b. Tổ chức cấp chưa có trong danh mục: ô để trống, gợi ý ghi tên bên cấp mà máy chủ báo.
+- 1a. Nhập hàng loạt: ở tab **Nhập hàng loạt**, người dùng dán tối đa 50 địa chỉ, bấm **Đọc tất cả**. Hệ thống
+  làm bước 2–6 cho từng địa chỉ, hiện bảng xem trước có ô tick; người dùng bấm **Lưu các dòng đã chọn**, hệ thống
+  lưu từng dòng như bước 7 và hiện kết quả từng dòng. Dòng trùng hoặc lỗi không tick được.
+- 5a. Chưa có tên miền nào khớp: ô tên miền điền sẵn tên vừa đọc, gợi ý "sẽ được tạo khi bấm Thêm chứng chỉ";
+  máy chủ cùng IP có sẵn thì dùng chung, không thì tạo máy chủ mới. Đọc bằng IP mà tên chính không phải tên miền:
+  ô để trống cho người dùng chọn.
+- 5b. Tổ chức cấp chưa có: ô điền sẵn tên hãng gọn, sẽ được tạo kèm quốc gia và mức tin cậy tự kiểm.
+- 5e. Tên miền đã có nhưng IP lúc đọc khác IP đã lưu (site dùng CDN): hệ thống chỉ ghi chú, kèm nút **Cập nhật IP
+  máy chủ**. Bấm thì sửa IP máy chủ đó và ghi nhật ký "Sửa"; không bấm thì không gì thay đổi.
 - 5c. Chứng chỉ đã có trong hệ thống (trùng fingerprint): hệ thống báo trước "Chứng chỉ này đã có trong hệ
   thống", kèm link tới chứng chỉ đó.
 - 5d. Thuật toán khoá không phải RSA hay ECDSA (ví dụ Ed25519, GOST): ô thuật toán để trống cho người dùng chọn.

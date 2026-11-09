@@ -47,6 +47,19 @@ function kiemTraMayChu(array $d): array
     return $loi;
 }
 
+// Máy chủ đầu tiên có IP nằm trong danh sách, null nếu không có. Dùng khi tên miền mới được tạo sau khi đọc
+// chứng chỉ: hai tên miền cùng IP thì chung một máy chủ.
+function mayChuTheoIp(PDO $pdo, array $cacIp): ?array
+{
+    if ($cacIp === []) {
+        return null;
+    }
+    $cau = $pdo->prepare('SELECT * FROM servers WHERE ip_address IN (' . implode(', ', array_fill(0, count($cacIp), '?')) . ')
+                          ORDER BY id LIMIT 1');
+    $cau->execute(array_values($cacIp));
+    return $cau->fetch() ?: null;
+}
+
 // $id là null khi thêm mới.
 function luuMayChu(PDO $pdo, ?int $id, array $d): array
 {
@@ -134,7 +147,7 @@ function xoaTenMien(PDO $pdo, int $id): ?string
 
 // Mã của bản ghi có đúng tên đó trong danh mục [mã => tên], không phân biệt hoa thường; null nếu không có.
 // Dùng cho ô gõ có gợi ý (form chứng chỉ gửi TÊN tên miền, tổ chức cấp) và khi tự chọn theo chứng chỉ đọc
-// được. Chỉ tra, không bao giờ tạo bản ghi mới (user chốt 08/11/2026). Tên là UNIQUE trong CSDL nên
+// được. Chỉ tra, không tạo; việc tạo khi đọc chứng chỉ nằm ở keHoachDanhMuc(). Tên là UNIQUE trong CSDL nên
 // khớp nhiều nhất một bản ghi.
 function idTheoTen(array $danhMuc, string $ten): ?int
 {

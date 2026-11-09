@@ -1,9 +1,10 @@
 <?php
 // Form thêm (không có ?id=) và sửa (có ?id=) chứng chỉ.
 // Form sửa dùng để sửa thông tin nhập sai, không ghi lịch sử; chứng chỉ được cấp lại thì dùng Gia hạn.
-// Form thêm có 2 tab (user chốt 08/11/2026): "Đọc từ máy chủ" (mở trước) kết nối tới máy chủ, lấy chứng chỉ
-// đang chạy rồi điền sẵn các ô; "Nhập thủ công" là form trống. Mọi nút đều gửi về chính trang này:
-// hanh_dong=doc là đọc, còn lại là lưu. Không cần JavaScript, nên form vẫn dùng được khi trình duyệt tắt nó.
+// Form thêm có 3 tab: "Đọc từ máy chủ" (mở trước) kết nối tới máy chủ, lấy chứng chỉ đang chạy rồi điền sẵn các ô,
+// bấm Thêm thì tạo luôn tên miền, máy chủ, tổ chức cấp còn thiếu (user chốt 09/11/2026); "Nhập hàng loạt" là trang
+// chung_chi_nhap.php; "Nhập thủ công" là form trống. Mọi nút đều gửi về chính trang này: hanh_dong=doc là đọc,
+// cap_nhat_ip là sửa IP máy chủ, còn lại là lưu. Không cần JavaScript, nên form vẫn dùng được khi trình duyệt tắt nó.
 require __DIR__ . '/../../src/khoi_dong.php';
 require __DIR__ . '/../../src/danh_muc.php';
 require __DIR__ . '/../../src/chung_chi.php';
@@ -44,23 +45,34 @@ $congDoc = 443;
 $loiDoc = null;
 $daDoc = null;
 
+// Lần đọc gần nhất nằm trong phiên (khoá doc_chung_chi): nút Thêm và nút Cập nhật IP dùng nó, không nhận lại
+// IP hay hãng từ trình duyệt. Mở form mới (GET) là bắt đầu lại từ đầu.
+if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+    unset($_SESSION['doc_chung_chi']);
+}
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     yeuCauCsrf();
-    if ($id === null && chuoiPost('hanh_dong') === 'doc') {
+    $hanhDongGui = chuoiPost('hanh_dong');
+    if ($id === null && $hanhDongGui === 'doc') {
+        unset($_SESSION['doc_chung_chi']);
         $diaChiDoc = trim(chuoiPost('dia_chi'));
         $congDoc = (int) chuoiPost('cong');
-        $ketQua = docChungChiChoForm($pdo, $diaChiDoc, $congDoc, $cacTenMien, $cacToChuc);
+        $ketQua = docChungChiChoForm($pdo, $diaChiDoc, $congDoc);
         if (isset($ketQua['loi'])) {
             $loiDoc = $ketQua['loi'];
         } else {
-            $giaTri = array_merge($giaTri, $ketQua['gia_tri']);
-            $diaChiDoc = $ketQua['host'];
-            $congDoc = $ketQua['cong'];
-            $daDoc = $ketQua + [
-                // Cùng cách đếm với cột days_left của CSDL: số ngày lịch tới ngày hết hạn, âm là đã quá.
-                'so_ngay' => (int) round((strtotime(date('Y-m-d', strtotime($giaTri['valid_to']))) - strtotime(date('Y-m-d'))) / 86400),
-                'chua_hieu_luc' => strtotime($giaTri['valid_from']) > time(),
-            ];
+            $_SESSION['doc_chung_chi'] = $ketQua;
+            $daDoc = $ketQua;
+        }
+    } elseif ($id === null && $hanhDongGui === 'cap_nhat_ip' && isset($_SESSION['doc_chung_chi'])) {
+        $daDoc = $_SESSION['doc_chung_chi'];
+        $ipKhac = keHoachDanhMuc($pdo, $daDoc['nguon'])['ip_khac'];
+        if ($ipKhac !== null) {
+            $loiDoc = capNhatIpMayChu($pdo, $ipKhac['server_id'], $ipKhac['ip_moi']);
+            if ($loiDoc === null) {
+                datThongBao('success', "Đã đổi IP máy chủ {$ipKhac['hostname']} từ {$ipKhac['ip_cu']} sang {$ipKhac['ip_moi']}.");
+            }
         }
     } else {
         $tenMienGo = trim(chuoiPost('ten_mien'));
@@ -71,7 +83,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             'serial' => trim(chuoiPost('serial')),
             'subject_cn' => trim(chuoiPost('subject_cn')),
             'san' => trim(chuoiPost('san')),
-            // Ô gõ gửi tên; tra ra mã trong danh mục. Tên lạ thành rỗng, luuChungChi() sẽ từ chối.
+            // Ô gõ gửi tên; tra ra mã trong danh mục. Tên lạ thành rỗng: luuChungChi() từ chối, trừ khi đó đúng
+            // là tên lần đọc vừa rồi định tạo (keHoachTheoONhap).
             'ca_id' => (string) (idTheoTen($cacToChuc, $toChucGo) ?? ''),
             'domain_id' => (string) (idTheoTen($cacTenMien, $tenMienGo) ?? ''),
             'valid_from' => chuoiPost('valid_from'),
@@ -80,12 +93,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             'key_size' => trim(chuoiPost('key_size')),
             'signature_algorithm' => trim(chuoiPost('signature_algorithm')),
         ];
-        $loi = luuChungChi($pdo, $id, $giaTri, (int) $nguoi['id']);
+        if ($id === null) {
+            // Tính lại kế hoạch theo CSDL lúc bấm, phòng khi danh mục vừa đổi từ lúc đọc.
+            $keHoach = ['ten_mien_moi' => null, 'may_chu_moi' => null, 'hang_moi' => null, 'server_id' => null];
+            if ($cheDo === 'tu_dong' && isset($_SESSION['doc_chung_chi'])) {
+                $keHoach = keHoachTheoONhap(keHoachDanhMuc($pdo, $_SESSION['doc_chung_chi']['nguon']), $tenMienGo, $toChucGo);
+            }
+            $loi = luuChungChiKemDanhMuc($pdo, $keHoach, $giaTri, (int) $nguoi['id']);
+        } else {
+            $loi = luuChungChi($pdo, $id, $giaTri, (int) $nguoi['id']);
+        }
         if ($loi === []) {
+            unset($_SESSION['doc_chung_chi']);
             datThongBao('success', $id === null ? 'Đã thêm chứng chỉ.' : 'Đã lưu thay đổi.');
             chuyenHuong($id === null ? 'admin/chung_chi.php' : 'admin/chung_chi_xem.php?id=' . $id);
         }
-        // Lỗi của luuChungChi() theo mã; ô trên form theo tên. Gõ tên chưa có thì nói rõ tên nào, không tự tạo.
+        // Lỗi của luuChungChi() theo mã; ô trên form theo tên. Gõ tên chưa có thì nói rõ tên nào.
         if (isset($loi['domain_id'])) {
             $loi['ten_mien'] = $tenMienGo === '' ? $loi['domain_id'] : "Chưa có tên miền \"$tenMienGo\" trong danh mục.";
         }
@@ -95,22 +118,50 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
+// Vừa đọc (hoặc vừa cập nhật IP): điền các ô đã đọc, kèm số ngày còn lại cho thẻ tóm tắt.
+if ($daDoc !== null) {
+    $giaTri = array_merge($giaTri, $daDoc['gia_tri']);
+    $diaChiDoc = $daDoc['host'];
+    $congDoc = $daDoc['cong'];
+    $daDoc += [
+        // Cùng cách đếm với cột days_left của CSDL: số ngày lịch tới ngày hết hạn, âm là đã quá.
+        'so_ngay' => (int) round((strtotime(date('Y-m-d', strtotime($giaTri['valid_to']))) - strtotime(date('Y-m-d'))) / 86400),
+        'chua_hieu_luc' => strtotime($giaTri['valid_from']) > time(),
+    ];
+}
+
+// Kế hoạch danh mục của lần đọc trong phiên, tính theo CSDL lúc này (vừa cập nhật IP thì ip_khac tự hết).
+$keHoachHien = $id === null && $cheDo === 'tu_dong' && isset($_SESSION['doc_chung_chi'])
+    ? keHoachDanhMuc($pdo, $_SESSION['doc_chung_chi']['nguon']) : null;
+$tenMienMoi = $keHoachHien['ten_mien_moi'] ?? null;
+$hangMoi = $keHoachHien['hang_moi'] ?? null;
+// Vừa đọc xong: hai ô gõ điền sẵn tên sắp tạo. Sau khi Lưu hỏng thì giữ đúng chữ người dùng đã gõ.
+if ($daDoc !== null) {
+    $tenMienGo = $giaTri['domain_id'] === '' ? $tenMienMoi : null;
+    $toChucGo = $giaTri['ca_id'] === '' ? ($hangMoi['name'] ?? null) : null;
+}
+
 // Ô datetime-local cần dạng có chữ T. Hiện cả giây (step="1"), để sửa thông tin khác
 // không làm tròn mất giây của ngày thật.
 $choO = fn(?string $ngay): string => str_replace(' ', 'T', (string) $ngay);
 
-// Dòng gợi ý dưới hai ô gõ: luôn có link thêm vào danh mục; vừa đọc mà không khớp thì nói máy chủ báo gì.
+// Dòng gợi ý dưới hai ô gõ: luôn có link thêm vào danh mục; vừa đọc thì nói cái gì sẽ được tạo khi bấm Thêm,
+// hoặc (đọc bằng IP, tên chính không phải tên miền) không khớp gì để người dùng tự chọn.
 $linkThemTenMien = '<a href="' . e(url('admin/ten_mien_form.php')) . '">Thêm tên miền mới</a>';
 $linkThemToChuc = '<a href="' . e(url('admin/to_chuc_cap_form.php')) . '">Thêm tổ chức cấp mới</a>';
 $goiYTenMien = $linkThemTenMien;
 $goiYToChuc = $linkThemToChuc;
-if ($daDoc !== null && $giaTri['domain_id'] === '') {
+if ($tenMienMoi !== null) {
+    $goiYTenMien = 'Chưa có trong danh mục: sẽ được tạo khi bấm Thêm chứng chỉ.';
+} elseif ($daDoc !== null && $giaTri['domain_id'] === '') {
     $goiYTenMien = 'Chưa có tên miền nào khớp ' . e($diaChiDoc) . '. ' . $linkThemTenMien . ' rồi đọc lại.';
 }
-if ($daDoc !== null && $giaTri['ca_id'] === '' && $daDoc['ben_cap'] !== []) {
-    $goiYToChuc = 'Máy chủ báo tổ chức cấp: <strong>' . e($daDoc['ben_cap'][0]) . '</strong>, chưa có trong danh mục. '
-        . $linkThemToChuc . ' rồi đọc lại.';
+if ($hangMoi !== null) {
+    $goiYToChuc = 'Chưa có trong danh mục: sẽ được tạo khi bấm Thêm chứng chỉ.';
 }
+// Ô gõ chỉ nhận tên có trong gợi ý (app.js), nên tên sắp tạo cũng phải nằm trong gợi ý.
+$goiYDsTenMien = $cacTenMien + ($tenMienMoi !== null ? ['moi' => $tenMienMoi] : []);
+$goiYDsToChuc = $cacToChuc + ($hangMoi !== null ? ['moi' => $hangMoi['name']] : []);
 
 // Các ô dựng sẵn, xếp khác nhau ở hai tab.
 $o = [
@@ -119,9 +170,9 @@ $o = [
         'Gồm chữ không dấu, số, dấu chấm, gạch dưới, gạch ngang.'),
     'ten_chinh' => oNhap('subject_cn', 'Tên chính (CN)', $giaTri['subject_cn'], $loi,
         'required maxlength="255" autocomplete="off"', 'Tên chính là bắt buộc.'),
-    'ten_mien' => oGoiY('ten_mien', 'Tên miền', $cacTenMien, $tenMienGo ?? ($cacTenMien[$giaTri['domain_id']] ?? ''),
+    'ten_mien' => oGoiY('ten_mien', 'Tên miền', $goiYDsTenMien, $tenMienGo ?? ($cacTenMien[$giaTri['domain_id']] ?? ''),
         $loi, 'Hãy chọn một tên miền có trong danh sách.', $goiYTenMien),
-    'to_chuc' => oGoiY('to_chuc_cap', 'Tổ chức cấp', $cacToChuc, $toChucGo ?? ($cacToChuc[$giaTri['ca_id']] ?? ''),
+    'to_chuc' => oGoiY('to_chuc_cap', 'Tổ chức cấp', $goiYDsToChuc, $toChucGo ?? ($cacToChuc[$giaTri['ca_id']] ?? ''),
         $loi, 'Hãy chọn một tổ chức cấp có trong danh sách.', $goiYToChuc),
     'bat_dau' => oNhap('valid_from', 'Ngày bắt đầu', $choO($giaTri['valid_from']), $loi,
         'required type="datetime-local" step="1"', 'Hãy nhập ngày bắt đầu.', 'Theo giờ Việt Nam.'),
@@ -159,7 +210,7 @@ require __DIR__ . '/../../views/tieu_de_trang.php';
 ?>
 <div class="page-body">
     <div class="container-xl">
-        <?php if ($cacToChuc === [] || $cacTenMien === []): ?>
+        <?php if ($cheDo === 'thu_cong' && ($cacToChuc === [] || $cacTenMien === [])): ?>
             <div class="alert alert-warning" role="alert">
                 Cần có ít nhất một <a href="<?= e(url('admin/to_chuc_cap_form.php')) ?>">tổ chức cấp</a>
                 và một <a href="<?= e(url('admin/ten_mien_form.php')) ?>">tên miền</a> trước khi thêm chứng chỉ.
@@ -167,24 +218,13 @@ require __DIR__ . '/../../views/tieu_de_trang.php';
         <?php endif; ?>
         <div class="card">
             <?php if ($id === null): ?>
-                <?php // Tab là link thường: đổi tab là tải lại trang ở chế độ kia, không cần JavaScript. ?>
-                <div class="card-header">
-                    <ul class="nav nav-tabs card-header-tabs">
-                        <li class="nav-item">
-                            <a class="nav-link<?= $cheDo === 'tu_dong' ? ' active' : '' ?>" href="<?= e(url('admin/chung_chi_form.php?che_do=tu_dong')) ?>"<?= $cheDo === 'tu_dong' ? ' aria-current="page"' : '' ?>>Đọc từ máy chủ</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link<?= $cheDo === 'thu_cong' ? ' active' : '' ?>" href="<?= e(url('admin/chung_chi_form.php?che_do=thu_cong')) ?>"<?= $cheDo === 'thu_cong' ? ' aria-current="page"' : '' ?>>Nhập thủ công</a>
-                        </li>
-                    </ul>
-                </div>
+                <?= tabThemChungChi($cheDo) ?>
             <?php endif; ?>
 
             <?php if ($cheDo === 'tu_dong'): ?>
                 <form class="card-body border-bottom" method="post" action="<?= e(url($hanhDong)) ?>">
                     <input type="hidden" name="csrf" value="<?= e(maCsrf()) ?>">
                     <input type="hidden" name="che_do" value="tu_dong">
-                    <input type="hidden" name="hanh_dong" value="doc">
                     <label class="form-label" for="dia_chi">Địa chỉ máy chủ</label>
                     <div class="row g-2">
                         <div class="col-12 col-md">
@@ -203,7 +243,7 @@ require __DIR__ . '/../../views/tieu_de_trang.php';
                             </select>
                         </div>
                         <div class="col-auto">
-                            <button type="submit" class="btn btn-primary">Đọc chứng chỉ</button>
+                            <button type="submit" class="btn btn-primary" name="hanh_dong" value="doc">Đọc chứng chỉ</button>
                         </div>
                     </div>
                     <small class="form-hint mt-2">Hệ thống kết nối tới máy chủ, lấy chứng chỉ đang chạy và điền sẵn các ô.
@@ -224,10 +264,29 @@ require __DIR__ . '/../../views/tieu_de_trang.php';
                             </div>
                             <div class="text-secondary small mt-1">
                                 <?= e($diaChiDoc . ':' . $congDoc) ?>
-                                · <?= e($daDoc['ben_cap'][0] ?? 'Không rõ tổ chức cấp') ?>
+                                <?php if ($daDoc['nguon']['cac_ip'] !== []): ?>· IP <?= e($daDoc['nguon']['cac_ip'][0]) ?><?php endif; ?>
+                                · <?= e($daDoc['nguon']['hang']) ?>
                                 <?php if ($giaTri['key_algorithm'] !== ''): ?>· <?= e($giaTri['key_algorithm'] . ' ' . $giaTri['key_size']) ?><?php endif; ?>
                                 · hết hạn <?= e(date('d/m/Y', strtotime($giaTri['valid_to']))) ?>
                             </div>
+                            <?php $seTao = $keHoachHien !== null ? moTaSeTao($keHoachHien) : []; ?>
+                            <?php if ($seTao !== []): ?>
+                                <div class="mt-3 small">
+                                    <div class="fw-semibold">Sẽ tạo mới khi bấm Thêm chứng chỉ:</div>
+                                    <ul class="mb-0 ps-3">
+                                        <?php foreach ($seTao as $dong): ?><li><?= e($dong) ?></li><?php endforeach; ?>
+                                    </ul>
+                                </div>
+                            <?php endif; ?>
+                            <?php if (($keHoachHien['ip_khac'] ?? null) !== null): ?>
+                                <?php $ipKhac = $keHoachHien['ip_khac']; ?>
+                                <?php // Chỉ ghi chú: site sau CDN đổi IP thường xuyên. Không bấm thì không có gì thay đổi. ?>
+                                <div class="alert alert-info mt-3 mb-0 d-flex flex-wrap align-items-center gap-2" role="status">
+                                    <span class="me-auto">IP lúc đọc <?= e($ipKhac['ip_moi']) ?> khác IP đã lưu <?= e($ipKhac['ip_cu']) ?>
+                                        của máy chủ <?= e($ipKhac['hostname']) ?>. Site dùng CDN thường đổi IP, chứng chỉ không đổi theo.</span>
+                                    <button type="submit" class="btn btn-sm" name="hanh_dong" value="cap_nhat_ip" formnovalidate>Cập nhật IP máy chủ</button>
+                                </div>
+                            <?php endif; ?>
                             <?php if ($daDoc['trung'] !== null): ?>
                                 <div class="alert alert-warning mt-3 mb-0" role="alert">
                                     Chứng chỉ này đã có trong hệ thống:

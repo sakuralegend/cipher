@@ -65,6 +65,26 @@ document.querySelectorAll('form[data-kiem-tra]').forEach(function (form) {
     });
 });
 
+// Form chạy lâu (Nhập hàng loạt đọc tới 50 máy chủ): <form data-dang-cho="Đang đọc…">. Bấm gửi thì khoá nút và
+// đổi chữ, để người dùng biết trang đang làm và không bấm lần hai.
+document.querySelectorAll('form[data-dang-cho]').forEach(function (form) {
+    form.addEventListener('submit', function (suKien) {
+        var nut = suKien.submitter;
+        if (nut) {
+            // Nút bị khoá thì trình duyệt không gửi tên/giá trị của nó: gửi thay bằng một ô ẩn.
+            var an = document.createElement('input');
+            an.type = 'hidden';
+            an.name = nut.name;
+            an.value = nut.value;
+            form.appendChild(an);
+            window.setTimeout(function () {
+                nut.disabled = true;
+                nut.textContent = form.dataset.dangCho;
+            }, 0);
+        }
+    });
+});
+
 // Nút in: <button data-in>.
 document.querySelectorAll('[data-in]').forEach(function (nut) {
     nut.addEventListener('click', function () {
@@ -125,7 +145,15 @@ document.querySelectorAll('[data-hien-mat-khau]').forEach(function (nut) {
                 border: {display: false},
             };
             var trucNhan = {
-                ticks: {color: mau.chu},
+                ticks: {
+                    color: mau.chu,
+                    // Nhãn dài (tên hãng lạ) bị Chart.js cắt cụt ở mép khung: rút gọn kèm "…". Tên đủ ở bảng
+                    // ngay dưới biểu đồ và trong ô hiện khi rê chuột.
+                    callback: function (giaTri) {
+                        var nhan = String(this.getLabelForValue(giaTri));
+                        return nhan.length > 24 ? nhan.slice(0, 23) + '…' : nhan;
+                    },
+                },
                 grid: {display: false},
                 border: {color: mau.truc},
             };

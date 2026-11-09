@@ -31,13 +31,13 @@ Hệ thống được kiểm ở 3 lớp:
    được chụp màn hình ở khổ máy tính và khổ điện thoại 390px trước khi giao.
 
 **Chạy lại:** cần MySQL đang bật và CSDL `cipher_test` đã tạo (README mục 2, bước 5), rồi
-`C:\xampp\php\php.exe tests\chay.php`. Mỗi test in ✅ hoặc ❌ kèm lý do; dòng cuối là `XANH: 89 test` hoặc
+`C:\xampp\php\php.exe tests\chay.php`. Mỗi test in ✅ hoặc ❌ kèm lý do; dòng cuối là `XANH: 96 test` hoặc
 `ĐỎ: số test đỏ/89`.
 
 ## 3. Danh sách test theo chức năng
 
 Tên test viết không dấu, bỏ tiền tố `test_`; tìm đúng tên đó trong `tests/chay.php` để xem code của test.
-Cột phải là câu Luật của test. Cả 89 test đều **đạt** ngày 08/11/2026.
+Cột phải là câu Luật của test. Cả 96 test đều **đạt** ngày 09/11/2026.
 
 | Nhóm | Số test | Phụ trách |
 |---|---|---|
@@ -47,13 +47,13 @@ Cột phải là câu Luật của test. Cả 89 test đều **đạt** ngày 08
 | Nhật ký hoạt động (mở rộng 1) | 5 | Thành viên 1 |
 | Chứng chỉ: thêm, sửa, thu hồi, xoá | 9 | Thành viên 2 |
 | Gia hạn | 5 | Thành viên 2 |
-| Đọc chứng chỉ thật (mở rộng 2) | 3 | Thành viên 2 |
+| Đọc chứng chỉ thật (mở rộng 2) | 10 | Thành viên 2 |
 | Danh sách, tìm kiếm, lọc, sắp xếp | 8 | Thành viên 2 |
 | Danh mục: tên miền, máy chủ, tổ chức cấp | 7 | Thành viên 3 |
 | Cảnh báo | 7 | Thành viên 3 |
 | Dashboard, thống kê, báo cáo | 8 | Thành viên 3 |
 | Giao diện, triển khai | 9 | Thành viên 3 |
-| **Tổng** | **89** | |
+| **Tổng** | **96** | |
 
 ### Đăng nhập, phiên, phân quyền (11 test, Thành viên 1)
 
@@ -132,13 +132,20 @@ Cột phải là câu Luật của test. Cả 89 test đều **đạt** ngày 08
 | `han_moi_phai_sau_han_cu_va_sau_hien_tai` | Hạn mới phải sau cả hạn hiện tại lẫn thời điểm gia hạn; dữ liệu sai bị từ chối đúng ô. |
 | `gia_han_loi_giua_chung_thi_khong_doi_gi` | Gia hạn lỗi giữa chừng thì không bước nào có hiệu lực. |
 
-### Đọc chứng chỉ thật (mở rộng 2) (3 test, Thành viên 2)
+### Đọc chứng chỉ thật (mở rộng 2) (10 test, Thành viên 2)
 
 | Test | Quy tắc được kiểm |
 |---|---|
 | `doc_chung_chi_chan_dia_chi_noi_bo_va_cong_ngoai_danh_sach` | Đọc chứng chỉ chỉ kết nối tới địa chỉ công khai và cổng TLS trong danh sách; chặn nếu BẤT KỲ IP nào của tên miền là nội bộ. |
 | `chung_chi_doc_duoc_dien_dung_cac_o` | Chứng chỉ đọc được điền đúng từng ô của form: tên chính, ngày theo giờ Việt Nam, thuật toán, độ dài khoá, ký, fingerprint, serial. |
-| `doc_xong_tu_chon_ten_mien_va_to_chuc_cap_khong_tu_tao` | Đọc xong thì tên miền và tổ chức cấp được tự chọn khi trùng tên (tên miền cha cũng được), không trùng thì để trống; không bao giờ tự tạo bản ghi. |
+| `doc_roi_bo_khong_tao_gi_va_tu_chon_danh_muc_co_san` | Đọc xong chỉ tính kế hoạch: tên miền (trùng hẳn hoặc tên miền cha), tổ chức cấp có sẵn thì chọn, chưa có thì ghi "sẽ tạo"; trước khi bấm Lưu không bản ghi nào được tạo. |
+| `ten_hang_gom_ve_tang_hang` | Tổ chức cấp ghi ở tầng hãng: mọi cách viết ô O (và ô CN) của cùng một hãng ra một tên gọn; hãng lạ giữ nguyên ô O. |
+| `hang_tin_cay_khi_chuoi_kiem_duoc_voi_kho_ca_goc` | Hãng mới tạo là tin cậy khi có chứng chỉ bên cấp (không tính chứng chỉ lá) trong chuỗi kiểm được với kho CA gốc của máy; chỉ có chứng chỉ lá thì không tin cậy. |
+| `luu_tao_du_chuoi_trong_mot_giao_dich` | Bấm Lưu thì tạo đủ máy chủ, tên miền, tổ chức cấp còn thiếu cùng chứng chỉ, mỗi thứ một dòng nhật ký; hỏng ở bước nào thì không bước nào được ghi. |
+| `hai_ten_mien_cung_ip_chi_mot_may_chu` | Tên miền mới tìm máy chủ theo IP: trùng IP với máy chủ có sẵn thì dùng chung, không tạo máy chủ mới. |
+| `doc_lai_ten_mien_da_co_ip_khac_chi_ghi_chu` | Đọc lại tên miền đã có mà IP khác: dùng tên miền và máy chủ cũ, chỉ ghi chú ip_khac; IP máy chủ chỉ đổi khi người dùng bấm Cập nhật. |
+| `hang_co_san_duoc_dung_lai_khong_doi_tin_cay` | Hãng đã có trong danh mục (tên gọn hoặc tên gốc O/CN, không phân biệt hoa thường) thì dùng lại; không tạo bản mới, không đổi mức tin cậy người dùng đã đặt. |
+| `nhap_hang_loat_chi_luu_du_lieu_doc_trong_phien` | Nhập hàng loạt nhận tối đa 50 địa chỉ (tách theo xuống dòng, dấu cách, phẩy, chấm phẩy; bỏ trùng); bước Lưu chỉ nhận số thứ tự dòng, dữ liệu chứng chỉ lấy từ phiên. |
 
 ### Danh sách, tìm kiếm, lọc, sắp xếp (8 test, Thành viên 2)
 
@@ -244,5 +251,6 @@ Mỗi lỗi khi sửa đều kèm đúng một test bắt lỗi đó, để lỗ
   chạy không cần trình duyệt; phần này kiểm bằng tay. Mọi quy tắc dữ liệu đều được PHP kiểm lại và có test.
 - **Chạy bằng Apache trong `htdocs`** (cách cài thường gặp với XAMPP) chưa thử; hẹn kiểm ngày 14–15/11/2026.
 - **Đọc chứng chỉ thật** kết nối ra internet: test kiểm phần chặn địa chỉ và phần đổi chứng chỉ thành giá trị
-  các ô bằng chứng chỉ mẫu, không kết nối mạng thật, để test không phụ thuộc mạng.
+  các ô bằng chứng chỉ mẫu, không kết nối mạng thật, để test không phụ thuộc mạng. Phần kết nối thật đã thử bằng
+  tay ngày 09/11/2026: nhập hàng loạt 50 site thật, đọc mất 41 giây, lưu được 50/50, Thống kê gom đúng 11 hãng.
 - Chưa kiểm hiệu năng với số lượng lớn (hàng chục nghìn chứng chỉ) và nhiều người dùng cùng lúc.
