@@ -1641,6 +1641,21 @@ function test_landing_chi_dung_anh_chup_that(PDO $pdo): void
     }
 }
 
+// Luật: Mỗi thẻ tính năng và mỗi bước trên landing có chỗ cho ảnh: ảnh chụp thật hoặc khung giữ chỗ ($khungChoAnh).
+// Vì sao: User 09/11/2026: bỏ hình vẽ giả nhưng "phần dưới bạn chưa chừa chỗ cho ảnh minh họa (6 mục)"; ảnh thật chụp sau khi xong giao diện.
+// Đỏ nghĩa là: Một thẻ .ld-the-tinh hay bước .ld-buoc không có khung ảnh, ảnh chụp sau này sẽ không có chỗ đặt và thẻ lệch nhau.
+// Đừng: Bỏ khung giữ chỗ khi chưa có ảnh thật; thay khung bằng <img> ảnh chụp trong assets/landing/.
+// Nhóm: Giao diện, triển khai (Giao diện)
+function test_moi_the_tinh_nang_va_buoc_tren_landing_co_cho_cho_anh(PDO $pdo): void
+{
+    $trang = file_get_contents(__DIR__ . '/../public/index.php');
+    preg_match_all('/<(?:div|li) class="[^"]*\bld-(?:the-tinh|buoc)\b[^"]*">(.*?)<\/(?:div|li)>\s*(?=<(?:div class="col|li class="ld-buoc|\/div>\s*<\/div>|\/ol>))/s', $trang, $cacMuc);
+    kiem(count($cacMuc[1]) === 6, 'Landing phải có đúng 6 mục (3 thẻ tính năng, 3 bước), đang đếm được ' . count($cacMuc[1]));
+    foreach ($cacMuc[1] as $i => $muc) {
+        kiem(str_contains($muc, '$khungChoAnh(') || str_contains($muc, '<img'), 'Mục thứ ' . ($i + 1) . ' chưa có chỗ cho ảnh');
+    }
+}
+
 // Luật: Logo và tên thương hiệu dựng một chỗ ($thuongHieu trong dau_trang.php): dấu "vòng thời hạn" một màu, chữ "Cert" nhạt hơn; trang chỉ in biến đó.
 // Vì sao: User 09/11/2026 chọn phương án B (vòng gần kín vừa là chữ C vừa là vòng đếm ngược, dấu trắng, "Cert" nhạt) sau khi xem 4 phương án.
 // Đỏ nghĩa là: Một trang tự ghép $logo với TEN_THUONG_HIEU (lại lệch kiểu chữ), hoặc logo quay về ô màu, hoặc mất lớp ten-phu.

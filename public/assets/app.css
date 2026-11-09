@@ -1106,97 +1106,81 @@ body:has(> main.ld-vung) {
     background: var(--cc-nen-sau);
 }
 
-/* Thẻ tính năng: nổi lên khi rê chuột. */
+/* Thẻ tính năng và thẻ bước, theo thẻ trên trang chủ Better Stack (user gửi ảnh mục Tracing 09/11/2026): ảnh giao
+   diện ở trên, mờ dần ở đáy, tiêu đề và mô tả bên dưới. Ảnh là ảnh chụp thật; chưa có thì là khung giữ chỗ. */
 .ld-the-tinh {
-    background: var(--tblr-bg-surface);
-    border: 1px solid var(--tblr-border-color);
+    background: var(--cc-nen-sau);
+    border: 1px solid var(--cc-vien);
     border-radius: 1rem;
+    display: flex;
+    flex-direction: column;
     height: 100%;
-    padding: 1.5rem;
-    transition: transform 0.25s ease, box-shadow 0.25s ease;
+    overflow: hidden;
+    transition: border-color 0.25s ease;
 }
 
 .ld-the-tinh:hover {
-    box-shadow: 0 1rem 2.5rem rgba(10, 14, 20, 0.14);
-    transform: translateY(-4px);
+    border-color: rgba(201, 211, 238, 0.2);
+}
+
+/* Ảnh trong thẻ: không khung cửa sổ, không bóng, tan dần vào nền thẻ ở đáy. */
+.ld-the-tinh .ld-cho-anh {
+    -webkit-mask-image: linear-gradient(to bottom, #000 55%, transparent);
+    border-radius: 0.75rem;
+    box-shadow: none;
+    margin: 1.25rem 1.25rem 0;
+    mask-image: linear-gradient(to bottom, #000 55%, transparent);
+}
+
+.ld-cho-anh-the .ld-cho-anh-than {
+    aspect-ratio: 4 / 3;
+    font-size: 0.875rem;
+    justify-content: flex-start;
+    padding-top: 22%;
+}
+
+.ld-the-tinh-chu {
+    padding: 0.25rem 1.5rem 1.5rem;
 }
 
 .ld-the-tinh-ten {
-    font-size: 1.0625rem;
+    align-items: center;
+    display: flex;
+    font-size: 1.125rem;
     font-weight: 600;
+    gap: 0.625rem;
+    letter-spacing: -0.01em;
     margin: 0 0 0.5rem;
 }
 
-/* Ba bước. Mỗi bước có một đoạn nối tới bước sau (::after). */
+/* Ba bước: cùng kiểu thẻ, số thứ tự đặt trước tiêu đề. */
 .ld-cac-buoc {
-    --ld-net: #0b1730;
-    --ld-net-chu: #fff;
     display: grid;
-    gap: 2rem;
-    grid-template-columns: repeat(3, 1fr);
+    gap: 1.5rem;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
     list-style: none;
     margin: 0;
     padding: 0;
 }
 
-/* Landing tối: số tím-chàm chữ tối (6,2:1). */
-.ld-vung .ld-cac-buoc {
-    --ld-net: var(--cc-nhan);
-    --ld-net-chu: var(--cc-nen);
-}
-
-.ld-buoc {
-    position: relative;
-}
-
-.ld-buoc:not(:last-child)::after {
-    content: "";
-    height: 2px;
-    left: 2.5rem;
-    position: absolute;
-    top: calc(1.25rem - 1px);
-    width: calc(100% + 2rem - 2.5rem);
-}
-
-.ld-buoc:not(:last-child)::after {
-    background: var(--ld-net);
-}
-
+/* Số tím-chàm chữ tối (6,2:1). */
 .ld-so-buoc {
     align-items: center;
-    background: var(--ld-net);
+    background: var(--cc-nhan);
     border-radius: 50%;
-    color: var(--ld-net-chu);
-    display: flex;
+    color: var(--cc-nen);
+    display: inline-flex;
+    flex-shrink: 0;
+    font-size: 0.8125rem;
     font-weight: 700;
-    height: 2.5rem;
+    height: 1.625rem;
     justify-content: center;
-    margin-bottom: 1rem;
-    transition: background-color 0.3s ease, color 0.3s ease, box-shadow 0.3s ease;
-    width: 2.5rem;
+    width: 1.625rem;
 }
 
-/* Màn hẹp: các bước xếp dọc, số nằm bên trái, đường nối chạy dọc xuống bước sau. */
 @media (max-width: 47.99rem) {
     .ld-cac-buoc {
         grid-template-columns: 1fr;
-    }
-
-    .ld-buoc {
-        padding-left: 3.5rem;
-    }
-
-    .ld-so-buoc {
-        left: 0;
-        position: absolute;
-        top: 0;
-    }
-
-    .ld-buoc:not(:last-child)::after {
-        height: calc(100% + 2rem - 2.5rem);
-        left: calc(1.25rem - 1px);
-        top: 2.5rem;
-        width: 2px;
     }
 }
 
@@ -1478,12 +1462,7 @@ body:has(> main.ld-vung) {
 }
 
 @media (prefers-reduced-motion: reduce) {
-    .ld-the-tinh,
-    .ld-so-buoc {
+    .ld-the-tinh {
         transition: none !important;
-    }
-
-    .ld-the-tinh:hover {
-        transform: none;
     }
 }

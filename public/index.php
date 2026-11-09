@@ -21,7 +21,8 @@ $coChuyenCanh = true; // Bấm Đăng nhập: thẻ chứng chỉ bay sang trang
 require __DIR__ . '/../views/dau_trang.php';
 
 // Khung giữ chỗ cho ảnh chụp giao diện: user 09/11/2026 muốn chụp ảnh thật sau khi làm xong giao diện mới,
-// trong lúc chờ thì để khung trống đúng tỉ lệ ảnh sẽ đặt vào. $loai: 'may' (máy tính 16:10) hoặc 'dt' (điện thoại).
+// trong lúc chờ thì để khung trống đúng tỉ lệ ảnh sẽ đặt vào. $loai: 'may' (máy tính 16:10, có thanh cửa sổ),
+// 'dt' (điện thoại 9:19,5) hoặc 'the' (ảnh cắt trong thẻ tính năng, thẻ bước, 4:3).
 $khungChoAnh = function (string $ten, string $loai = 'may'): string {
     $dau = $loai === 'may' ? '<div class="ld-cho-anh-dau" aria-hidden="true"><i></i><i></i><i></i></div>' : '';
     return '<figure class="ld-cho-anh ld-cho-anh-' . $loai . '">' . $dau
@@ -100,6 +101,7 @@ $khungChoAnh = function (string $ten, string $loai = 'may'): string {
         </div>
     </section>
 
+    <?php // Thẻ tính năng và thẻ bước theo thẻ của Better Stack: ảnh giao diện thật ở trên, chữ ở dưới. Khung ghi màn hình sẽ chụp. ?>
     <section class="ld-muc">
         <div class="container-xl">
             <div class="ld-dau-muc">
@@ -108,20 +110,29 @@ $khungChoAnh = function (string $ten, string $loai = 'may'): string {
             <div class="row row-cards">
                 <div class="col-md-4">
                     <div class="ld-the-tinh">
-                        <h3 class="ld-the-tinh-ten">Quản lý tập trung</h3>
-                        <p class="text-secondary mb-0">Lưu chứng chỉ cùng tên miền, máy chủ và tổ chức cấp. Mỗi chứng chỉ có mã quản lý và dấu vân tay riêng.</p>
+                        <?= $khungChoAnh('Danh sách chứng chỉ', 'the') ?>
+                        <div class="ld-the-tinh-chu">
+                            <h3 class="ld-the-tinh-ten">Quản lý tập trung</h3>
+                            <p class="text-secondary mb-0">Lưu chứng chỉ cùng tên miền, máy chủ và tổ chức cấp. Mỗi chứng chỉ có mã quản lý và dấu vân tay riêng.</p>
+                        </div>
                     </div>
                 </div>
                 <div class="col-md-4">
                     <div class="ld-the-tinh">
-                        <h3 class="ld-the-tinh-ten">Cảnh báo theo mốc</h3>
-                        <p class="text-secondary mb-0">Trạng thái và số ngày còn lại luôn được tính theo ngày hiện tại. Sắp đến hạn thì cảnh báo hiện ngay.</p>
+                        <?= $khungChoAnh('Trang Cảnh báo', 'the') ?>
+                        <div class="ld-the-tinh-chu">
+                            <h3 class="ld-the-tinh-ten">Cảnh báo theo mốc</h3>
+                            <p class="text-secondary mb-0">Trạng thái và số ngày còn lại luôn được tính theo ngày hiện tại. Sắp đến hạn thì cảnh báo hiện ngay.</p>
+                        </div>
                     </div>
                 </div>
                 <div class="col-md-4">
                     <div class="ld-the-tinh">
-                        <h3 class="ld-the-tinh-ten">Thống kê và báo cáo</h3>
-                        <p class="text-secondary mb-0">Xem số liệu theo trạng thái bằng bảng và biểu đồ, giữ lịch sử gia hạn, xuất báo cáo khi cần.</p>
+                        <?= $khungChoAnh('Thống kê và báo cáo', 'the') ?>
+                        <div class="ld-the-tinh-chu">
+                            <h3 class="ld-the-tinh-ten">Thống kê và báo cáo</h3>
+                            <p class="text-secondary mb-0">Xem số liệu theo trạng thái bằng bảng và biểu đồ, giữ lịch sử gia hạn, xuất báo cáo khi cần.</p>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -134,20 +145,26 @@ $khungChoAnh = function (string $ten, string $loai = 'may'): string {
                 <h2 class="ld-tieu-de-muc">Ba bước đơn giản</h2>
             </div>
             <ol class="ld-cac-buoc">
-                <li class="ld-buoc">
-                    <div class="ld-so-buoc">1</div>
-                    <h3 class="ld-the-tinh-ten">Nhập chứng chỉ</h3>
-                    <p class="text-secondary mb-0">Khai báo chứng chỉ, tên miền và tổ chức cấp vào hệ thống.</p>
+                <li class="ld-buoc ld-the-tinh">
+                    <?= $khungChoAnh('Form thêm chứng chỉ', 'the') ?>
+                    <div class="ld-the-tinh-chu">
+                        <h3 class="ld-the-tinh-ten"><span class="ld-so-buoc">1</span>Nhập chứng chỉ</h3>
+                        <p class="text-secondary mb-0">Khai báo chứng chỉ, tên miền và tổ chức cấp vào hệ thống.</p>
+                    </div>
                 </li>
-                <li class="ld-buoc">
-                    <div class="ld-so-buoc">2</div>
-                    <h3 class="ld-the-tinh-ten">Theo dõi tự động</h3>
-                    <p class="text-secondary mb-0">Hệ thống tính số ngày còn lại và báo khi chứng chỉ chạm mốc cảnh báo.</p>
+                <li class="ld-buoc ld-the-tinh">
+                    <?= $khungChoAnh('Chi tiết chứng chỉ, số ngày còn lại', 'the') ?>
+                    <div class="ld-the-tinh-chu">
+                        <h3 class="ld-the-tinh-ten"><span class="ld-so-buoc">2</span>Theo dõi tự động</h3>
+                        <p class="text-secondary mb-0">Hệ thống tính số ngày còn lại và báo khi chứng chỉ chạm mốc cảnh báo.</p>
+                    </div>
                 </li>
-                <li class="ld-buoc">
-                    <div class="ld-so-buoc">3</div>
-                    <h3 class="ld-the-tinh-ten">Gia hạn kịp thời</h3>
-                    <p class="text-secondary mb-0">Cập nhật chứng chỉ mới; thông tin bản cũ được lưu lại trong lịch sử.</p>
+                <li class="ld-buoc ld-the-tinh">
+                    <?= $khungChoAnh('Form gia hạn', 'the') ?>
+                    <div class="ld-the-tinh-chu">
+                        <h3 class="ld-the-tinh-ten"><span class="ld-so-buoc">3</span>Gia hạn kịp thời</h3>
+                        <p class="text-secondary mb-0">Cập nhật chứng chỉ mới; thông tin bản cũ được lưu lại trong lịch sử.</p>
+                    </div>
                 </li>
             </ol>
         </div>
