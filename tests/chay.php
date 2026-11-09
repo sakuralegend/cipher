@@ -1743,25 +1743,27 @@ function test_nen_trang_tri_chi_la_gradient_khong_luoi_cham(PDO $pdo): void
     kiem(str_contains($dauTrang, '$nenSao = ') && str_contains($dauTrang, 'mt_srand('), 'Nền sao phải sinh ngẫu nhiên có hạt giống trong dau_trang.php ($nenSao, mt_srand)');
 }
 
-// Luật: Landing không có hình minh hoạ vẽ giả giao diện; chỗ cần hình là ảnh chụp thật của hệ thống hoặc khung giữ chỗ chờ ảnh.
-// Vì sao: User 09/11/2026: "Tinh thần là phải lấy đúng ảnh thực tế, như Better Stack họ lấy từ sản phẩm của họ".
-// Đỏ nghĩa là: index.php lại có khối ld-minh-hoa (danh sách, nhãn, cột biểu đồ dựng bằng HTML), hoặc ảnh không nằm trong assets/landing/.
+// Luật: Landing không có hình minh hoạ vẽ giả giao diện, cũng không còn khung giữ chỗ: mọi ảnh là ảnh chụp thật của hệ thống ($anhGiaoDien), tệp có thật trong assets/landing/.
+// Vì sao: User 09/11/2026: "Tinh thần là phải lấy đúng ảnh thực tế, như Better Stack họ lấy từ sản phẩm của họ"; khung giữ chỗ chỉ để chờ giao diện mới xong (bước 6 đã chụp).
+// Đỏ nghĩa là: index.php lại có khối ld-minh-hoa hay $khungChoAnh, hoặc gọi $anhGiaoDien với tệp không có trong assets/landing/ (ảnh vỡ trên trang công khai).
 // Đừng: Vẽ lại giao diện bằng HTML/CSS cho "nhanh"; chụp màn hình thật với dữ liệu mẫu rồi đặt vào assets/landing/.
 // Nhóm: Giao diện, triển khai (Giao diện)
 function test_landing_chi_dung_anh_chup_that(PDO $pdo): void
 {
     $trang = file_get_contents(__DIR__ . '/../public/index.php');
     kiem(!str_contains($trang, 'ld-minh-hoa'), 'index.php còn hình minh hoạ vẽ bằng HTML (ld-minh-hoa)');
-    preg_match_all('/<img[^>]+src="([^"]+)"/', $trang, $cacAnh);
-    foreach ($cacAnh[1] as $nguon) {
-        kiem(str_contains($nguon, 'assets/landing/'), "Ảnh $nguon phải là ảnh chụp đặt trong assets/landing/");
+    kiem(!str_contains($trang, '$khungChoAnh'), 'index.php còn khung giữ chỗ ảnh');
+    preg_match_all("/\\\$anhGiaoDien\('([a-z0-9-]+)'/", $trang, $cacTep);
+    kiem(count($cacTep[1]) === 9, 'Landing phải có đúng 9 ảnh giao diện, đang có ' . count($cacTep[1]));
+    foreach ($cacTep[1] as $tep) {
+        kiem(is_file(__DIR__ . "/../public/assets/landing/$tep.webp"), "Thiếu ảnh assets/landing/$tep.webp");
     }
 }
 
-// Luật: Mỗi thẻ tính năng và mỗi bước trên landing có chỗ cho ảnh: ảnh chụp thật hoặc khung giữ chỗ ($khungChoAnh).
+// Luật: Mỗi thẻ tính năng và mỗi bước trên landing có ảnh giao diện ($anhGiaoDien).
 // Vì sao: User 09/11/2026: bỏ hình vẽ giả nhưng "phần dưới bạn chưa chừa chỗ cho ảnh minh họa (6 mục)"; ảnh thật chụp sau khi xong giao diện.
 // Đỏ nghĩa là: Một thẻ .ld-the-tinh hay bước .ld-buoc không có khung ảnh, ảnh chụp sau này sẽ không có chỗ đặt và thẻ lệch nhau.
-// Đừng: Bỏ khung giữ chỗ khi chưa có ảnh thật; thay khung bằng <img> ảnh chụp trong assets/landing/.
+// Đừng: Bỏ ảnh của một thẻ cho gọn; thẻ không ảnh lệch hẳn với các thẻ bên cạnh.
 // Nhóm: Giao diện, triển khai (Giao diện)
 function test_moi_the_tinh_nang_va_buoc_tren_landing_co_cho_cho_anh(PDO $pdo): void
 {
@@ -1769,7 +1771,7 @@ function test_moi_the_tinh_nang_va_buoc_tren_landing_co_cho_cho_anh(PDO $pdo): v
     preg_match_all('/<(?:div|li) class="[^"]*\bld-(?:the-tinh|buoc)\b[^"]*">(.*?)<\/(?:div|li)>\s*(?=<(?:div class="col|li class="ld-buoc|\/div>\s*<\/div>|\/ol>))/s', $trang, $cacMuc);
     kiem(count($cacMuc[1]) === 6, 'Landing phải có đúng 6 mục (3 thẻ tính năng, 3 bước), đang đếm được ' . count($cacMuc[1]));
     foreach ($cacMuc[1] as $i => $muc) {
-        kiem(str_contains($muc, '$khungChoAnh(') || str_contains($muc, '<img'), 'Mục thứ ' . ($i + 1) . ' chưa có chỗ cho ảnh');
+        kiem(str_contains($muc, '$anhGiaoDien('), 'Mục thứ ' . ($i + 1) . ' chưa có ảnh giao diện');
     }
 }
 

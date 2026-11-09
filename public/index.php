@@ -20,13 +20,17 @@ $coThanhRieng = true;
 $coChuyenCanh = true; // Bấm Đăng nhập: trang mờ chuyển sang trang đăng nhập.
 require __DIR__ . '/../views/dau_trang.php';
 
-// Khung giữ chỗ cho ảnh chụp giao diện: user 09/11/2026 muốn chụp ảnh thật sau khi làm xong giao diện mới,
-// trong lúc chờ thì để khung trống đúng tỉ lệ ảnh sẽ đặt vào. $loai: 'may' (máy tính 16:10, có thanh cửa sổ),
-// 'dt' (điện thoại 9:19,5) hoặc 'the' (ảnh cắt trong thẻ tính năng, thẻ bước, 4:3).
-$khungChoAnh = function (string $ten, string $loai = 'may'): string {
-    $dau = $loai === 'may' ? '<div class="ld-cho-anh-dau" aria-hidden="true"><i></i><i></i><i></i></div>' : '';
-    return '<figure class="ld-cho-anh ld-cho-anh-' . $loai . '">' . $dau
-        . '<div class="ld-cho-anh-than"><span>' . e($ten) . '</span><small>Ảnh chụp sẽ đặt ở đây</small></div></figure>';
+// Ảnh chụp thật của hệ thống (user 09/11/2026: "phải lấy đúng ảnh thực tế, như Better Stack"), chụp từ giao diện mới
+// với dữ liệu mẫu 50 chứng chỉ, lưu WebP ở assets/landing/. $loai: 'may' (máy tính 16:10, có thanh cửa sổ), 'dt'
+// (điện thoại 9:19,5) hoặc 'the' (phần nội dung trong thẻ tính năng, thẻ bước, 4:3). Ảnh ở hero tải ngay ($taiSau =
+// false), ảnh bên dưới chỉ tải khi cuộn tới. width/height cho trình duyệt giữ chỗ đúng tỉ lệ, trang không nhảy.
+// Đổi giao diện thì chụp lại bằng cùng kích thước (2 lần điểm ảnh cho màn retina).
+$anhGiaoDien = function (string $tep, string $moTa, string $loai = 'may', bool $taiSau = true): string {
+    [$rong, $cao] = ['may' => [1600, 1000], 'dt' => [780, 1688], 'the' => [1200, 900]][$loai];
+    $dau = $loai === 'may' ? '<div class="ld-anh-dau" aria-hidden="true"><i></i><i></i><i></i></div>' : '';
+    return '<figure class="ld-anh ld-anh-' . $loai . '">' . $dau . '<img src="' . e(url('assets/landing/' . $tep . '.webp'))
+        . '" width="' . $rong . '" height="' . $cao . '" alt="' . e($moTa) . '"' . ($taiSau ? ' loading="lazy"' : '')
+        . ' decoding="async"></figure>';
 };
 ?>
 <?php // ld-vung: vùng mang bảng màu tối giản nền tối (biến --cc-* trong app.css). ?>
@@ -58,8 +62,8 @@ $khungChoAnh = function (string $ten, string $loai = 'may'): string {
         <div class="container-xl">
             <div class="ld-trung-bay">
                 <div class="ld-trung-bay-trong">
-                    <?= $khungChoAnh('Dashboard trên máy tính') ?>
-                    <?= $khungChoAnh('Dashboard trên điện thoại', 'dt') ?>
+                    <?= $anhGiaoDien('dashboard-may', 'Dashboard trên máy tính: số chứng chỉ theo trạng thái, bảng chứng chỉ cần xử lý ngay và hai biểu đồ', 'may', false) ?>
+                    <?= $anhGiaoDien('dashboard-dt', 'Dashboard trên điện thoại', 'dt', false) ?>
                 </div>
             </div>
         </div>
@@ -97,11 +101,11 @@ $khungChoAnh = function (string $ten, string $loai = 'may'): string {
                 <h2 class="ld-tieu-de-muc">Mở ra là biết việc nào cần làm trước</h2>
                 <p class="ld-mo-ta-muc">Dashboard đếm chứng chỉ theo trạng thái và xếp những chứng chỉ gần hết hạn nhất lên đầu.</p>
             </div>
-            <?= $khungChoAnh('Danh sách chứng chỉ cần xử lý') ?>
+            <?= $anhGiaoDien('can-xu-ly', 'Danh sách chứng chỉ lọc theo Sắp hết hạn, chứng chỉ gần hạn nhất ở trên cùng') ?>
         </div>
     </section>
 
-    <?php // Thẻ tính năng và thẻ bước theo thẻ của Better Stack: ảnh giao diện thật ở trên, chữ ở dưới. Khung ghi màn hình sẽ chụp. ?>
+    <?php // Thẻ tính năng và thẻ bước theo thẻ của Better Stack: ảnh giao diện thật ở trên, chữ ở dưới. ?>
     <section class="ld-muc">
         <div class="container-xl">
             <div class="ld-dau-muc">
@@ -110,7 +114,7 @@ $khungChoAnh = function (string $ten, string $loai = 'may'): string {
             <div class="row row-cards">
                 <div class="col-md-4">
                     <div class="ld-the-tinh">
-                        <?= $khungChoAnh('Danh sách chứng chỉ', 'the') ?>
+                        <?= $anhGiaoDien('the-danh-sach', 'Danh sách chứng chỉ kèm tổ chức cấp, ngày hết hạn, trạng thái và hạng an toàn', 'the') ?>
                         <div class="ld-the-tinh-chu">
                             <h3 class="ld-the-tinh-ten">Quản lý tập trung</h3>
                             <p class="text-secondary mb-0">Lưu chứng chỉ cùng tên miền, máy chủ và tổ chức cấp. Mỗi chứng chỉ có mã quản lý và dấu vân tay riêng.</p>
@@ -119,7 +123,7 @@ $khungChoAnh = function (string $ten, string $loai = 'may'): string {
                 </div>
                 <div class="col-md-4">
                     <div class="ld-the-tinh">
-                        <?= $khungChoAnh('Trang Cảnh báo', 'the') ?>
+                        <?= $anhGiaoDien('the-canh-bao', 'Trang Cảnh báo: mỗi chứng chỉ ở mốc 7, 15 hoặc 30 ngày', 'the') ?>
                         <div class="ld-the-tinh-chu">
                             <h3 class="ld-the-tinh-ten">Cảnh báo theo mốc</h3>
                             <p class="text-secondary mb-0">Trạng thái và số ngày còn lại luôn được tính theo ngày hiện tại. Sắp đến hạn thì cảnh báo hiện ngay.</p>
@@ -128,7 +132,7 @@ $khungChoAnh = function (string $ten, string $loai = 'may'): string {
                 </div>
                 <div class="col-md-4">
                     <div class="ld-the-tinh">
-                        <?= $khungChoAnh('Thống kê và báo cáo', 'the') ?>
+                        <?= $anhGiaoDien('the-thong-ke', 'Thống kê theo trạng thái và số chứng chỉ hết hạn trong 12 tháng tới', 'the') ?>
                         <div class="ld-the-tinh-chu">
                             <h3 class="ld-the-tinh-ten">Thống kê và báo cáo</h3>
                             <p class="text-secondary mb-0">Xem số liệu theo trạng thái bằng bảng và biểu đồ, giữ lịch sử gia hạn, xuất báo cáo khi cần.</p>
@@ -146,21 +150,21 @@ $khungChoAnh = function (string $ten, string $loai = 'may'): string {
             </div>
             <ol class="ld-cac-buoc">
                 <li class="ld-buoc ld-the-tinh">
-                    <?= $khungChoAnh('Form thêm chứng chỉ', 'the') ?>
+                    <?= $anhGiaoDien('the-them', 'Form thêm chứng chỉ', 'the') ?>
                     <div class="ld-the-tinh-chu">
                         <h3 class="ld-the-tinh-ten"><span class="ld-so-buoc">1</span>Nhập chứng chỉ</h3>
                         <p class="text-secondary mb-0">Khai báo chứng chỉ, tên miền và tổ chức cấp vào hệ thống.</p>
                     </div>
                 </li>
                 <li class="ld-buoc ld-the-tinh">
-                    <?= $khungChoAnh('Chi tiết chứng chỉ, số ngày còn lại', 'the') ?>
+                    <?= $anhGiaoDien('the-chi-tiet', 'Chi tiết chứng chỉ còn 7 ngày, kèm đánh giá an toàn và lịch sử gia hạn', 'the') ?>
                     <div class="ld-the-tinh-chu">
                         <h3 class="ld-the-tinh-ten"><span class="ld-so-buoc">2</span>Theo dõi tự động</h3>
                         <p class="text-secondary mb-0">Hệ thống tính số ngày còn lại và báo khi chứng chỉ chạm mốc cảnh báo.</p>
                     </div>
                 </li>
                 <li class="ld-buoc ld-the-tinh">
-                    <?= $khungChoAnh('Form gia hạn', 'the') ?>
+                    <?= $anhGiaoDien('the-gia-han', 'Form gia hạn chứng chỉ', 'the') ?>
                     <div class="ld-the-tinh-chu">
                         <h3 class="ld-the-tinh-ten"><span class="ld-so-buoc">3</span>Gia hạn kịp thời</h3>
                         <p class="text-secondary mb-0">Cập nhật chứng chỉ mới; thông tin bản cũ được lưu lại trong lịch sử.</p>
