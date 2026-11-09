@@ -5,6 +5,8 @@
 
 | Nợ | Vì sao chưa trả | Hết hạn |
 |---|---|---|
+| Chú thích ý nghĩa hạng an toàn A · Tốt, B · Lưu ý, C · Cần xử lý, F · Nguy hiểm (HANG_AN_TOAN trong src/chung_chi.php; không có D) ở cột An toàn của Danh sách và thẻ Đánh giá an toàn của trang chi tiết: người dùng chỉ thấy chữ cái, không biết vì sao | User giao 09/11/2026 cho phiên sau, đang làm lại giao diện | Phiên kế tiếp, muộn nhất 12/11/2026 |
+| Thanh tiến trình khi nhập hàng loạt (chung_chi_nhap.php): đọc tối đa 50 địa chỉ trong một lần gửi form, máy chủ đọc lần lượt nên trang đứng im lâu, người dùng không biết đã tới đâu | User giao 09/11/2026 cho phiên sau | Phiên kế tiếp, muộn nhất 12/11/2026 |
 | Đường vào quản trị VPS khi đang ở Nga, phòng VPN, SSH, Telegram cùng bị chặn | Chưa đến lượt, self-SNI vừa xong 07/11/2026 | Trước ngày bay, cuối 11/2026 |
 | Điền mã sinh viên 3 thành viên vào bảng phân công `README.md` mục 6 (họ tên đã điền 09/11/2026, theo thứ tự user đưa: Nguyễn Đức Trung, Phan Tuấn Anh, Nguyễn Chí Kiên) | User chưa đưa mã | 14–15/11/2026 |
 | Đóng gói mã nguồn nộp bằng file nén: `git archive` kèm `export-ignore` trong `.gitattributes`, loại `.claude/`, `CLAUDE.md`, các sổ, `docs/BAN_GIAO.md`, `deploy/`, `scripts/`, `temp/`, `ban_do_test.py`; mở file nén kiểm tra không còn chữ VPN (bỏ qua `inter.css`: mã base64 của font trùng ngẫu nhiên chuỗi này, vô hại); IP VPS chỉ được có ở `database/seed.sql` (máy chủ của chứng chỉ thật, IP này ai tra DNS cũng thấy) | Chưa đến lúc nộp | 16/11/2026 |
