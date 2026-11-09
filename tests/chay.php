@@ -74,6 +74,7 @@ function trangThai(PDO $pdo, string $ma): array
 // Vì sao: PHP XAMPP mặc định Europe/Berlin; CSDL XAMPP không strict nên âm thầm cắt dữ liệu.
 // Đỏ nghĩa là: số ngày còn lại có thể sai, hoặc dữ liệu sai lọt vào mà không báo lỗi.
 // Đừng: sửa bằng php.ini hay my.ini, vì máy giảng viên và VPS có cấu hình khác.
+// Nhóm: CSDL, ràng buộc, dữ liệu mẫu (Ng, Nj)
 function test_ket_noi_luon_o_mui_gio_viet_nam_va_che_do_strict(PDO $pdo): void
 {
     kiem(date_default_timezone_get() === 'Asia/Ho_Chi_Minh', 'PHP sai múi giờ');
@@ -98,6 +99,7 @@ function phaiBiTuChoiDoQuaDai(PDO $pdo): void
 // Vì sao: Việc tạo cảnh báo chạy lặp lại, không có ràng buộc thì người dùng nhận trùng liên tục.
 // Đỏ nghĩa là: uq_alert_cycle đã mất hoặc sai cột.
 // Đừng: chuyển việc chặn trùng sang PHP, vì hai lần chạy cùng lúc vẫn tạo trùng được.
+// Nhóm: Cảnh báo (D6)
 function test_khong_tao_canh_bao_trung_trong_cung_chu_ky(PDO $pdo): void
 {
     $them = "INSERT INTO alerts (certificate_id, valid_to, threshold_days)
@@ -110,6 +112,7 @@ function test_khong_tao_canh_bao_trung_trong_cung_chu_ky(PDO $pdo): void
 // Vì sao: Thiết kế gốc UNIQUE (certificate_id, threshold_days) làm chu kỳ sau không còn cảnh báo.
 // Đỏ nghĩa là: chứng chỉ đã gia hạn sẽ hết hạn mà không ai được báo, và không có lỗi nào hiện ra.
 // Đừng: bỏ valid_to khỏi UNIQUE, hay xoá cảnh báo cũ khi gia hạn để lách.
+// Nhóm: Cảnh báo (D6)
 function test_sau_gia_han_van_canh_bao_lai_duoc_cung_moc(PDO $pdo): void
 {
     $them = "INSERT INTO alerts (certificate_id, valid_to, threshold_days)
@@ -126,6 +129,7 @@ function test_sau_gia_han_van_canh_bao_lai_duoc_cung_moc(PDO $pdo): void
 // Vì sao: Đây là tiêu chí của đề; mốc 30 ngày phải là "sắp hết hạn", 31 ngày thì chưa.
 // Đỏ nghĩa là: công thức trong v_certificates bị sửa, hoặc sai thứ tự ưu tiên.
 // Đừng: lưu trạng thái thành cột, hay tính lại ở PHP thành công thức thứ hai.
+// Nhóm: Chứng chỉ: thêm, sửa, thu hồi, xoá (D1, D4, D5, Nf)
 function test_trang_thai_va_so_ngay_tinh_tu_valid_to(PDO $pdo): void
 {
     $mong = [
@@ -154,6 +158,7 @@ function test_trang_thai_va_so_ngay_tinh_tu_valid_to(PDO $pdo): void
 // Vì sao: Fingerprint nhận diện duy nhất một chứng chỉ; trùng tức là nhập một chứng chỉ hai lần.
 // Đỏ nghĩa là: UNIQUE trên fingerprint_sha256 đã mất.
 // Đừng: chỉ kiểm tra trùng ở PHP.
+// Nhóm: CSDL, ràng buộc, dữ liệu mẫu (Ng, Nj)
 function test_fingerprint_khong_duoc_trung(PDO $pdo): void
 {
     phaiBiTuChoi(
@@ -167,6 +172,7 @@ function test_fingerprint_khong_duoc_trung(PDO $pdo): void
 // Vì sao: Đề ghi "mã HOẶC fingerprint"; dạng 'AB:CD' và 'abcd' sẽ lọt qua UNIQUE nếu không ép.
 // Đỏ nghĩa là: giảng viên không thêm được chứng chỉ khi thiếu fingerprint, hoặc UNIQUE bị lách.
 // Đừng: bỏ chk_cert_fingerprint, hay đổi cột sang collation không phân biệt hoa thường.
+// Nhóm: CSDL, ràng buộc, dữ liệu mẫu (Ng, Nj)
 function test_ma_quan_ly_bat_buoc_con_fingerprint_duoc_trong_nhung_phai_chuan_hoa(PDO $pdo): void
 {
     themChungChi($pdo, 'CERT-101', 'NULL');
@@ -184,6 +190,7 @@ function test_ma_quan_ly_bat_buoc_con_fingerprint_duoc_trong_nhung_phai_chuan_ho
 // Vì sao: Xoá người sẽ mất dấu vết ai đã tạo, gia hạn, thao tác gì. Đề đòi "xoá" nên vẫn phải xoá được người mới.
 // Đỏ nghĩa là: một khoá ngoại tới users đã đổi khỏi RESTRICT, nên có thể mất lịch sử.
 // Đừng: đổi sang CASCADE hay SET NULL để cho xoá; người có lịch sử thì dùng khoá tài khoản.
+// Nhóm: Người dùng (Nb)
 function test_khong_xoa_duoc_nguoi_dung_da_co_lich_su(PDO $pdo): void
 {
     phaiBiTuChoi($pdo, 'DELETE FROM users WHERE id = 1', 'Người đã tạo chứng chỉ');
@@ -206,6 +213,7 @@ function test_khong_xoa_duoc_nguoi_dung_da_co_lich_su(PDO $pdo): void
 // Vì sao: Nếu CSDL cho xoá dây chuyền, xoá một máy chủ có thể làm mất hàng loạt chứng chỉ.
 // Đỏ nghĩa là: một khoá ngoại đã đổi khỏi RESTRICT.
 // Đừng: đổi sang CASCADE cho tiện; người dùng phải chuyển hoặc xoá dữ liệu con trước.
+// Nhóm: CSDL, ràng buộc, dữ liệu mẫu (Ng, Nj)
 function test_khong_xoa_duoc_danh_muc_con_du_lieu_phu_thuoc(PDO $pdo): void
 {
     // Dùng người và máy chủ không có dữ liệu khác, để chắc chính khoá ngoại đang xét là thứ chặn xoá.
@@ -221,6 +229,7 @@ function test_khong_xoa_duoc_danh_muc_con_du_lieu_phu_thuoc(PDO $pdo): void
 // Vì sao: Cảnh báo và lịch sử không còn ý nghĩa khi không còn chứng chỉ; vết thao tác nằm ở audit_logs.
 // Đỏ nghĩa là: không xoá được chứng chỉ, hoặc còn dữ liệu mồ côi.
 // Đừng: gắn khoá ngoại từ audit_logs tới chứng chỉ, vì nhật ký phải sống lâu hơn đối tượng.
+// Nhóm: CSDL, ràng buộc, dữ liệu mẫu (Ng, Nj)
 function test_xoa_chung_chi_xoa_kem_canh_bao_va_lich_su(PDO $pdo): void
 {
     $pdo->exec("INSERT INTO alerts (certificate_id, valid_to, threshold_days)
@@ -234,6 +243,7 @@ function test_xoa_chung_chi_xoa_kem_canh_bao_va_lich_su(PDO $pdo): void
 // Vì sao: Giảng viên kiểm thử bằng dữ liệu mẫu (yêu cầu j của đề); thiếu mốc thì cảnh báo không hiện ra.
 // Đỏ nghĩa là: seed.sql bị sửa làm mất một trường hợp demo.
 // Đừng: viết ngày cố định trong seed, vì các mốc sẽ trôi trước khi giảng viên chấm.
+// Nhóm: CSDL, ràng buộc, dữ liệu mẫu (Ng, Nj)
 function test_du_lieu_mau_co_du_moc_va_trang_thai(PDO $pdo): void
 {
     $trangThaiCo = $pdo->query('SELECT DISTINCT status FROM v_certificates')->fetchAll(PDO::FETCH_COLUMN);
@@ -267,6 +277,7 @@ function saiLienTiep(PDO $pdo, string $ten, int $soLan): void
 // Vì sao: Nếu không đếm lại, người dùng thật sẽ dần bị chặn vì những lần gõ nhầm rải rác.
 // Đỏ nghĩa là: dangNhap() hỏng, hoặc không còn đặt lại failed_logins.
 // Đừng: đếm lại khi sai mật khẩu, vì kẻ dò sẽ không bao giờ bị chặn.
+// Nhóm: Đăng nhập, phiên, phân quyền (Na, Ni)
 function test_dang_nhap_dung_thi_vao_duoc_va_dem_lai_so_lan_sai(PDO $pdo): void
 {
     saiLienTiep($pdo, 'admin', 3);
@@ -280,6 +291,7 @@ function test_dang_nhap_dung_thi_vao_duoc_va_dem_lai_so_lan_sai(PDO $pdo): void
 // Vì sao: Câu lỗi khác nhau cho kẻ dò biết tên đăng nhập nào tồn tại, hay mật khẩu vừa thử có đúng không.
 // Đỏ nghĩa là: thông báo lỗi đã bị tách theo từng trường hợp.
 // Đừng: viết câu thân thiện hơn cho riêng trường hợp đang tạm chặn.
+// Nhóm: Đăng nhập, phiên, phân quyền (Na, Ni)
 function test_sai_mat_khau_hay_sai_ten_deu_bao_cung_mot_loi(PDO $pdo): void
 {
     $saiMatKhau = dangNhap($pdo, 'admin', 'mat-khau-sai');
@@ -292,6 +304,7 @@ function test_sai_mat_khau_hay_sai_ten_deu_bao_cung_mot_loi(PDO $pdo): void
 // Vì sao: Đề yêu cầu đăng nhập phải kiểm tra trạng thái tài khoản (chức năng a).
 // Đỏ nghĩa là: dangNhap() đã bỏ bước kiểm tra is_locked.
 // Đừng: báo "đã bị khoá" khi mật khẩu sai, vì sẽ lộ tình trạng tài khoản cho người ngoài.
+// Nhóm: Đăng nhập, phiên, phân quyền (Na, Ni)
 function test_tai_khoan_bi_khoa_khong_dang_nhap_duoc(PDO $pdo): void
 {
     $pdo->exec('UPDATE users SET is_locked = 1 WHERE id = 2');
@@ -305,6 +318,7 @@ function test_tai_khoan_bi_khoa_khong_dang_nhap_duoc(PDO $pdo): void
 // Vì sao: QD-05 yêu cầu chặn dò mật khẩu thật, vì web chạy trên internet.
 // Đỏ nghĩa là: kẻ dò có thể thử mật khẩu không giới hạn.
 // Đừng: chặn theo IP, vì web sau proxy có thể chỉ thấy một IP và sẽ khoá tất cả mọi người.
+// Nhóm: Đăng nhập, phiên, phân quyền (Na, Ni)
 function test_sai_5_lan_thi_tam_chan_ke_ca_khi_nhap_dung(PDO $pdo): void
 {
     saiLienTiep($pdo, 'admin', 4);
@@ -324,6 +338,7 @@ function test_sai_5_lan_thi_tam_chan_ke_ca_khi_nhap_dung(PDO $pdo): void
 // Vì sao: Đây là chặn tạm, người dùng thật không cần Admin mở khoá.
 // Đỏ nghĩa là: tài khoản bị khoá vĩnh viễn sau 5 lần sai, ai cũng có thể cố tình khoá Admin.
 // Đừng: bỏ so sánh locked_until với NOW().
+// Nhóm: Đăng nhập, phiên, phân quyền (Na, Ni)
 function test_het_15_phut_thi_dang_nhap_lai_duoc(PDO $pdo): void
 {
     saiLienTiep($pdo, 'admin', 5);
@@ -335,6 +350,7 @@ function test_het_15_phut_thi_dang_nhap_lai_duoc(PDO $pdo): void
 // Vì sao: Khoá tài khoản phải có tác dụng ngay, không đợi người đó tự đăng xuất.
 // Đỏ nghĩa là: nguoiDungHienTai() không còn đọc is_locked từ CSDL.
 // Đừng: lưu thông tin người dùng trong phiên để tiết kiệm một truy vấn.
+// Nhóm: Đăng nhập, phiên, phân quyền (Na, Ni)
 function test_nguoi_dung_bi_khoa_giua_phien_thi_bi_day_ra(PDO $pdo): void
 {
     $_SESSION = ['user_id' => 2];
@@ -347,6 +363,7 @@ function test_nguoi_dung_bi_khoa_giua_phien_thi_bi_day_ra(PDO $pdo): void
 // Vì sao: Đề yêu cầu phân quyền theo vai trò; chỉ Admin được quản lý người dùng và xoá chứng chỉ.
 // Đỏ nghĩa là: tên vai trò trong seed.sql hoặc hàm laAdmin() đã đổi, có thể mở quyền cho nhân viên.
 // Đừng: kiểm tra quyền bằng cách chỉ ẩn nút trên giao diện.
+// Nhóm: Đăng nhập, phiên, phân quyền (Na, Ni)
 function test_nhan_vien_khong_co_quyen_admin(PDO $pdo): void
 {
     $_SESSION = ['user_id' => 2];
@@ -359,6 +376,7 @@ function test_nhan_vien_khong_co_quyen_admin(PDO $pdo): void
 // Vì sao: Không có mã này, trang web lạ có thể gửi lệnh thay người đang đăng nhập.
 // Đỏ nghĩa là: thao tác thay đổi dữ liệu có thể bị giả mạo.
 // Đừng: so sánh bằng ==, vì để lộ mã qua thời gian trả lời.
+// Nhóm: Đăng nhập, phiên, phân quyền (Na, Ni)
 function test_ma_csrf_sai_bi_tu_choi(PDO $pdo): void
 {
     $_SESSION = [];
@@ -375,6 +393,7 @@ function test_ma_csrf_sai_bi_tu_choi(PDO $pdo): void
 // Vì sao: Quên gọi ở một trang thì trang đó mở cho cả internet mà không có lỗi nào hiện ra.
 // Đỏ nghĩa là: có trang quản trị vừa thêm mà chưa kiểm tra đăng nhập.
 // Đừng: bỏ qua test này cho trang "chỉ đọc"; dữ liệu chứng chỉ cũng là thông tin nội bộ.
+// Nhóm: Đăng nhập, phiên, phân quyền (Na, Ni)
 function test_moi_trang_quan_tri_deu_kiem_tra_dang_nhap(PDO $pdo): void
 {
     $soTrang = 0;
@@ -413,6 +432,7 @@ function duLieuNguoiMoi(array $thayDoi = []): array
 // Vì sao: Đề yêu cầu kiểm tra bằng cả JavaScript và PHP; JavaScript có thể bị bỏ qua nên PHP là lớp thật.
 // Đỏ nghĩa là: một quy tắc trong kiemTraNguoiDung() đã mất hoặc báo sai ô.
 // Đừng: chỉ dựa vào thuộc tính required, pattern trên form.
+// Nhóm: Người dùng (Nb)
 function test_du_lieu_nguoi_dung_sai_bi_tu_choi(PDO $pdo): void
 {
     $truongHop = [
@@ -437,6 +457,7 @@ function test_du_lieu_nguoi_dung_sai_bi_tu_choi(PDO $pdo): void
 // Vì sao: CSDL là nơi chặn trùng; nếu không bắt lỗi, người dùng thấy trang lỗi thay vì câu dễ hiểu.
 // Đỏ nghĩa là: loiTrungTenDangNhap() không còn nhận ra mã lỗi trùng khoá.
 // Đừng: bỏ UNIQUE và chỉ SELECT kiểm tra trước, vì hai yêu cầu cùng lúc vẫn tạo trùng được.
+// Nhóm: Người dùng (Nb)
 function test_ten_dang_nhap_trung_bao_loi_ro_rang(PDO $pdo): void
 {
     kiem(isset(themNguoiDung($pdo, duLieuNguoiMoi(['username' => 'admin']))['username']), 'Thêm trùng phải báo lỗi');
@@ -447,6 +468,7 @@ function test_ten_dang_nhap_trung_bao_loi_ro_rang(PDO $pdo): void
 // Vì sao: Đề yêu cầu mật khẩu được mã hoá; lộ CSDL cũng không lộ mật khẩu.
 // Đỏ nghĩa là: một đường ghi mật khẩu đang lưu bản gốc.
 // Đừng: viết thêm câu UPDATE password_hash ở trang; hãy gọi capNhatMatKhau().
+// Nhóm: Người dùng (Nb)
 function test_mat_khau_luon_luu_dang_bam(PDO $pdo): void
 {
     $doc = fn() => $pdo->query("SELECT password_hash FROM users WHERE username = 'nguoi.moi'")->fetchColumn();
@@ -470,6 +492,7 @@ function test_mat_khau_luon_luu_dang_bam(PDO $pdo): void
 // Vì sao: Nhờ ba quy tắc này, hệ thống luôn còn ít nhất một Admin; không có cách nào cứu nếu mất hết.
 // Đỏ nghĩa là: Admin có thể khoá mình khỏi hệ thống.
 // Đừng: chỉ ẩn nút trên giao diện; yêu cầu POST có thể gửi thẳng.
+// Nhóm: Người dùng (Nb)
 function test_admin_khong_tu_khoa_tu_xoa_tu_doi_vai_tro(PDO $pdo): void
 {
     kiem(khoaNguoiDung($pdo, 1, 1) !== null, 'Không được tự khoá');
@@ -492,6 +515,7 @@ function test_admin_khong_tu_khoa_tu_xoa_tu_doi_vai_tro(PDO $pdo): void
 // Vì sao: Đề đòi chức năng xoá, nhưng xoá người đã thao tác sẽ mất dấu vết.
 // Đỏ nghĩa là: xoaNguoiDung() không còn nhận ra lỗi khoá ngoại, trang sẽ báo lỗi hệ thống.
 // Đừng: đếm lịch sử bằng truy vấn riêng, vì thêm bảng mới là quên cập nhật.
+// Nhóm: Người dùng (Nb)
 function test_xoa_nguoi_co_lich_su_bao_chi_co_the_khoa(PDO $pdo): void
 {
     $loi = xoaNguoiDung($pdo, 2, 1);
@@ -508,6 +532,7 @@ function test_xoa_nguoi_co_lich_su_bao_chi_co_the_khoa(PDO $pdo): void
 // Vì sao: Không có việc này, Admin bấm mở khoá mà người dùng vẫn phải đợi 15 phút.
 // Đỏ nghĩa là: moKhoaNguoiDung() chỉ đổi is_locked.
 // Đừng: bắt Admin chạy lệnh SQL để cứu tài khoản lúc demo.
+// Nhóm: Người dùng (Nb)
 function test_mo_khoa_xoa_ca_trang_thai_tam_chan(PDO $pdo): void
 {
     saiLienTiep($pdo, 'nhanvien', 5);
@@ -520,6 +545,7 @@ function test_mo_khoa_xoa_ca_trang_thai_tam_chan(PDO $pdo): void
 // Vì sao: Người khác ngồi vào máy đang đăng nhập không được chiếm luôn tài khoản.
 // Đỏ nghĩa là: doiMatKhau() đã bỏ bước kiểm tra mật khẩu cũ.
 // Đừng: dùng hàm này cho Admin đặt lại mật khẩu người khác; đó là việc của suaNguoiDung().
+// Nhóm: Người dùng (Nb)
 function test_doi_mat_khau_phai_dung_mat_khau_cu(PDO $pdo): void
 {
     kiem(isset(doiMatKhau($pdo, 2, 'sai', 'MoiHan@1234', 'MoiHan@1234')['password_cu']), 'Sai mật khẩu cũ phải báo lỗi');
@@ -533,6 +559,7 @@ function test_doi_mat_khau_phai_dung_mat_khau_cu(PDO $pdo): void
 // Vì sao: Quên một trang thì nhân viên có thể tự nâng quyền hay xoá người khác, và không có lỗi nào hiện ra.
 // Đỏ nghĩa là: có trang nguoi_dung*.php đang mở cho nhân viên.
 // Đừng: dựa vào việc menu đã ẩn mục Người dùng.
+// Nhóm: Người dùng (Nb)
 function test_trang_quan_ly_nguoi_dung_chi_danh_cho_admin(PDO $pdo): void
 {
     $cacTrang = glob(__DIR__ . '/../public/admin/nguoi_dung*.php');
@@ -557,6 +584,7 @@ function mayChuHopLe(array $thayDoi = []): array
 // Vì sao: Đề yêu cầu kiểm tra dữ liệu ở PHP; cột ENUM và kiểu số không báo được lỗi dễ hiểu.
 // Đỏ nghĩa là: một quy tắc trong kiemTraMayChu() đã mất.
 // Đừng: chỉ dựa vào pattern, type="number" trên form, vì JavaScript có thể bị bỏ qua.
+// Nhóm: Danh mục: tên miền, máy chủ, tổ chức cấp (D2, D3, Nc)
 function test_may_chu_sai_ip_cong_moi_truong_bi_tu_choi(PDO $pdo): void
 {
     $truongHop = [
@@ -582,6 +610,7 @@ function test_may_chu_sai_ip_cong_moi_truong_bi_tu_choi(PDO $pdo): void
 // Vì sao: Quy tắc quá chặt sẽ chặn tên miền thật; quá lỏng thì dữ liệu rác lọt vào.
 // Đỏ nghĩa là: biểu thức trong tenMienHopLe() đã đổi, hoặc không còn chuyển về chữ thường.
 // Đừng: nới lỏng để cho qua một ca lạ mà không thêm ca đó vào danh sách dưới đây.
+// Nhóm: Danh mục: tên miền, máy chủ, tổ chức cấp (D2, D3, Nc)
 function test_ten_mien_hop_le_duoc_nhan_va_sai_dinh_dang_bi_tu_choi(PDO $pdo): void
 {
     $hopLe = ['cert.cipher.id.vn', '*.cipher.id.vn', 'congty.example', 'a.co', 'xn--bcher-kva.example', 'a-b.c-d.org'];
@@ -602,6 +631,7 @@ function test_ten_mien_hop_le_duoc_nhan_va_sai_dinh_dang_bi_tu_choi(PDO $pdo): v
 // Vì sao: CSDL là nơi chặn trùng; không bắt lỗi thì người dùng thấy trang lỗi thay vì câu dễ hiểu.
 // Đỏ nghĩa là: loiNeuTrung() không còn nhận ra mã lỗi, hoặc mất UNIQUE trong schema.
 // Đừng: bỏ UNIQUE và chỉ SELECT kiểm tra trước, vì hai yêu cầu cùng lúc vẫn tạo trùng được.
+// Nhóm: Danh mục: tên miền, máy chủ, tổ chức cấp (D2, D3, Nc)
 function test_ten_mien_trung_va_ten_to_chuc_trung_bao_loi_ro_rang(PDO $pdo): void
 {
     kiem(isset(luuTenMien($pdo, null, ['domain_name' => 'CONGTY.example', 'server_id' => 1])['domain_name']), 'Thêm trùng tên miền, kể cả khác hoa thường');
@@ -621,6 +651,7 @@ function test_ten_mien_trung_va_ten_to_chuc_trung_bao_loi_ro_rang(PDO $pdo): voi
 // Vì sao: Không kiểm tra trước thì khoá ngoại từ chối và người dùng thấy trang lỗi.
 // Đỏ nghĩa là: luuTenMien() đã bỏ bước kiểm tra máy chủ.
 // Đừng: cho phép tên miền không có máy chủ; cột server_id là bắt buộc.
+// Nhóm: Danh mục: tên miền, máy chủ, tổ chức cấp (D2, D3, Nc)
 function test_ten_mien_phai_gan_voi_may_chu_co_that(PDO $pdo): void
 {
     foreach ([0, 999, ''] as $idSai) {
@@ -633,6 +664,7 @@ function test_ten_mien_phai_gan_voi_may_chu_co_that(PDO $pdo): void
 // Vì sao: Xoá dây chuyền có thể làm mất hàng loạt chứng chỉ; báo lỗi hệ thống thì người dùng không biết phải làm gì.
 // Đỏ nghĩa là: xoaHoacBaoConDuLieu() không còn nhận ra lỗi khoá ngoại.
 // Đừng: đếm dữ liệu con bằng truy vấn riêng, vì thêm bảng mới là quên cập nhật.
+// Nhóm: Danh mục: tên miền, máy chủ, tổ chức cấp (D2, D3, Nc)
 function test_xoa_danh_muc_con_du_lieu_con_bao_ly_do_ro_rang(PDO $pdo): void
 {
     kiem(str_contains((string) xoaMayChu($pdo, 4), 'còn tên miền'), 'Máy chủ còn tên miền');
@@ -647,6 +679,7 @@ function test_xoa_danh_muc_con_du_lieu_con_bao_ly_do_ro_rang(PDO $pdo): void
 // Vì sao: Hai người cùng mở trang, một người xoá trước; người sau thấy "đã xoá" sẽ tưởng chính mình vừa xoá.
 // Đỏ nghĩa là: xoaHoacBaoConDuLieu() không còn xét số dòng bị xoá.
 // Đừng: bỏ qua trường hợp này vì "kết quả vẫn là không còn dòng đó"; thông báo phải đúng sự thật.
+// Nhóm: Danh mục: tên miền, máy chủ, tổ chức cấp (D2, D3, Nc)
 function test_xoa_ban_ghi_khong_ton_tai_bao_loi(PDO $pdo): void
 {
     kiem(xoaMayChu($pdo, 9999) !== null, 'Máy chủ không tồn tại');
@@ -659,6 +692,7 @@ function test_xoa_ban_ghi_khong_ton_tai_bao_loi(PDO $pdo): void
 // Vì sao: Chế độ strict khiến CSDL từ chối byte sai mã (đã gặp lỗi 500 khi thử ngày 06/11/2026).
 // Đỏ nghĩa là: chuoiPost() không còn kiểm tra mã hoá hoặc kiểu dữ liệu.
 // Đừng: tắt strict để CSDL tự cắt dữ liệu; lỗi sẽ thành âm thầm.
+// Nhóm: CSDL, ràng buộc, dữ liệu mẫu (Ng, Nj)
 function test_o_form_sai_ma_hoa_hoac_la_mang_duoc_coi_la_trong(PDO $pdo): void
 {
     $_POST = ['sai_ma' => "Ph\xF2ng A", 'mang' => ['x'], 'dung' => 'Phòng A'];
@@ -673,6 +707,7 @@ function test_o_form_sai_ma_hoa_hoac_la_mang_duoc_coi_la_trong(PDO $pdo): void
 // Vì sao: Đề yêu cầu CRUD đầy đủ; chặn xoá chỉ áp dụng khi còn dữ liệu phụ thuộc.
 // Đỏ nghĩa là: một hàm xoá đang nhắm sai bảng hoặc luôn từ chối.
 // Đừng: thay xoá thật bằng cột ẩn để lách khoá ngoại.
+// Nhóm: Danh mục: tên miền, máy chủ, tổ chức cấp (D2, D3, Nc)
 function test_danh_muc_khong_con_du_lieu_con_thi_xoa_duoc(PDO $pdo): void
 {
     kiem(xoaTenMien($pdo, 5) === null, 'Tên miền không có chứng chỉ phải xoá được');
@@ -708,6 +743,7 @@ function chungChiHopLe(array $thayDoi = []): array
 // Vì sao: Đề yêu cầu kiểm tra dữ liệu ở PHP; JavaScript có thể bị bỏ qua.
 // Đỏ nghĩa là: một quy tắc trong kiemTraChungChi() đã mất hoặc báo sai ô.
 // Đừng: chuyển việc kiểm tra về chỉ dựa vào thuộc tính HTML hay ràng buộc CSDL.
+// Nhóm: Chứng chỉ: thêm, sửa, thu hồi, xoá (D1, D4, D5, Nf)
 function test_chung_chi_du_lieu_sai_bi_tu_choi_dung_o(PDO $pdo): void
 {
     $truongHop = [
@@ -739,6 +775,7 @@ function test_chung_chi_du_lieu_sai_bi_tu_choi_dung_o(PDO $pdo): void
 // Vì sao: EE:7A và ee7a là cùng một vân tay; không chuẩn hoá thì kiểm tra trùng không phát hiện được.
 // Đỏ nghĩa là: chuanHoaFingerprint(), chuanHoaSerial() đã đổi, hoặc lưu chuỗi rỗng thay vì NULL.
 // Đừng: lưu nguyên dạng người dùng dán vào.
+// Nhóm: Chứng chỉ: thêm, sửa, thu hồi, xoá (D1, D4, D5, Nf)
 function test_fingerprint_va_serial_duoc_chuan_hoa_truoc_khi_luu(PDO $pdo): void
 {
     $vanTay = 'EE:7A:1D:35:56:85:B8:8E:42:56:0A:57:53:0A:F5:72:A7:7D:D1:93:E2:7E:E7:BA:61:6C:22:58:69:C5:00:01';
@@ -757,6 +794,7 @@ function test_fingerprint_va_serial_duoc_chuan_hoa_truoc_khi_luu(PDO $pdo): void
 // Vì sao: Bảng có hai cột UNIQUE; báo nhầm ô thì người dùng không biết phải sửa gì.
 // Đỏ nghĩa là: phần phân biệt cột trong luuChungChi() đã hỏng.
 // Đừng: bỏ UNIQUE và chỉ SELECT kiểm tra trước, vì hai yêu cầu cùng lúc vẫn tạo trùng được.
+// Nhóm: Chứng chỉ: thêm, sửa, thu hồi, xoá (D1, D4, D5, Nf)
 function test_ma_quan_ly_va_fingerprint_trung_bao_loi_ro_rang(PDO $pdo): void
 {
     $loiMa = luuChungChi($pdo, null, chungChiHopLe(['cert_code' => 'CERT-001']), 1);
@@ -774,6 +812,7 @@ function test_ma_quan_ly_va_fingerprint_trung_bao_loi_ro_rang(PDO $pdo): void
 // Vì sao: Đây là chức năng 4 của đề; nếu không kiểm tra, CSDL từ chối và người dùng thấy trang lỗi.
 // Đỏ nghĩa là: so sánh ngày trong kiemTraChungChi() đã đổi.
 // Đừng: so sánh chuỗi trước khi chuanHoaNgay() đưa về cùng một dạng.
+// Nhóm: Chứng chỉ: thêm, sửa, thu hồi, xoá (D1, D4, D5, Nf)
 function test_ngay_het_han_phai_sau_ngay_bat_dau(PDO $pdo): void
 {
     $truocDo = luuChungChi($pdo, null, chungChiHopLe(['valid_from' => '2027-01-02T00:00', 'valid_to' => '2027-01-01T00:00']), 1);
@@ -791,6 +830,7 @@ function test_ngay_het_han_phai_sau_ngay_bat_dau(PDO $pdo): void
 // Vì sao: Xoá làm mất cả lịch sử gia hạn; nhân viên dùng Thu hồi. User chốt 06/11/2026.
 // Đỏ nghĩa là: xoaChungChi() đã bỏ kiểm tra quyền, nhân viên có thể xoá bằng lệnh gửi thẳng.
 // Đừng: chỉ ẩn nút Xoá trên giao diện.
+// Nhóm: Chứng chỉ: thêm, sửa, thu hồi, xoá (D1, D4, D5, Nf)
 function test_nhan_vien_khong_xoa_duoc_chung_chi_admin_thi_duoc(PDO $pdo): void
 {
     $_SESSION = ['user_id' => 2];
@@ -810,6 +850,7 @@ function test_nhan_vien_khong_xoa_duoc_chung_chi_admin_thi_duoc(PDO $pdo): void
 // Vì sao: Chứng chỉ thật đã thu hồi thì không thể dùng lại; muốn dùng thì cấp chứng chỉ mới.
 // Đỏ nghĩa là: luuChungChi() đang ghi is_revoked, hoặc thuHoiChungChi() đã đổi.
 // Đừng: thêm nút bỏ thu hồi; nhập nhầm thì tạo chứng chỉ mới.
+// Nhóm: Chứng chỉ: thêm, sửa, thu hồi, xoá (D1, D4, D5, Nf)
 function test_thu_hoi_giu_du_lieu_va_khong_hoan_tac_duoc(PDO $pdo): void
 {
     kiem(thuHoiChungChi($pdo, 1) === null, 'Phải thu hồi được');
@@ -827,6 +868,7 @@ function test_thu_hoi_giu_du_lieu_va_khong_hoan_tac_duoc(PDO $pdo): void
 // Vì sao: Mục đích hệ thống là không để sót chứng chỉ sắp hết hạn; dữ liệu mẫu có 50 dòng.
 // Đỏ nghĩa là: LIMIT, OFFSET trong danhSachChungChi() đã đổi.
 // Đừng: lấy hết rồi cắt bằng PHP, vì dữ liệu lớn sẽ chậm.
+// Nhóm: Danh sách, tìm kiếm, lọc, sắp xếp (Nd)
 function test_danh_sach_phan_trang_va_chung_chi_gan_het_han_len_dau(PDO $pdo): void
 {
     for ($i = 200; $i < 225; $i++) {
@@ -846,6 +888,7 @@ function test_danh_sach_phan_trang_va_chung_chi_gan_het_han_len_dau(PDO $pdo): v
 // Vì sao: Form điền sẵn mã này; trùng thì người dùng bị báo lỗi ngay khi chưa nhập gì sai.
 // Đỏ nghĩa là: maChungChiKeTiep() đã đổi.
 // Đừng: tính từ số dòng trong bảng, vì đã xoá dòng thì sẽ ra mã trùng.
+// Nhóm: Chứng chỉ: thêm, sửa, thu hồi, xoá (D1, D4, D5, Nf)
 function test_ma_ke_tiep_khong_trung_ma_da_co(PDO $pdo): void
 {
     kiem(maChungChiKeTiep($pdo) === 'CERT-010', 'Dữ liệu mẫu tới CERT-009 thì kế tiếp là CERT-010');
@@ -861,6 +904,7 @@ function test_ma_ke_tiep_khong_trung_ma_da_co(PDO $pdo): void
 // Vì sao: Quên một trang thì trang web lạ có thể gửi lệnh thay người đang đăng nhập, và không có lỗi nào hiện ra.
 // Đỏ nghĩa là: có trang vừa thêm đọc POST mà chưa kiểm tra mã CSRF.
 // Đừng: bỏ qua cho trang "ít quan trọng"; đăng xuất cũng phải có mã.
+// Nhóm: Đăng nhập, phiên, phân quyền (Na, Ni)
 function test_moi_trang_nhan_post_deu_kiem_tra_csrf(PDO $pdo): void
 {
     $soTrang = 0;
@@ -916,6 +960,7 @@ function duLieuGiaHan(array $doi = []): array
 // Vì sao: Thêm chứng chỉ còn 5 ngày mà tạo cả ba mốc thì người dùng nhận ba cảnh báo cho một việc.
 // Đỏ nghĩa là: biểu thức CASE trong taoCanhBao() đã đổi, chứng chỉ có thể nhận sai mốc.
 // Đừng: tạo đủ các mốc đã qua để "cho chắc".
+// Nhóm: Cảnh báo (D6)
 function test_chung_chi_con_5_ngay_chi_tao_canh_bao_moc_7(PDO $pdo): void
 {
     // Mỗi lần đổi hạn là một chu kỳ mới, nên cùng một chứng chỉ thử được mọi ranh giới.
@@ -930,6 +975,7 @@ function test_chung_chi_con_5_ngay_chi_tao_canh_bao_moc_7(PDO $pdo): void
 // Vì sao: Việc này chạy mỗi lần mở Dashboard; sai thì cảnh báo đã xem cứ hiện lại là mới.
 // Đỏ nghĩa là: phần ON DUPLICATE KEY trong taoCanhBao() đã đổi.
 // Đừng: dùng INSERT IGNORE, vì nó nuốt cả các lỗi khác ngoài lỗi trùng.
+// Nhóm: Cảnh báo (D6)
 function test_tao_canh_bao_chay_lai_khong_sinh_them_dong(PDO $pdo): void
 {
     $dem = fn(): int => (int) $pdo->query('SELECT COUNT(*) FROM alerts')->fetchColumn();
@@ -946,6 +992,7 @@ function test_tao_canh_bao_chay_lai_khong_sinh_them_dong(PDO $pdo): void
 // Vì sao: Chứng chỉ đã thu hồi, đã hết hạn, chưa hiệu lực thì mốc đếm ngược không còn ý nghĩa.
 // Đỏ nghĩa là: điều kiện status trong taoCanhBao() đã đổi, cảnh báo sẽ nhiễu.
 // Đừng: lọc theo days_left thay cho status, vì thu hồi và chưa hiệu lực vẫn có days_left nhỏ.
+// Nhóm: Cảnh báo (D6)
 function test_khong_tao_canh_bao_cho_chung_chi_khong_o_trang_thai_sap_het_han(PDO $pdo): void
 {
     datHanSauSoNgay($pdo, 'CERT-006', 5); // Đã thu hồi.
@@ -960,6 +1007,7 @@ function test_khong_tao_canh_bao_cho_chung_chi_khong_o_trang_thai_sap_het_han(PD
 // Vì sao: User chốt 07/11/2026: hết hạn là trường hợp gấp nhất; thu hồi thì không còn việc để xử lý.
 // Đỏ nghĩa là: điều kiện trong CANH_BAO_DANG_XET đã đổi; số cảnh báo mới có thể đếm sai.
 // Đừng: xoá cảnh báo cũ để ẩn; cảnh báo cũ phải được giữ theo SPEC.
+// Nhóm: Cảnh báo (D6)
 function test_trang_canh_bao_an_chu_ky_cu_va_chung_chi_thu_hoi_nhung_giu_het_han(PDO $pdo): void
 {
     kiem(maCuaCanhBaoDangHien($pdo) === ['CERT-004', 'CERT-003', 'CERT-002'], 'Chứng chỉ gần hết hạn nhất phải lên đầu');
@@ -983,6 +1031,7 @@ function test_trang_canh_bao_an_chu_ky_cu_va_chung_chi_thu_hoi_nhung_giu_het_han
 // Vì sao: Đây là thao tác của chức năng 6; ẩn mất thì người dùng không xem lại được.
 // Đỏ nghĩa là: danhDauDaXem() đã đổi, hoặc danh sách đang lọc bỏ cảnh báo đã xem.
 // Đừng: xoá dòng cảnh báo khi đã xem; UNIQUE sẽ không còn gì để chặn và cảnh báo sẽ tạo lại.
+// Nhóm: Cảnh báo (D6)
 function test_danh_dau_da_xem_lam_giam_so_canh_bao_moi(PDO $pdo): void
 {
     kiem(demCanhBaoMoi($pdo) === 3, 'Dữ liệu mẫu có 3 cảnh báo mới');
@@ -1001,6 +1050,7 @@ function test_danh_dau_da_xem_lam_giam_so_canh_bao_moi(PDO $pdo): void
 // Vì sao: Gia hạn sửa trên cùng dòng (QD-11), nên lịch sử là nơi duy nhất còn thông tin cũ.
 // Đỏ nghĩa là: giaHanChungChi() đã đổi, thông tin bản cũ có thể mất vĩnh viễn.
 // Đừng: giữ fingerprint cũ khi ô trống; nó không còn đúng với chứng chỉ đã cấp lại.
+// Nhóm: Gia hạn (D7)
 function test_gia_han_luu_thong_tin_cu_va_cap_nhat_chung_chi(PDO $pdo): void
 {
     $cu = timChungChi($pdo, 1);
@@ -1031,6 +1081,7 @@ function test_gia_han_luu_thong_tin_cu_va_cap_nhat_chung_chi(PDO $pdo): void
 // Vì sao: Cảnh báo của hạn cũ không còn đúng; hạn mới vẫn phải được báo khi tới mốc.
 // Đỏ nghĩa là: chứng chỉ đã gia hạn sẽ hết hạn mà không ai được báo, và không có lỗi nào hiện ra.
 // Đừng: bắt người dùng đánh dấu đã xem cảnh báo cũ, hay xoá chúng khi gia hạn.
+// Nhóm: Gia hạn (D7)
 function test_sau_gia_han_cac_moc_canh_bao_tinh_lai_tu_dau(PDO $pdo): void
 {
     kiem(cacMocCanhBao($pdo, 'CERT-004') === [7], 'Dữ liệu mẫu: CERT-004 ở mốc 7');
@@ -1048,6 +1099,7 @@ function test_sau_gia_han_cac_moc_canh_bao_tinh_lai_tu_dau(PDO $pdo): void
 // Vì sao: User chốt: chứng chỉ đã thu hồi không dùng lại; muốn dùng thì thêm chứng chỉ mới.
 // Đỏ nghĩa là: kiemTraGiaHan() đã bỏ kiểm tra, gửi lệnh thẳng sẽ gia hạn được chứng chỉ đã thu hồi.
 // Đừng: chỉ ẩn nút Gia hạn trên giao diện.
+// Nhóm: Gia hạn (D7)
 function test_chan_gia_han_chung_chi_da_thu_hoi(PDO $pdo): void
 {
     $truoc = timChungChi($pdo, 6)['valid_to'];
@@ -1061,6 +1113,7 @@ function test_chan_gia_han_chung_chi_da_thu_hoi(PDO $pdo): void
 // Vì sao: Chứng chỉ đã hết hạn được gia hạn; không xét thời điểm hiện tại thì gia hạn xong vẫn hết hạn.
 // Đỏ nghĩa là: kiemTraGiaHan() đã đổi; sai ngày hết hạn là sai tiêu chí chính của đề.
 // Đừng: chỉ dựa vào chk_renewal_dates; nó không biết thời điểm hiện tại, và người dùng sẽ thấy trang lỗi.
+// Nhóm: Gia hạn (D7)
 function test_han_moi_phai_sau_han_cu_va_sau_hien_tai(PDO $pdo): void
 {
     $hanHienTai = timChungChi($pdo, 1)['valid_to'];
@@ -1088,6 +1141,7 @@ function test_han_moi_phai_sau_han_cu_va_sau_hien_tai(PDO $pdo): void
 // Vì sao: Fingerprint trùng chỉ bị phát hiện ở bước cập nhật, sau khi lịch sử đã ghi; thiếu giao dịch thì còn dòng lịch sử giả.
 // Đỏ nghĩa là: giao dịch trong giaHanChungChi() đã mất hoặc không rollBack.
 // Đừng: SELECT kiểm tra trùng trước thay cho giao dịch, vì hai yêu cầu cùng lúc vẫn lọt.
+// Nhóm: Gia hạn (D7)
 function test_gia_han_loi_giua_chung_thi_khong_doi_gi(PDO $pdo): void
 {
     $truoc = timChungChi($pdo, 1);
@@ -1103,6 +1157,7 @@ function test_gia_han_loi_giua_chung_thi_khong_doi_gi(PDO $pdo): void
 // Vì sao: Đo 06/11/2026: LIKE '%_%' khớp cả 9 chứng chỉ, người dùng tưởng đã lọc mà thực ra thấy tất cả.
 // Đỏ nghĩa là: addcslashes trong dieuKienLoc() đã mất, hoặc cột ascii báo lỗi với từ khoá có dấu.
 // Đừng: bỏ các ký tự đặc biệt khỏi từ khoá; mã quản lý được phép chứa dấu gạch dưới.
+// Nhóm: Danh sách, tìm kiếm, lọc, sắp xếp (Nd)
 function test_tu_khoa_co_ky_tu_dac_biet_khong_khop_tat_ca(PDO $pdo): void
 {
     foreach (['%', '_', '\\', ':', 'tiếng việt'] as $tuKhoa) {
@@ -1119,6 +1174,7 @@ function test_tu_khoa_co_ky_tu_dac_biet_khong_khop_tat_ca(PDO $pdo): void
 // Vì sao: Đo 06/11/2026: cột fingerprint phân biệt hoa thường nên tìm EE7A không ra; công cụ thường in dạng EE:7A.
 // Đỏ nghĩa là: từ khoá không còn qua chuẩn hoá trong dieuKienLoc(), người dùng tưởng chứng chỉ không có trong hệ thống.
 // Đừng: đổi kiểu cột fingerprint; ràng buộc CHECK cần nó phân biệt hoa thường.
+// Nhóm: Danh sách, tìm kiếm, lọc, sắp xếp (Nd)
 function test_tim_fingerprint_duoc_du_viet_hoa_hay_co_dau_hai_cham(PDO $pdo): void
 {
     foreach (['EE:7A:1D:35', 'ee7a1d35', 'EE 7A 1D 35'] as $tuKhoa) {
@@ -1133,6 +1189,7 @@ function test_tim_fingerprint_duoc_du_viet_hoa_hay_co_dau_hai_cham(PDO $pdo): vo
 // Vì sao: Đây là chức năng nền tảng d; thống kê, báo cáo phiếu sau dùng lại đúng bộ lọc này.
 // Đỏ nghĩa là: docBoLoc() hoặc dieuKienLoc() đã đổi; số liệu báo cáo sẽ sai theo.
 // Đừng: ghép giá trị lọc thẳng vào câu SQL.
+// Nhóm: Danh sách, tìm kiếm, lọc, sắp xếp (Nd)
 function test_cac_bo_loc_ket_hop_va_gia_tri_loc_sai_bi_bo_qua(PDO $pdo): void
 {
     kiem(maKhopBoLoc($pdo, ['trang_thai' => 'expired']) === ['CERT-005'], 'Lọc theo trạng thái');
@@ -1166,6 +1223,7 @@ function maTheoCachXep(PDO $pdo, array $nguon): array
 // Vì sao: User chốt 07/11/2026: xếp thuần theo ngày làm chứng chỉ đã thu hồi nằm lẫn giữa chứng chỉ đang hoạt động.
 // Đỏ nghĩa là: thứ tự trong TRANG_THAI hoặc nhánh mặc định của menhDeSapXep() đã đổi.
 // Đừng: viết lại thứ tự mức gấp ở chỗ khác; hàng nút và danh sách cùng lấy từ TRANG_THAI.
+// Nhóm: Danh sách, tìm kiếm, lọc, sắp xếp (Nd)
 function test_danh_sach_mac_dinh_xep_theo_muc_gap_thu_hoi_cuoi_cung(PDO $pdo): void
 {
     chayFileSql($pdo, 'seed_demo.sql');
@@ -1186,6 +1244,7 @@ function test_danh_sach_mac_dinh_xep_theo_muc_gap_thu_hoi_cuoi_cung(PDO $pdo): v
 // Vì sao: Tên cột không truyền được bằng dấu ?, nên giá trị từ địa chỉ trang mà lọt vào câu SQL là bị chèn mã.
 // Đỏ nghĩa là: COT_SAP_XEP, docSapXep() hoặc menhDeSapXep() đã đổi; nặng nhất là giá trị người dùng đã vào được câu SQL.
 // Đừng: ghép $_GET vào ORDER BY, kể cả sau khi "lọc ký tự lạ".
+// Nhóm: Danh sách, tìm kiếm, lọc, sắp xếp (Nd)
 function test_sap_xep_theo_cot_va_gia_tri_la_ve_mac_dinh(PDO $pdo): void
 {
     $maTang = maTheoCachXep($pdo, ['sap_xep' => 'ma']);
@@ -1214,6 +1273,7 @@ function test_sap_xep_theo_cot_va_gia_tri_la_ve_mac_dinh(PDO $pdo): void
 // Vì sao: Số lệch danh sách làm người dùng tin sai về số chứng chỉ gấp, mà không có lỗi nào hiện ra.
 // Đỏ nghĩa là: demTheoTrangThai() đã đổi, hoặc không còn dùng chung dieuKienLoc() với danh sách.
 // Đừng: đếm bằng PHP từ trang đang hiện, vì danh sách đã bị chia trang.
+// Nhóm: Danh sách, tìm kiếm, lọc, sắp xếp (Nd)
 function test_so_tren_nut_trang_thai_khop_danh_sach_va_giu_bo_loc_khac(PDO $pdo): void
 {
     chayFileSql($pdo, 'seed_demo.sql');
@@ -1237,6 +1297,7 @@ function test_so_tren_nut_trang_thai_khop_danh_sach_va_giu_bo_loc_khac(PDO $pdo)
 // Vì sao: User chỉ ra 07/11/2026: web đi vào hoạt động thật bắt đầu từ 0 dòng, còn các test khác đều chạy trên dữ liệu mẫu.
 // Đỏ nghĩa là: một phép tính đang giả định có dữ liệu; người dùng đầu tiên sẽ gặp lỗi ngay khi vào web.
 // Đừng: chèn sẵn dữ liệu vào CSDL thật để né trường hợp này.
+// Nhóm: Danh sách, tìm kiếm, lọc, sắp xếp (Nd)
 function test_he_thong_chua_co_chung_chi_van_chay_dung(PDO $pdo): void
 {
     $pdo->exec('DELETE FROM certificates');
@@ -1257,6 +1318,7 @@ function test_he_thong_chua_co_chung_chi_van_chay_dung(PDO $pdo): void
 // Vì sao: Chứng chỉ quá hạn lâu đứng đầu sẽ che mất các chứng chỉ còn cứu được; chúng đã có thẻ số riêng.
 // Đỏ nghĩa là: chungChiSapHetHan() đã đổi, người quản trị có thể không thấy chứng chỉ sắp hết hạn gấp nhất.
 // Đừng: gộp chứng chỉ đã quá hạn vào bảng này.
+// Nhóm: Dashboard, thống kê, báo cáo (D8, D9, Ne, Nh)
 function test_dashboard_chi_liet_ke_10_chung_chi_sap_het_han_gan_nhat(PDO $pdo): void
 {
     chayFileSql($pdo, 'seed_demo.sql');
@@ -1273,6 +1335,7 @@ function test_dashboard_chi_liet_ke_10_chung_chi_sap_het_han_gan_nhat(PDO $pdo):
 // Vì sao: Các biểu đồ cùng một trang mà tổng lệch nhau thì người đọc không tin được số nào.
 // Đỏ nghĩa là: demTheoNhom() không còn dùng chung dieuKienLoc(), hoặc demTheoTrangThai() bỏ sót trạng thái đang chọn.
 // Đừng: nhận tên cột từ địa chỉ trang; chỉ khoá trong NHOM_THONG_KE mới vào được câu SQL.
+// Nhóm: Dashboard, thống kê, báo cáo (D8, D9, Ne, Nh)
 function test_thong_ke_to_chuc_va_thuat_toan_khop_tong_va_theo_bo_loc(PDO $pdo): void
 {
     chayFileSql($pdo, 'seed_demo.sql');
@@ -1295,6 +1358,7 @@ function test_thong_ke_to_chuc_va_thuat_toan_khop_tong_va_theo_bo_loc(PDO $pdo):
 // Vì sao: Biểu đồ dùng để dự báo việc gia hạn; chứng chỉ đã thu hồi không cần gia hạn nữa.
 // Đỏ nghĩa là: hetHanTheoThang() đã đổi, dự báo khối lượng gia hạn sẽ sai.
 // Đừng: bỏ các tháng có số 0; trục thời gian thiếu tháng làm người đọc hiểu sai.
+// Nhóm: Dashboard, thống kê, báo cáo (D8, D9, Ne, Nh)
 function test_het_han_theo_thang_du_12_thang_bo_thu_hoi_va_da_qua_han(PDO $pdo): void
 {
     $homNay = date('Y-m-d H:i:s');
@@ -1322,6 +1386,7 @@ function test_het_han_theo_thang_du_12_thang_bo_thu_hoi_va_da_qua_han(PDO $pdo):
 // Vì sao: Trong PHP, 31/01 cộng 1 tháng ra 03/03, nên tháng 2 biến mất khỏi biểu đồ mà không có lỗi nào.
 // Đỏ nghĩa là: hetHanTheoThang() không còn tính từ ngày đầu tháng.
 // Đừng: dùng strtotime('+1 month') từ ngày hiện tại.
+// Nhóm: Dashboard, thống kê, báo cáo (D8, D9, Ne, Nh)
 function test_het_han_theo_thang_khong_nhay_coc_khi_hom_nay_la_ngay_31(PDO $pdo): void
 {
     $thang = array_keys(hetHanTheoThang($pdo, [], '2027-01-31 12:00:00'));
@@ -1334,6 +1399,7 @@ function test_het_han_theo_thang_khong_nhay_coc_khi_hom_nay_la_ngay_31(PDO $pdo)
 // Vì sao: Tên chứng chỉ do người dùng nhập; Excel chạy ô đó như công thức khi người khác mở báo cáo.
 // Đỏ nghĩa là: oCsvAnToan() đã đổi, báo cáo CSV có thể chạy lệnh trên máy người mở.
 // Đừng: xoá các ký tự này khỏi dữ liệu; báo cáo phải giữ đúng nội dung.
+// Nhóm: Dashboard, thống kê, báo cáo (D8, D9, Ne, Nh)
 function test_csv_vo_hieu_hoa_cong_thuc_va_giu_nguyen_du_lieu_thuong(PDO $pdo): void
 {
     foreach (['=1+1', '+1', '-1', '@SUM(A1)', " =1", "\t=1", "\r\n=1"] as $giaTri) {
@@ -1355,6 +1421,7 @@ function test_csv_vo_hieu_hoa_cong_thuc_va_giu_nguyen_du_lieu_thuong(PDO $pdo): 
 // Vì sao: User mở CSV thấy ##### vì ngày kèm giờ dài hơn cột; dạng 09/11/2026 còn bị máy định dạng Mỹ đọc thành 11 tháng 9.
 // Đỏ nghĩa là: dongCsv() đã đổi dạng ngày, hạn chứng chỉ trong báo cáo có thể bị đọc sai mà không báo gì.
 // Đừng: đổi sang dạng ngày/tháng/năm cho quen mắt; bảng tính tự hiện theo định dạng của máy người mở.
+// Nhóm: Dashboard, thống kê, báo cáo (D8, D9, Ne, Nh)
 function test_csv_ngay_dang_nam_thang_ngay_khong_nham_ngay_thang(PDO $pdo): void
 {
     $pdo->exec("UPDATE certificates SET valid_from = '2026-02-03 08:30:00', valid_to = '2027-09-11 23:59:59' WHERE cert_code = 'CERT-001'");
@@ -1377,6 +1444,7 @@ function timDongBaoCao(PDO $pdo, string $ma): array
 // Vì sao: Báo cáo chỉ có 20 dòng đầu mà không báo gì thì người đọc tin là đủ.
 // Đỏ nghĩa là: tatCaChungChi() đã có LIMIT, hoặc không dùng chung dieuKienLoc(), menhDeSapXep() với danh sách.
 // Đừng: gọi danhSachChungChi() lặp từng trang; dữ liệu đổi giữa chừng sẽ trùng hoặc thiếu dòng.
+// Nhóm: Dashboard, thống kê, báo cáo (D8, D9, Ne, Nh)
 function test_xuat_bao_cao_lay_du_ket_qua_khong_chia_trang_va_theo_bo_loc(PDO $pdo): void
 {
     chayFileSql($pdo, 'seed_demo.sql');
@@ -1395,6 +1463,7 @@ function test_xuat_bao_cao_lay_du_ket_qua_khong_chia_trang_va_theo_bo_loc(PDO $p
 // Vì sao: File này nạp vào web đang chạy để xem thử và demo; nạp hỏng giữa chừng thì danh mục thừa nằm lại trong CSDL.
 // Đỏ nghĩa là: một dòng dữ liệu sai ràng buộc, hoặc dòng tra tên danh mục không khớp nên âm thầm bị bỏ.
 // Đừng: gộp vào seed.sql, vì nhiều test dựa vào đúng 9 chứng chỉ của file đó.
+// Nhóm: CSDL, ràng buộc, dữ liệu mẫu (Ng, Nj)
 function test_du_lieu_demo_du_50_chung_chi_du_trang_thai_va_khong_nap_trung(PDO $pdo): void
 {
     chayFileSql($pdo, 'seed_demo.sql');
@@ -1424,6 +1493,7 @@ function test_du_lieu_demo_du_50_chung_chi_du_trang_thai_va_khong_nap_trung(PDO 
 // Vì sao: Web còn làm lớp ngụy trang cho máy chủ VPN sau khi nộp (QD-08); ai cũng mở được trang này và tải được các file đó.
 // Đỏ nghĩa là: Có chữ, kể cả trong chú thích, làm lộ mục đích của máy chủ cho người ngoài và cho giảng viên.
 // Đừng: Xoá từ khoá khỏi danh sách để test xanh; hãy bỏ chữ đó khỏi file công khai.
+// Nhóm: Giao diện, triển khai (Giao diện)
 function test_landing_cong_khai_khong_nhac_den_vpn(PDO $pdo): void
 {
     foreach (['public/index.php', 'public/assets/app.css', 'public/assets/app.js'] as $tep) {
@@ -1436,6 +1506,7 @@ function test_landing_cong_khai_khong_nhac_den_vpn(PDO $pdo): void
 // Vì sao: User 07/11/2026: nút đăng nhập "chưa ăn khớp với trang, mà vẫn là nút của tabler"; landing có bộ màu riêng (QD-21).
 // Đỏ nghĩa là: Có thành phần mới lấy màu mặc định của khung giao diện, trang lại trông như mẫu có sẵn.
 // Đừng: Đổi tên lớp để né test; dùng .ld-nut-chinh hoặc cặp màu --ld-net. Màu trạng thái xanh lá, vàng, đỏ vẫn dùng được.
+// Nhóm: Giao diện, triển khai (Giao diện)
 function test_landing_khong_dung_mau_chu_dao_mac_dinh_cua_tabler(PDO $pdo): void
 {
     $trang = file_get_contents(__DIR__ . '/../public/index.php');
@@ -1451,6 +1522,7 @@ function test_landing_khong_dung_mau_chu_dao_mac_dinh_cua_tabler(PDO $pdo): void
 // Vì sao: User 07/11/2026: chuyển menu "rung lắc rất rõ, gây đau mắt". Đo được: font về sau làm menu nhảy 11-13px, thanh cuộn lệch 7-8px.
 // Đỏ nghĩa là: Ai đó tách font ra file riêng hoặc bỏ phần giữ chỗ thanh cuộn; menu sẽ rung lại mỗi lần bấm.
 // Đừng: Đổi về file woff2 với font-display: swap vì "gọn hơn"; đó chính là nguyên nhân gây rung.
+// Nhóm: Giao diện, triển khai (Giao diện)
 function test_dau_trang_dung_yen_khi_chuyen_trang_nho_nhung_font_va_giu_cho_thanh_cuon(PDO $pdo): void
 {
     $font = file_get_contents(__DIR__ . '/../public/assets/inter/inter.css');
@@ -1466,6 +1538,7 @@ function test_dau_trang_dung_yen_khi_chuyen_trang_nho_nhung_font_va_giu_cho_than
 // Vì sao: User 07/11/2026 muốn hiệu ứng khi bấm Đăng nhập; trang quản trị dùng hằng ngày nên ưu tiên nhanh, dễ nhìn (QD-21).
 // Đỏ nghĩa là: @view-transition lọt vào app.css (áp cho mọi trang), hoặc thêm/bớt trang bật $coChuyenCanh.
 // Đừng: Chuyển khối @view-transition vào app.css cho "gọn"; mỗi lần bấm menu quản trị sẽ chạy hiệu ứng.
+// Nhóm: Giao diện, triển khai (Giao diện)
 function test_chuyen_canh_chi_bat_o_landing_va_dang_nhap(PDO $pdo): void
 {
     kiem(!str_contains(file_get_contents(__DIR__ . '/../public/assets/app.css'), '@view-transition'), 'app.css không được bật chuyển cảnh cho mọi trang');
@@ -1486,6 +1559,7 @@ function test_chuyen_canh_chi_bat_o_landing_va_dang_nhap(PDO $pdo): void
 // Vì sao: Máy chủ không gửi Cache-Control; sau lần deploy 07/11/2026 Safari trên iPhone có thể giữ CSS cũ hàng giờ, ghép với HTML mới là trang vỡ.
 // Đỏ nghĩa là: Có chỗ nạp hai file này bằng url() trần, hoặc urlTep() không còn gắn thời điểm sửa file.
 // Đừng: Gắn số phiên bản viết tay (?v=2); quên tăng là lỗi quay lại.
+// Nhóm: Giao diện, triển khai (Giao diện)
 function test_css_js_cua_he_thong_co_so_phien_ban_theo_file(PDO $pdo): void
 {
     $giaoDien = file_get_contents(__DIR__ . '/../views/dau_trang.php') . file_get_contents(__DIR__ . '/../views/cuoi_trang.php');
@@ -1501,6 +1575,7 @@ function test_css_js_cua_he_thong_co_so_phien_ban_theo_file(PDO $pdo): void
 // Vì sao: User 07/11/2026 muốn chấm "đang hoạt động" có hiệu ứng; nhiều chấm cùng động thì rối và kéo mắt khỏi chứng chỉ cần xử lý (QD-21).
 // Đỏ nghĩa là: cham-song lan sang trang khác hoặc gắn cho trạng thái khác, hoặc mất phần tắt hiệu ứng khi giảm chuyển động.
 // Đừng: Gắn cham-song vào nhan_trang_thai.php cho "đồng bộ"; danh sách 50 dòng cùng nhấp nháy.
+// Nhóm: Giao diện, triển khai (Giao diện)
 function test_chi_cham_con_hieu_luc_tren_dashboard_co_vong_sang(PDO $pdo): void
 {
     $cacTrang = [];
@@ -1521,6 +1596,7 @@ function test_chi_cham_con_hieu_luc_tren_dashboard_co_vong_sang(PDO $pdo): void
 // Vì sao: User 07/11/2026: "Khi đăng xuất thì hãy về trang landing".
 // Đỏ nghĩa là: logout.php chuyển hướng đi chỗ khác, hoặc không còn gọi dangXuat() trước khi chuyển.
 // Đừng: Đổi về login.php vì "tiện đăng nhập lại"; landing đã có nút Đăng nhập.
+// Nhóm: Đăng nhập, phiên, phân quyền (Na, Ni)
 function test_dang_xuat_xong_ve_landing(PDO $pdo): void
 {
     $code = codeKhongChuThich(__DIR__ . '/../public/logout.php');
@@ -1548,6 +1624,7 @@ function idTheoCot(PDO $pdo, string $bang, string $cot, string $giaTri): int
 // Vì sao: Chức năng mở rộng 1, user chốt 07/11/2026 "ghi tất cả"; ghi ngay trong hàm ở src/ để không trang nào quên ghi.
 // Đỏ nghĩa là: một hàm ghi dữ liệu trong src/ không còn gọi ghiNhatKy(), hoặc ghi sai hành động, đối tượng, người làm.
 // Đừng: chuyển việc ghi ra từng trang trong public/; thêm trang mới là quên ghi.
+// Nhóm: Nhật ký hoạt động (mở rộng 1) (Mở rộng 1)
 function test_moi_thao_tac_deu_ghi_nhat_ky(PDO $pdo): void
 {
     $admin = ['id' => 1, 'role_name' => VAI_TRO_ADMIN];
@@ -1629,6 +1706,7 @@ function test_moi_thao_tac_deu_ghi_nhat_ky(PDO $pdo): void
 // Vì sao: User 07/11/2026 chọn chặn ở CSDL: không ai lén sửa hay xoá một dòng để giấu việc mình làm. Dọn trước demo dùng TRUNCATE (đo 07/11/2026: trigger không chặn lệnh này).
 // Đỏ nghĩa là: trigger trong schema.sql bị mất, đổi bảng, hoặc ai đó đã nới cho sửa/xoá.
 // Đừng: thêm nút xoá nhật ký trên web, hay sửa trigger để "cho Admin xoá".
+// Nhóm: Nhật ký hoạt động (mở rộng 1) (Mở rộng 1)
 function test_csdl_tu_choi_sua_xoa_nhat_ky(PDO $pdo): void
 {
     $pdo->exec("INSERT INTO audit_logs (user_id, action) VALUES (1, 'dang_nhap')");
@@ -1642,6 +1720,7 @@ function test_csdl_tu_choi_sua_xoa_nhat_ky(PDO $pdo): void
 // Vì sao: User 07/11/2026 chốt chỉ Admin xem nhật ký; quản lý tài khoản là việc của Admin. Menu dọc 08/11/2026 gom hai mục vào nhóm Hệ thống.
 // Đỏ nghĩa là: Một trong hai trang không gọi yeuCauAdmin(), hoặc link tới nó nằm ngoài khối laAdmin() trong đầu trang.
 // Đừng: chỉ giấu link trên menu; người biết địa chỉ vẫn mở được trang.
+// Nhóm: Nhật ký hoạt động (mở rộng 1) (Mở rộng 1)
 function test_nhom_he_thong_tren_menu_va_hai_trang_cua_no_chi_danh_cho_admin(PDO $pdo): void
 {
     $dauTrang = codeKhongChuThich(__DIR__ . '/../views/dau_trang.php');
@@ -1659,6 +1738,7 @@ function test_nhom_he_thong_tren_menu_va_hai_trang_cua_no_chi_danh_cho_admin(PDO
 // Vì sao: User 08/11/2026 chốt brand ngắn Cipher Cert và dấu | (QD-24); tên trang đứng trước để mở nhiều tab vẫn phân biệt được.
 // Đỏ nghĩa là: Ai đó đổi lại dấu phân cách, đảo thứ tự, hoặc viết cứng tên ở đầu trang thay vì dùng hằng.
 // Đừng: Viết "Cipher Cert" thẳng vào từng trang; đổi tên lần sau sẽ sót.
+// Nhóm: Giao diện, triển khai (Giao diện)
 function test_tab_trinh_duyet_ghi_ten_trang_roi_ten_thuong_hieu(PDO $pdo): void
 {
     $khoiDong = codeKhongChuThich(__DIR__ . '/../src/khoi_dong.php');
@@ -1673,6 +1753,7 @@ function test_tab_trinh_duyet_ghi_ten_trang_roi_ten_thuong_hieu(PDO $pdo): void
 // Vì sao: Chụp 08/11/2026 ở 390px: cột hẹp làm trình duyệt bẻ giữa chữ ("pay.congt" / "y.example").
 // Đỏ nghĩa là: tenMienNgatDong() không chèn <wbr> sau dấu chấm, hoặc in thẳng ký tự HTML (lỗ XSS), hoặc bảng quay lại dùng text-break.
 // Đừng: Bọc kết quả thêm e(): <wbr> sẽ hiện thành chữ trên trang.
+// Nhóm: Giao diện, triển khai (Giao diện)
 function test_ten_mien_chi_xuong_dong_o_dau_cham(PDO $pdo): void
 {
     kiem(tenMienNgatDong('pay.congty.example') === 'pay.<wbr>congty.<wbr>example', 'Phải chèn <wbr> sau mỗi dấu chấm');
@@ -1688,6 +1769,7 @@ function test_ten_mien_chi_xuong_dong_o_dau_cham(PDO $pdo): void
 // Vì sao: Caddy vẫn nghe 8443 nên tự quảng bá cổng này qua Alt-Svc, và người mở link cũ sẽ thấy lại đuôi nếu không bị đá về.
 // Đỏ nghĩa là: ai đó đã đưa đuôi :8443 trở lại, hoặc bỏ dòng xoá Alt-Svc trong cấu hình Caddy.
 // Đừng: sửa test cho xanh bằng cách thêm lại đuôi; gói nộp không có thư mục deploy/ nên phần đọc file đó được bỏ qua.
+// Nhóm: Giao diện, triển khai (Giao diện)
 function test_web_co_dia_chi_khong_duoi_cong(PDO $pdo): void
 {
     $cong = $pdo->query("SELECT port FROM servers WHERE hostname = 'cipher-vps'")->fetchColumn();
@@ -1736,6 +1818,7 @@ PEM;
 // Vì sao: VPS chạy chung dịch vụ chỉ nghe ở 127.0.0.1, không mật khẩu; không chặn thì người đăng nhập mượn web dò mạng nội bộ (SSRF).
 // Đỏ nghĩa là: Có một dạng địa chỉ nội bộ lọt qua (kể cả IPv4 viết trong IPv6), hoặc cổng ngoài danh sách được đọc.
 // Đừng: Chỉ kiểm IP đầu tiên của tên miền, hay tra DNS lần nữa lúc kết nối; kẻ xấu đổi bản ghi giữa hai lần tra.
+// Nhóm: Đọc chứng chỉ thật (mở rộng 2) (Mở rộng 2)
 function test_doc_chung_chi_chan_dia_chi_noi_bo_va_cong_ngoai_danh_sach(PDO $pdo): void
 {
     $noiBo = ['127.0.0.1', '127.8.8.8', '10.0.0.1', '172.16.0.1', '172.31.255.255', '192.168.1.1', '169.254.169.254',
@@ -1761,6 +1844,7 @@ function test_doc_chung_chi_chan_dia_chi_noi_bo_va_cong_ngoai_danh_sach(PDO $pdo
 // Vì sao: User 08/11/2026 muốn đọc xong chỉ việc xem lại rồi Lưu; ô điền sai là lưu sai ngày hết hạn, sai cảnh báo.
 // Đỏ nghĩa là: Ngày lệch múi giờ (giờ UTC thay vì +07:00), thuật toán hay fingerprint lấy sai trường của chứng chỉ.
 // Đừng: Sửa giá trị mong đợi theo kết quả mới cho xanh; so lại với "openssl x509 -text" của chứng chỉ mẫu trước.
+// Nhóm: Đọc chứng chỉ thật (mở rộng 2) (Mở rộng 2)
 function test_chung_chi_doc_duoc_dien_dung_cac_o(PDO $pdo): void
 {
     $gt = giaTriTuChungChi(CHUNG_CHI_MAU_PEM);
@@ -1832,6 +1916,7 @@ function demDanhMuc(PDO $pdo): int
 // Vì sao: User 09/11/2026 lật chốt "không tự tạo" của 08/11 để nhập 50 site thật cho nhanh, nhưng đọc thử rồi bỏ thì danh mục vẫn phải sạch.
 // Đỏ nghĩa là: Chọn nhầm tên miền ngắn hơn khi có tên khớp dài hơn, phân biệt hoa thường, đổi ô gõ mà vẫn tạo theo tên cũ, hoặc keHoachDanhMuc() đã INSERT.
 // Đừng: Tạo bản ghi ngay trong keHoachDanhMuc() hay idTheoTen() cho "tiện"; chỉ luuChungChiKemDanhMuc() được tạo.
+// Nhóm: Đọc chứng chỉ thật (mở rộng 2) (Mở rộng 2)
 function test_doc_roi_bo_khong_tao_gi_va_tu_chon_danh_muc_co_san(PDO $pdo): void
 {
     $tenMien = [3 => 'cipher.id.vn', 4 => 'cert.cipher.id.vn', 5 => 'id.vn'];
@@ -1861,6 +1946,7 @@ function test_doc_roi_bo_khong_tao_gi_va_tu_chon_danh_muc_co_san(PDO $pdo): void
 // Vì sao: User 09/11/2026: "Let's Encrypt chỉ có một"; ghi theo chứng chỉ trung gian (YE1, R10) hay theo biến thể (SSL Corp và SSL Corporation, đo 72 site) thì Thống kê theo tổ chức cấp tách cột vô nghĩa.
 // Đỏ nghĩa là: Một biến thể đã đo bị tách thành hãng riêng, hoặc mẫu khớp giữa chữ ("Pineapple" thành Apple).
 // Đừng: Khớp bằng str_contains, hay đổi tên các hãng người dùng đã nhập trong danh mục.
+// Nhóm: Đọc chứng chỉ thật (mở rộng 2) (Mở rộng 2)
 function test_ten_hang_gom_ve_tang_hang(PDO $pdo): void
 {
     $mong = [
@@ -1888,6 +1974,7 @@ function test_ten_hang_gom_ve_tang_hang(PDO $pdo): void
 // Vì sao: User 09/11/2026 chọn tự đoán thay cho mặc định "có": sberbank.ru (CA của Nga), tự ký, gốc lạ phải ra không tin cậy (đo VPS và XAMPP 09/11/2026).
 // Đỏ nghĩa là: Kiểm cả chứng chỉ lá (lá hết hạn làm hãng đáng tin ra không tin), bỏ openssl.cafile (XAMPP ra không tin hết), hoặc máy chạy test không có kho CA gốc.
 // Đừng: Kiểm bằng verify_peer lúc kết nối: chứng chỉ hết hạn, sai tên vẫn phải đọc được.
+// Nhóm: Đọc chứng chỉ thật (mở rộng 2) (Mở rộng 2)
 function test_hang_tin_cay_khi_chuoi_kiem_duoc_voi_kho_ca_goc(PDO $pdo): void
 {
     kiem(laChuoiTinCay([CHUNG_CHI_MAU_PEM, CA_GOC_ISRG_PEM]), 'Chuỗi có CA gốc trong kho phải tin cậy');
@@ -1900,6 +1987,7 @@ function test_hang_tin_cay_khi_chuoi_kiem_duoc_voi_kho_ca_goc(PDO $pdo): void
 // Vì sao: User 09/11/2026 muốn đọc xong bấm Lưu là xong; tạo dở dang để lại tên miền mồ côi, lần sau đọc lại thì tưởng đã có.
 // Đỏ nghĩa là: Thiếu giao dịch hoặc rollBack, hay một bước không qua hàm lưu có sẵn (mất kiểm tra hoặc mất nhật ký).
 // Đừng: INSERT thẳng vào bảng trong luuChungChiKemDanhMuc(); dùng luuMayChu/luuTenMien/luuToChuc/luuChungChi.
+// Nhóm: Đọc chứng chỉ thật (mở rộng 2) (Mở rộng 2)
 function test_luu_tao_du_chuoi_trong_mot_giao_dich(PDO $pdo): void
 {
     $_SESSION['user_id'] = 1;
@@ -1927,6 +2015,7 @@ function test_luu_tao_du_chuoi_trong_mot_giao_dich(PDO $pdo): void
 // Vì sao: User 09/11/2026 chọn "mỗi IP một máy chủ": nhiều tên miền trên một IP (như VPS này) là một máy chủ thật.
 // Đỏ nghĩa là: Mỗi tên miền đẻ một máy chủ, hoặc tra máy chủ chỉ theo IP đầu mà bỏ các IP còn lại của tên miền.
 // Đừng: Gộp theo tên máy chủ; tên máy chủ tự tạo lấy theo tên miền nên luôn khác nhau.
+// Nhóm: Đọc chứng chỉ thật (mở rộng 2) (Mở rộng 2)
 function test_hai_ten_mien_cung_ip_chi_mot_may_chu(PDO $pdo): void
 {
     $kh = keHoachDanhMuc($pdo, nguonMau(['host' => 'a.example.org', 'cac_ip' => ['203.0.113.1', '192.0.2.10']]));
@@ -1950,6 +2039,7 @@ function test_hai_ten_mien_cung_ip_chi_mot_may_chu(PDO $pdo): void
 // Vì sao: Chứng chỉ gắn với tên miền, không với IP; site sau CDN đổi IP theo phút (shopee.vn đổi trong 40 giây, đo 09/11/2026). User chốt không có dịch vụ chạy ngầm dò IP.
 // Đỏ nghĩa là: IP mới đẻ máy chủ hoặc tên miền mới, hoặc IP máy chủ bị tự sửa lúc đọc.
 // Đừng: Đề xuất xoá máy chủ cũ khi IP đổi; chứng chỉ, gia hạn, cảnh báo đều gắn vào nó.
+// Nhóm: Đọc chứng chỉ thật (mở rộng 2) (Mở rộng 2)
 function test_doc_lai_ten_mien_da_co_ip_khac_chi_ghi_chu(PDO $pdo): void
 {
     $nguon = nguonMau(['host' => 'cert.cipher.id.vn', 'cac_ip' => ['203.0.113.77'], 'hang' => "Let's Encrypt"]);
@@ -1974,6 +2064,7 @@ function test_doc_lai_ten_mien_da_co_ip_khac_chi_ghi_chu(PDO $pdo): void
 // Vì sao: Danh mục nhập tay trước 09/11/2026 có thể ghi "GlobalSign nv-sa"; tạo thêm "GlobalSign" là tách đôi một hãng trong Thống kê.
 // Đỏ nghĩa là: Chỉ tra theo tên gọn, hoặc lúc lưu ghi đè is_trusted theo kết quả kiểm chuỗi.
 // Đừng: Sửa hãng có sẵn cho khớp tên gọn; đó là dữ liệu của người dùng.
+// Nhóm: Đọc chứng chỉ thật (mở rộng 2) (Mở rộng 2)
 function test_hang_co_san_duoc_dung_lai_khong_doi_tin_cay(PDO $pdo): void
 {
     $pdo->exec("INSERT INTO certificate_authorities (name, country, is_trusted) VALUES ('globalsign NV-SA', 'Bỉ', 0)");
@@ -1992,6 +2083,7 @@ function test_hang_co_san_duoc_dung_lai_khong_doi_tin_cay(PDO $pdo): void
 // Vì sao: User 09/11/2026 chọn xem trước rồi mới lưu; nếu bước Lưu nhận dữ liệu từ trình duyệt thì ai cũng gửi được chứng chỉ, IP, "tin cậy" giả. Trần 50 để một lượt không treo PHP quá vài phút.
 // Đỏ nghĩa là: Trang đọc thêm ô POST nào ngoài hanh_dong, dia_chi, cong, chon; hoặc trần, cách tách địa chỉ bị đổi.
 // Đừng: Gửi kết quả đọc qua ô ẩn trong form cho "khỏi dùng phiên".
+// Nhóm: Đọc chứng chỉ thật (mở rộng 2) (Mở rộng 2)
 function test_nhap_hang_loat_chi_luu_du_lieu_doc_trong_phien(PDO $pdo): void
 {
     kiem(tachDanhSachDiaChi("a.vn\r\nB.vn, b.vn;c.vn  d.vn:465\n\n") === ['dia_chi' => ['a.vn', 'B.vn', 'c.vn', 'd.vn:465']],
@@ -2014,6 +2106,7 @@ function test_nhap_hang_loat_chi_luu_du_lieu_doc_trong_phien(PDO $pdo): void
 // Vì sao: Hai ô đổi từ ô chọn sang ô gõ có gợi ý (08/11/2026); gõ tự do mà lưu được thì danh mục và thống kê vỡ.
 // Đỏ nghĩa là: idTheoTen() trả về mã cho tên không có, hoặc luuChungChi() nhận chứng chỉ không có tên miền, tổ chức cấp.
 // Đừng: Chỉ dựa vào kiểm tra của trình duyệt (data-trong-danh-sach); tắt JavaScript là qua.
+// Nhóm: Chứng chỉ: thêm, sửa, thu hồi, xoá (D1, D4, D5, Nf)
 function test_o_go_ten_mien_to_chuc_cap_chi_nhan_ten_co_trong_danh_muc(PDO $pdo): void
 {
     $danhMuc = [7 => "Let's Encrypt", 9 => 'DigiCert'];
@@ -2030,6 +2123,7 @@ function test_o_go_ten_mien_to_chuc_cap_chi_nhan_ten_co_trong_danh_muc(PDO $pdo)
 // Vì sao: User 08/11/2026: trục co theo dữ liệu lọc thì cột dài nhất lúc nào cũng kín khung, "không có giá trị so sánh".
 // Đỏ nghĩa là: Trần tính theo dữ liệu đã lọc, một biểu đồ quên truyền 'tran', hoặc app.js không dùng nó cho trục số.
 // Đừng: Đổi suggestedMax thành max; max cắt đúng số lẻ (22) thay vì làm tròn lên mốc đẹp như lúc chưa lọc.
+// Nhóm: Dashboard, thống kê, báo cáo (D8, D9, Ne, Nh)
 function test_bieu_do_thong_ke_giu_tran_truc_khi_loc(PDO $pdo): void
 {
     $tran = tranBieuDoThongKe($pdo);
@@ -2052,6 +2146,7 @@ function test_bieu_do_thong_ke_giu_tran_truc_khi_loc(PDO $pdo): void
 // Vì sao: User 08/11/2026 muốn Nhật ký có IP thật thay cho 127.0.0.1; khối này nằm ở phần chung của Caddyfile, bị ghi đè là web qua 443 hỏng và VPN không nhận kết nối mới.
 // Đỏ nghĩa là: Script deploy mất khối nhận, tin PROXY protocol từ mọi nơi (ai cũng giả được IP), chặn khách slushai vào thẳng 8443, hoặc bước kiem bỏ dòng bắt lệch.
 // Đừng: Đọc IP từ header X-Forwarded-For cho nhanh; khách tự gõ được header đó.
+// Nhóm: Nhật ký hoạt động (mở rộng 1) (Mở rộng 1)
 function test_caddy_nhan_proxy_protocol_chi_tu_xray(PDO $pdo): void
 {
     $tep = __DIR__ . '/../deploy/dung_vps.sh';
@@ -2071,6 +2166,7 @@ function test_caddy_nhan_proxy_protocol_chi_tu_xray(PDO $pdo): void
 // Vì sao: User 09/11/2026 thấy vạch lệch tỉ lệ: bảng vị trí đặt tay cho 30→15 (15 ngày) và 15→7 (8 ngày) cùng dài 22% thanh.
 // Đỏ nghĩa là: Một vạch không nằm ở (1 - ngày/ngày đầu thang) của thanh, hoặc app.js lại tự giữ một bảng vị trí riêng.
 // Đừng: Kéo dãn khoảng 7 → Hết hạn cho chữ dễ đọc; muốn rộng hơn thì đổi ngày đầu thang ở một chỗ duy nhất.
+// Nhóm: Giao diện, triển khai (Giao diện)
 function test_vach_thanh_thoi_gian_dung_ti_le_so_ngay(PDO $pdo): void
 {
     ob_start();
@@ -2096,6 +2192,7 @@ function test_vach_thanh_thoi_gian_dung_ti_le_so_ngay(PDO $pdo): void
 // Vì sao: User 08/11/2026 trên iPhone không xem được IP: cột bị ẩn hẳn (d-none d-lg-table-cell), kéo bảng cũng không thấy.
 // Đỏ nghĩa là: Dòng IP cho màn hẹp bị xoá, hoặc nó và cột IP không cùng mốc lg nên có khoảng độ rộng không hiện IP.
 // Đừng: Bỏ d-none của cột IP cho "đơn giản"; bảng 5 cột tràn ngang trên điện thoại.
+// Nhóm: Nhật ký hoạt động (mở rộng 1) (Mở rộng 1)
 function test_nhat_ky_hien_ip_o_moi_do_rong_man_hinh(PDO $pdo): void
 {
     $trang = file_get_contents(__DIR__ . '/../public/admin/nhat_ky.php');
@@ -2136,16 +2233,28 @@ function kiemTaiLieuKhopCode(): void
         $bao(isset($noiDung[$tep]), "Chưa có $tep");
     }
     $kt = $noiDung['docs/KIEM_THU.md'] ?? '';
+    // ERD trong tài liệu phải chứa đúng sơ đồ sinh từ CSDL (sinhErd), không vẽ tay.
+    if (isset($noiDung['docs/ERD.md'])) {
+        try {
+            $pdoErd = ketNoiCsdl('cipher_test');
+            napLaiCsdl($pdoErd);
+            $bao(str_contains($noiDung['docs/ERD.md'], sinhErd($pdoErd)), 'docs/ERD.md khác sơ đồ sinh từ CSDL: chạy "php tests/chay.php --erd" rồi dán lại');
+        } catch (PDOException) {
+            $bao(false, 'Cần bật MySQL để so docs/ERD.md với CSDL');
+        }
+    }
     foreach (['README.md' => '/`XANH: (\d+) test`/', 'docs/KIEM_THU.md' => '/`XANH: (\d+) test`/'] as $tep => $mau) {
         $bao(preg_match($mau, $noiDung[$tep] ?? '', $so) === 1 && (int) $so[1] === $soTest, "$tep ghi XANH: " . ($so[1] ?? '?') . ", thật là $soTest");
     }
     $bao(preg_match('/Cả (\d+) test đều \*\*đạt\*\*/', $kt, $so) === 1 && (int) $so[1] === $soTest, 'KIEM_THU ghi "Cả ' . ($so[1] ?? '?') . " test\", thật là $soTest");
     $bao(preg_match('/\| \*\*Tổng\*\* \| \*\*(\d+)\*\* \|/', $kt, $so) === 1 && (int) $so[1] === $soTest, 'Dòng Tổng của KIEM_THU ghi ' . ($so[1] ?? '?') . ", thật là $soTest");
 
+    // Nhóm của từng test lấy từ dòng "// Nhóm: Tên nhóm (mã)" ngay trên function (ban_do_test.py --kiem bắt thiếu).
+    preg_match_all('/^\/\/ Nhóm: (.+) \([^()]+\)\nfunction\stest_(\w+)\(/m', $doc(__FILE__), $m);
+    $nhomCua = array_combine($m[2], $m[1]);
     // Test kiểm cấu hình máy chủ triển khai riêng của nhóm có nhắc VPN: tài liệu nộp không được có chữ này (a44b624),
-    // nên không có dòng trong bảng nhưng vẫn được đếm vào nhóm và tổng. [tên => nhóm]
-    $khongLietKe = ['landing_cong_khai_khong_nhac_den_vpn' => 'Giao diện, triển khai',
-        'caddy_nhan_proxy_protocol_chi_tu_xray' => 'Nhật ký hoạt động (mở rộng 1)'];
+    // nên không có dòng trong bảng nhưng vẫn được đếm vào nhóm của nó và vào tổng.
+    $khongLietKe = array_flip(['landing_cong_khai_khong_nhac_den_vpn', 'caddy_nhan_proxy_protocol_chi_tu_xray']);
     foreach ($noiDung as $tep => $chu) {
         $bao(preg_match('/\bVPN\b|Xray/i', $chu) !== 1, "$tep có chữ VPN hoặc Xray; tài liệu nộp không được nhắc hạ tầng này");
     }
@@ -2155,12 +2264,13 @@ function kiemTaiLieuKhopCode(): void
             continue;
         }
         preg_match_all('/^\| `(\w+)` \| (.+) \|$/m', $phan, $dong, PREG_SET_ORDER);
-        $soNhom = count($dong) + count(array_keys($khongLietKe, $nhom[1], true));
+        $soNhom = count(array_keys($nhomCua, $nhom[1], true));
         $bao($soNhom === (int) $nhom[2], "Nhóm \"{$nhom[1]}\" ghi {$nhom[2]} test nhưng đếm được $soNhom");
         $bao(preg_match('/^\| ' . preg_quote($nhom[1], '/') . ' \| (\d+) \|/m', $kt, $tongNhom) === 1 && (int) $tongNhom[1] === $soNhom,
             "Bảng tổng hợp ghi nhóm \"{$nhom[1]}\" là " . ($tongNhom[1] ?? '?') . " test, đếm được $soNhom");
         foreach ($dong as [, $ten, $cau]) {
             $bao(!isset($dongTest[$ten]), "Test $ten có hai dòng trong KIEM_THU");
+            $bao(($nhomCua[$ten] ?? $nhom[1]) === $nhom[1], "Test $ten nằm ở nhóm \"{$nhom[1]}\" của KIEM_THU nhưng dòng Nhóm trong code ghi \"" . ($nhomCua[$ten] ?? '') . '"');
             $dongTest[$ten] = $cau;
         }
     }
@@ -2207,7 +2317,73 @@ function kiemTaiLieuKhopCode(): void
    - ", $loi));
 }
 
-// Chế độ kiểm tài liệu (xem kiemTaiLieuKhopCode): không cần CSDL, không chạy test thường.
+// Sơ đồ ERD dạng Mermaid, sinh từ chính CSDL vừa nạp schema.sql (user chốt 09/11/2026): ERD dán vào tài liệu lúc nào
+// cũng đúng bằng code. Chạy "php tests/chay.php --erd" (cần MySQL), dán kết quả vào docs/ERD.md trong khối ```mermaid;
+// --tai-lieu so lại. Chú thích một cột = chú thích cuối dòng ("-- ...") của cột đó trong schema.sql; dòng chú thích
+// nằm riêng phía trên một cột là lý do thiết kế, dành cho SPEC, không đưa vào sơ đồ cho gọn.
+function sinhErd(PDO $pdo): string
+{
+    $chuThich = [];
+    $bang = null;
+    foreach (file(__DIR__ . '/../database/schema.sql', FILE_IGNORE_NEW_LINES) as $dong) {
+        if (preg_match('/^CREATE TABLE (\w+)/', $dong, $m) === 1) {
+            $bang = $m[1];
+        } elseif (str_starts_with($dong, ')')) {
+            $bang = null;
+        } elseif ($bang !== null && preg_match('/^\s+(\w+)\s.*?--\s*(.+)$/', $dong, $m) === 1) {
+            // Mermaid đặt chú thích trong ngoặc kép: đổi ngoặc kép trong câu thành ngoặc đơn.
+            $chuThich[$bang][$m[1]] = str_replace('"', "'", trim($m[2]));
+        }
+    }
+
+    $csdl = $pdo->query('SELECT DATABASE()')->fetchColumn();
+    $cau = $pdo->prepare("SELECT TABLE_NAME, COLUMN_NAME, REFERENCED_TABLE_NAME FROM information_schema.KEY_COLUMN_USAGE
+                          WHERE TABLE_SCHEMA = ? AND REFERENCED_TABLE_NAME IS NOT NULL ORDER BY TABLE_NAME, COLUMN_NAME");
+    $cau->execute([$csdl]);
+    $khoaNgoai = $cau->fetchAll();
+    $laKhoaNgoai = array_flip(array_map(fn(array $k): string => $k['TABLE_NAME'] . '.' . $k['COLUMN_NAME'], $khoaNgoai));
+
+    // Chỉ bảng thật: v_certificates là view tính từ certificates, không phải thực thể riêng.
+    $cau = $pdo->prepare("SELECT c.TABLE_NAME, c.COLUMN_NAME, c.DATA_TYPE, c.IS_NULLABLE, c.COLUMN_KEY
+                          FROM information_schema.COLUMNS c
+                          JOIN information_schema.TABLES t ON t.TABLE_SCHEMA = c.TABLE_SCHEMA AND t.TABLE_NAME = c.TABLE_NAME
+                          WHERE c.TABLE_SCHEMA = ? AND t.TABLE_TYPE = 'BASE TABLE'
+                          ORDER BY c.TABLE_NAME, c.ORDINAL_POSITION");
+    $cau->execute([$csdl]);
+    $cacBang = [];
+    $choPhepTrong = [];
+    foreach ($cau->fetchAll() as $c) {
+        $ten = $c['TABLE_NAME'] . '.' . $c['COLUMN_NAME'];
+        $choPhepTrong[$ten] = $c['IS_NULLABLE'] === 'YES';
+        $khoa = array_filter([$c['COLUMN_KEY'] === 'PRI' ? 'PK' : null, isset($laKhoaNgoai[$ten]) ? 'FK' : null,
+            $c['COLUMN_KEY'] === 'UNI' ? 'UK' : null]);
+        $cacBang[$c['TABLE_NAME']][] = "        {$c['DATA_TYPE']} {$c['COLUMN_NAME']}" . ($khoa !== [] ? ' ' . implode(', ', $khoa) : '')
+            . (isset($chuThich[$c['TABLE_NAME']][$c['COLUMN_NAME']]) ? ' "' . $chuThich[$c['TABLE_NAME']][$c['COLUMN_NAME']] . '"' : '');
+    }
+
+    $ra = ['erDiagram'];
+    // Một khoá ngoại là một quan hệ 1-n; cột khoá ngoại được trống thì phía cha là "không hoặc một".
+    foreach ($khoaNgoai as $k) {
+        $cha = $choPhepTrong[$k['TABLE_NAME'] . '.' . $k['COLUMN_NAME']] ? '|o' : '||';
+        $ra[] = "    {$k['REFERENCED_TABLE_NAME']} $cha--o{ {$k['TABLE_NAME']} : \"{$k['COLUMN_NAME']}\"";
+    }
+    foreach ($cacBang as $bang => $cacCot) {
+        $ra[] = "    $bang {";
+        array_push($ra, ...$cacCot);
+        $ra[] = '    }';
+    }
+    return implode("\n", $ra) . "\n";
+}
+
+// Chế độ sinh ERD (xem sinhErd): nạp lại cipher_test rồi in sơ đồ, không chạy test thường.
+if (in_array('--erd', $argv, true)) {
+    $pdo = ketNoiCsdl('cipher_test');
+    napLaiCsdl($pdo);
+    echo sinhErd($pdo);
+    exit(0);
+}
+
+// Chế độ kiểm tài liệu (xem kiemTaiLieuKhopCode): chỉ cần CSDL để so ERD, không chạy test thường.
 if (in_array('--tai-lieu', $argv, true)) {
     try {
         kiemTaiLieuKhopCode();

@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
-"""Ban do test: ten test -> dong Luat. --kiem: exit 1 neu test thieu 'Luật:' hoac 'Vì sao:'."""
+"""Ban do test: ten test -> dong Luat. --kiem: exit 1 neu test thieu 'Luật:', 'Vì sao:' hoac 'Nhóm:'.
+Nhóm: chuc nang cua de ma test thuoc ve; luc cuoi sinh lai bao cao kiem thu va SPEC theo nhom (user chot 09/11/2026)."""
 import re, sys, pathlib
 GOC = pathlib.Path(__file__).resolve().parent
 THU_MUC = ["tests"]  # sua cho dung du an
 KHAI = re.compile(r"(?:def|function)\s+(test\w+)|(?:\bit|\btest)\(\s*['\"](.+?)['\"]")
-LUAT, VISAO = re.compile(r"Luật:\s*(.+)"), re.compile(r"Vì sao:")
+LUAT, VISAO, NHOM = re.compile(r"Luật:\s*(.+)"), re.compile(r"Vì sao:"), re.compile(r"^// Nhóm: .+\(.+\)$", re.M)
 
 def quet():
     for d in THU_MUC:
@@ -23,18 +24,18 @@ def quet():
                     dau = max(ds[k - 1][0] + 1 if k else 0, i - 8)
                     vung = "\n".join(dong[dau:i + 1])
                 l = LUAT.search(vung)
-                yield f.relative_to(GOC), m.group(1) or m.group(2), (l.group(1).strip() if l else None), bool(VISAO.search(vung))
+                yield f.relative_to(GOC), m.group(1) or m.group(2), (l.group(1).strip() if l else None), bool(VISAO.search(vung)), bool(NHOM.search(vung))
 
 def main():
     kiem, thieu = "--kiem" in sys.argv, 0
-    for f, ten, luat, co_vs in quet():
-        if not luat or not co_vs:
+    for f, ten, luat, co_vs, co_nhom in quet():
+        if not luat or not co_vs or not co_nhom:
             thieu += 1
-            print(f"🔴 {f} :: {ten} — thiếu {'Luật:' if not luat else 'Vì sao:'}")
+            print(f"🔴 {f} :: {ten} — thiếu {'Luật:' if not luat else 'Vì sao:' if not co_vs else 'Nhóm: (dòng ngay trên function, dạng // Nhóm: Tên nhóm (mã))'}")
         elif not kiem:
             print(f"{ten}\n    → {luat}")
     if kiem:
-        print("✅ mọi test có Luật + Vì sao" if not thieu else f"❌ {thieu} test thiếu lý do")
+        print("✅ mọi test có Luật + Vì sao + Nhóm" if not thieu else f"❌ {thieu} test thiếu Luật, Vì sao hoặc Nhóm")
         sys.exit(1 if thieu else 0)
 
 if __name__ == "__main__":

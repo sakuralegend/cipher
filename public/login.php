@@ -1,4 +1,7 @@
 <?php
+// Đăng nhập. Ai dùng: mọi người có tài khoản (Admin, Nhân viên quản trị); không có trang tự đăng ký (QD-03).
+// Luồng: gõ tên và mật khẩu -> dangNhap() kiểm tra -> vào Dashboard. Lỗi: sai tên hay sai mật khẩu báo cùng một câu;
+// sai 5 lần thì tài khoản tạm chặn 15 phút; tài khoản bị Admin khoá thì không vào được. Đã đăng nhập thì về Dashboard.
 require __DIR__ . '/../src/khoi_dong.php';
 
 $pdo = ketNoiCsdl();
