@@ -2212,6 +2212,101 @@ function test_vach_thanh_thoi_gian_dung_ti_le_so_ngay(PDO $pdo): void
     kiem(str_contains($js, 'ray.dataset.ldNgayDau') && !str_contains($js, 'VI_TRI_RAY'), 'app.js phải đọc thang từ HTML, không giữ bảng vị trí riêng');
 }
 
+// Một dòng chứng chỉ "tốt" để chấm: ECDSA P-256, ký SHA-384, tổ chức cấp tin cậy, tên khớp, 90 ngày. Test đổi từng ô.
+function chungChiDeCham(array $thayDoi = []): array
+{
+    return $thayDoi + ['key_algorithm' => 'ECDSA', 'key_size' => 256, 'signature_algorithm' => 'ecdsa-with-SHA384',
+        'valid_from' => '2026-11-06 10:18:41', 'valid_to' => '2027-02-04 10:18:40', 'subject_cn' => 'cert.cipher.id.vn',
+        'san' => null, 'domain_name' => 'cert.cipher.id.vn', 'ca_tin_cay' => 1];
+}
+
+// Luật: Hạng an toàn là mức nặng nhất trong các phát hiện: chữ ký SHA-1/MD5, RSA dưới 2048, ECDSA dưới 256 là F; tổ chức cấp không tin cậy là C; RSA 2048–3071 là B; không vướng gì là A; mỗi phát hiện có nguồn.
+// Vì sao: User 09/11/2026 duyệt chấm theo hạng chữ, mỗi tiêu chí lấy từ quy định có thật (CA/B Baseline Requirements, NIST SP 800-57/800-131A) để giải thích được.
+// Đỏ nghĩa là: Một ngưỡng bị đổi (2048, 3072, 256), hạng không lấy mức nặng nhất, hoặc một phát hiện mất nguồn.
+// Đừng: Cộng trừ điểm cho "mịn" hơn; hạng phải chỉ ra được đúng lỗi nặng nhất là gì.
+// Nhóm: Chấm hạng an toàn (mở rộng 3) (Mở rộng 3)
+function test_cham_hang_lay_muc_nang_nhat_va_ghi_nguon(PDO $pdo): void
+{
+    $mong = [
+        'A' => [[], ['key_algorithm' => 'RSA', 'key_size' => 3072, 'signature_algorithm' => 'sha256WithRSAEncryption'],
+            ['key_algorithm' => 'Ed25519', 'key_size' => 256, 'signature_algorithm' => 'ED25519']],
+        'B' => [['key_algorithm' => 'RSA', 'key_size' => 2048, 'signature_algorithm' => 'sha256WithRSAEncryption']],
+        'C' => [['ca_tin_cay' => 0], ['ca_tin_cay' => 0, 'key_algorithm' => 'RSA', 'key_size' => 2048]],
+        'F' => [['signature_algorithm' => 'sha1WithRSAEncryption'], ['signature_algorithm' => 'md5WithRSAEncryption'],
+            ['key_algorithm' => 'RSA', 'key_size' => 1024], ['key_algorithm' => 'ECDSA', 'key_size' => 192],
+            ['key_algorithm' => 'RSA', 'key_size' => 1024, 'ca_tin_cay' => 0]],
+    ];
+    foreach ($mong as $hang => $cacCa) {
+        foreach ($cacCa as $thayDoi) {
+            $kq = chamDiem(chungChiDeCham($thayDoi));
+            kiem($kq['hang'] === $hang, "Mong hạng $hang, nhận {$kq['hang']} với " . json_encode($thayDoi));
+            foreach ($kq['phat_hien'] as $p) {
+                kiem($p['nguon'] !== '' && $p['noi_dung'] !== '', 'Mỗi phát hiện phải có nội dung và nguồn');
+            }
+        }
+    }
+    $so = demTheoHang($pdo);
+    kiem(array_keys($so) === ['A', 'B', 'C', 'F'] && array_sum($so) === demChungChi($pdo), 'Biểu đồ hạng phải đủ 4 hạng và đếm hết chứng chỉ');
+}
+
+// Luật: Thời hạn dài hơn mức tối đa lúc cấp là C: 825 ngày từ 01/03/2018, 398 từ 01/09/2020, 200 từ 15/03/2026, 100 từ 15/03/2027, 47 từ 15/03/2029; cấp trước 01/03/2018 thì không xét.
+// Vì sao: User 09/11/2026 chọn giữ tiêu chí này: phản ánh lộ trình rút ngắn thời hạn (ballot SC-081v3); 50 site thật đo 09/11/2026 có sberbank.ru 365 ngày cấp 07/2026 (CA Nga không theo luật chung).
+// Đỏ nghĩa là: Một mốc ngày hay số ngày tối đa bị đổi, hoặc xét theo luật hiện tại thay vì luật ở ngày cấp.
+// Đừng: Lấy mức tối đa của hôm nay cho mọi chứng chỉ; chứng chỉ 397 ngày cấp tháng 1/2026 là hợp lệ.
+// Nhóm: Chấm hạng an toàn (mở rộng 3) (Mở rộng 3)
+function test_cham_hang_thoi_han_theo_luat_o_ngay_cap(PDO $pdo): void
+{
+    $ca = [
+        ['2026-07-27 07:00:00', '2027-07-27 07:00:00', 'C', 'sberbank.ru: 365 ngày, cấp sau 15/03/2026 (tối đa 200)'],
+        ['2026-01-13 00:00:00', '2027-02-14 00:00:00', 'A', 'python.org: 397 ngày, cấp trước 15/03/2026 (tối đa 398)'],
+        ['2026-10-01 00:00:00', '2027-04-18 00:00:00', 'A', '199 ngày cấp sau 15/03/2026'],
+        ['2027-03-20 00:00:00', '2027-09-01 00:00:00', 'C', '165 ngày cấp sau 15/03/2027 (tối đa 100)'],
+        ['2029-03-15 00:00:00', '2029-05-15 00:00:00', 'C', '61 ngày cấp từ 15/03/2029 (tối đa 47)'],
+        ['2017-03-27 00:00:00', '2020-06-23 00:00:00', 'A', 'cấp trước 01/03/2018: không xét'],
+    ];
+    foreach ($ca as [$tu, $den, $hang, $moTa]) {
+        kiem(chamDiem(chungChiDeCham(['valid_from' => $tu, 'valid_to' => $den]))['hang'] === $hang, "$moTa: mong hạng $hang");
+    }
+    kiem(thoiHanToiDa('2020-09-01 00:00:00') === 398 && thoiHanToiDa('2020-08-31 23:59:59') === 825, 'Mốc 01/09/2020 phải tính từ đúng ngày đó');
+}
+
+// Luật: Không tên nào trong chứng chỉ (tên chính, tên phụ) thuộc tên miền quản lý thì là C; tên miền con hay wildcard phủ một tầng vẫn tính là thuộc; wildcard chỉ là ghi chú, không hạ hạng.
+// Vì sao: Tên miền quản lý có thể là tên miền cha (chonTenMienChoDiaChi), nên mail.cipher.id.vn thuộc cipher.id.vn là đúng; còn tên lạc hẳn nghĩa là gắn nhầm hoặc máy chủ dùng chứng chỉ của tên khác.
+// Đỏ nghĩa là: Chỉ so trùng hẳn (tên miền cha thành C oan), wildcard phủ quá một tầng, hoặc wildcard bị hạ hạng.
+// Đừng: Đòi tên miền quản lý phải đứng nguyên văn trong chứng chỉ.
+// Nhóm: Chấm hạng an toàn (mở rộng 3) (Mở rộng 3)
+function test_cham_hang_ten_mien_khong_lien_quan(PDO $pdo): void
+{
+    $ca = [
+        ['mail.cipher.id.vn', null, 'cipher.id.vn', 'A', 'tên miền con của tên miền quản lý'],
+        ['*.badssl.com', null, 'expired.badssl.com', 'A', 'wildcard phủ một tầng (chỉ ghi chú)'],
+        ['*.badssl.com', null, 'wrong.host.badssl.com', 'C', 'site minh hoạ sai tên: wildcard không phủ hai tầng'],
+        ['*.lazada.com', 'lazada.com', 'lazada.vn', 'C', 'tên khác hẳn tên miền quản lý'],
+        ['*.lazada.com', 'lazada.com, lazada.vn', 'lazada.vn', 'A', 'tên phụ có tên miền quản lý'],
+        ['shop.example.org', null, '*.example.org', 'A', 'tên miền quản lý dạng wildcard'],
+    ];
+    foreach ($ca as [$cn, $san, $tenMien, $hang, $moTa]) {
+        $kq = chamDiem(chungChiDeCham(['subject_cn' => $cn, 'san' => $san, 'domain_name' => $tenMien]));
+        kiem($kq['hang'] === $hang, "$moTa: mong hạng $hang, nhận {$kq['hang']}");
+    }
+    $kq = chamDiem(chungChiDeCham(['subject_cn' => '*.badssl.com', 'domain_name' => 'badssl.com']));
+    kiem(in_array('i', array_column($kq['phat_hien'], 'muc'), true), 'Wildcard phải có ghi chú');
+}
+
+// Luật: Chứng chỉ GOST là B (chỉ dùng được ở Nga), không phải F; hạng không xét hết hạn hay thu hồi.
+// Vì sao: GOST là chuẩn quốc gia của Nga, không yếu nhưng trình duyệt phổ thông không mở được (đề 66: "nhận diện GOST"). Hết hạn, thu hồi đã có trạng thái riêng; xét thêm là tính một lỗi hai lần.
+// Đỏ nghĩa là: GOST bị coi là thuật toán yếu, hoặc chamDiem() đọc cột status/days_left/is_revoked.
+// Đừng: Hạ hạng chứng chỉ hết hạn cho "nổi bật"; trạng thái đã tô đỏ nó.
+// Nhóm: Chấm hạng an toàn (mở rộng 3) (Mở rộng 3)
+function test_cham_hang_nhan_dien_gost_va_khong_tron_trang_thai(PDO $pdo): void
+{
+    kiem(chamDiem(chungChiDeCham(['key_algorithm' => 'GOST', 'key_size' => 256, 'signature_algorithm' => '1.2.643.7.1.1.3.2']))['hang'] === 'B',
+        'Chứng chỉ GOST phải là B');
+    $hetHan = chamDiem(chungChiDeCham(['valid_from' => '2024-01-01 00:00:00', 'valid_to' => '2024-03-01 00:00:00',
+        'status' => 'expired', 'days_left' => -600, 'is_revoked' => 1]));
+    kiem($hetHan['hang'] === 'A', 'Hết hạn, thu hồi không được làm đổi hạng');
+}
+
 // Luật: Trang Nhật ký hiện IP ở mọi độ rộng màn hình: cột IP chỉ có từ 992px, màn hẹp hơn thì IP nằm dưới người làm.
 // Vì sao: User 08/11/2026 trên iPhone không xem được IP: cột bị ẩn hẳn (d-none d-lg-table-cell), kéo bảng cũng không thấy.
 // Đỏ nghĩa là: Dòng IP cho màn hẹp bị xoá, hoặc nó và cột IP không cùng mốc lg nên có khoảng độ rộng không hiện IP.

@@ -1,5 +1,5 @@
 <?php
-// Thống kê: 4 biểu đồ, mỗi biểu đồ có bảng số ngay dưới, cùng theo một bộ lọc với danh sách chứng chỉ.
+// Thống kê: 5 biểu đồ (thêm hạng an toàn, mở rộng 3), mỗi biểu đồ có bảng số ngay dưới, cùng theo một bộ lọc với danh sách chứng chỉ.
 // Khoảng thời gian là khoảng ngày hết hạn, vì hệ thống không lưu thời điểm thêm chứng chỉ.
 require __DIR__ . '/../../src/khoi_dong.php';
 require __DIR__ . '/../../src/danh_muc.php';
@@ -22,6 +22,8 @@ $trangThai = demTheoTrangThai($pdo, $loc, true);
 $tong = array_sum($trangThai);
 $toChuc = demTheoNhom($pdo, 'to_chuc', $loc);
 $thuatToan = demTheoNhom($pdo, 'thuat_toan', $loc);
+// Hạng an toàn (mở rộng 3): đủ 4 hạng A, B, C, F; nhãn bảng là tên đầy đủ, ví dụ "B · Lưu ý".
+$hang = array_combine(array_column(HANG_AN_TOAN, 'nhan'), demTheoHang($pdo, $loc));
 $theoThang = hetHanTheoThang($pdo, $loc);
 // Trần trục theo toàn bộ chứng chỉ, giữ nguyên khi lọc (xem tranBieuDoThongKe()).
 $tran = tranBieuDoThongKe($pdo);
@@ -100,15 +102,21 @@ require __DIR__ . '/../../views/tieu_de_trang.php';
                 </div>
             </div>
 
-            <?php foreach ([['Theo tổ chức cấp', 'Tổ chức cấp', $toChuc, $tran['to_chuc']], ['Theo thuật toán khoá', 'Thuật toán', $thuatToan, $tran['thuat_toan']]] as [$tieuDeThe, $tenCot, $soLieu, $tranTruc]): ?>
-                <div class="col-lg-6">
+            <?php // Hạng an toàn đứng cạnh thuật toán khoá (cùng nói về độ an toàn); tổ chức cấp nhiều cột nên trải hết hàng. ?>
+            <?php foreach ([
+                ['Theo hạng an toàn', 'Hạng', $hang, $tran['hang'], 'col-lg-6', array_column(HANG_AN_TOAN, 'mau')],
+                ['Theo thuật toán khoá', 'Thuật toán', $thuatToan, $tran['thuat_toan'], 'col-lg-6', null],
+                ['Theo tổ chức cấp', 'Tổ chức cấp', $toChuc, $tran['to_chuc'], 'col-12', null],
+            ] as [$tieuDeThe, $tenCot, $soLieu, $tranTruc, $lopCot, $mau]): ?>
+                <div class="<?= $lopCot ?>">
                     <div class="card h-100">
                         <div class="card-header"><h2 class="card-title"><?= e($tieuDeThe) ?></h2></div>
-                        <?php if ($soLieu === []): ?>
+                        <?php if (array_sum($soLieu) === 0): ?>
                             <div class="card-body text-center text-secondary py-4">Không có chứng chỉ nào khớp bộ lọc.</div>
                         <?php else: ?>
                             <div class="card-body">
-                                <?= khungBieuDo(['huong' => 'ngang', 'nhan' => array_map('strval', array_keys($soLieu)), 'so' => array_values($soLieu), 'tran' => $tranTruc],
+                                <?= khungBieuDo(['huong' => 'ngang', 'nhan' => array_map('strval', array_keys($soLieu)), 'so' => array_values($soLieu), 'tran' => $tranTruc]
+                                    + ($mau !== null ? ['mau' => $mau] : []),
                                     $tieuDeThe . '; số liệu ở bảng bên dưới.') ?>
                             </div>
                             <div class="table-responsive">

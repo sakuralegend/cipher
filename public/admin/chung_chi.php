@@ -55,6 +55,8 @@ require __DIR__ . '/../../views/tieu_de_trang.php';
                             <?= $tieuDeCot('het_han', 'Hết hạn', 'd-none d-md-table-cell') ?>
                             <?= $tieuDeCot('con_lai', 'Còn lại') ?>
                             <?= $tieuDeCot('trang_thai', 'Trạng thái') ?>
+                            <?php // Hạng an toàn tính bằng PHP (chamDiem) nên không xếp theo được; ẩn dưới 992px cho bảng khỏi tràn. ?>
+                            <th class="d-none d-lg-table-cell">An toàn</th>
                             <th class="w-1 d-none d-md-table-cell"><span class="visually-hidden">Thao tác</span></th>
                         </tr>
                     </thead>
@@ -74,6 +76,10 @@ require __DIR__ . '/../../views/tieu_de_trang.php';
                                     require __DIR__ . '/../../views/nhan_trang_thai.php';
                                     ?>
                                 </td>
+                                <td class="d-none d-lg-table-cell">
+                                    <?php $hangDong = chamDiem($dong)['hang']; ?>
+                                    <span class="badge bg-<?= HANG_AN_TOAN[$hangDong]['mau'] ?>-lt" title="<?= e(HANG_AN_TOAN[$hangDong]['nhan']) ?>"><?= $hangDong ?></span>
+                                </td>
                                 <td class="d-none d-md-table-cell">
                                     <div class="btn-list flex-nowrap">
                                         <?php // Đã thu hồi thì không sửa được (luuChungChi chặn), nên không hiện nút. ?>
@@ -86,7 +92,7 @@ require __DIR__ . '/../../views/tieu_de_trang.php';
                         <?php endforeach; ?>
                         <?php if ($danhSach === []): ?>
                             <tr>
-                                <td colspan="7" class="text-center text-secondary py-4">
+                                <td colspan="8" class="text-center text-secondary py-4">
                                     <?= !$coLoc ? 'Chưa có chứng chỉ nào.' : 'Không có chứng chỉ nào khớp bộ lọc.' ?>
                                 </td>
                             </tr>

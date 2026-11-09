@@ -321,7 +321,8 @@ function diaChiCoLoc(string $trang, array $loc, array $sapXep = [], array $doi =
     return url($trang . ($thamSo === [] ? '' : '?' . http_build_query($thamSo)));
 }
 
-const COT_CHUNG_CHI = 'SELECT c.*, a.name AS ca_name, d.domain_name, s.hostname AS server_name FROM ';
+// ca_tin_cay: mức tin cậy của tổ chức cấp, chamDiem() cần.
+const COT_CHUNG_CHI = 'SELECT c.*, a.name AS ca_name, a.is_trusted AS ca_tin_cay, d.domain_name, s.hostname AS server_name FROM ';
 
 // Toàn bộ kết quả, không chia trang, cho báo cáo: báo cáo chỉ có một phần là báo cáo sai.
 function tatCaChungChi(PDO $pdo, array $loc = [], array $sapXep = []): array
@@ -351,7 +352,7 @@ function danhSachChungChi(PDO $pdo, int $trang, array $loc = [], array $sapXep =
 
 function timChungChi(PDO $pdo, int $id): ?array
 {
-    $cau = $pdo->prepare('SELECT c.*, a.name AS ca_name, d.domain_name, u.full_name AS created_by_name
+    $cau = $pdo->prepare('SELECT c.*, a.name AS ca_name, a.is_trusted AS ca_tin_cay, d.domain_name, u.full_name AS created_by_name
                           FROM v_certificates c
                           JOIN certificate_authorities a ON a.id = c.ca_id
                           JOIN domains d ON d.id = c.domain_id
@@ -533,7 +534,7 @@ function demTheoNhom(PDO $pdo, string $nhom, array $loc = []): array
     return array_map('intval', $cau->fetchAll(PDO::FETCH_KEY_PAIR));
 }
 
-// Trần trục số của bốn biểu đồ Thống kê, tính trên TOÀN BỘ chứng chỉ, không theo bộ lọc: lọc thì cột ngắn lại trên
+// Trần trục số của năm biểu đồ Thống kê, tính trên TOÀN BỘ chứng chỉ, không theo bộ lọc: lọc thì cột ngắn lại trên
 // cùng một thước nên so được với lúc chưa lọc (user yêu cầu 08/11/2026: trục co theo dữ liệu lọc thì cột dài nhất
 // lúc nào cũng kín khung, mất giá trị so sánh). Lọc chỉ bớt chứng chỉ, nên số khi lọc không bao giờ vượt trần này.
 function tranBieuDoThongKe(PDO $pdo): array
@@ -544,6 +545,7 @@ function tranBieuDoThongKe(PDO $pdo): array
         'thang' => $lonNhat(hetHanTheoThang($pdo)),
         'to_chuc' => $lonNhat(demTheoNhom($pdo, 'to_chuc')),
         'thuat_toan' => $lonNhat(demTheoNhom($pdo, 'thuat_toan')),
+        'hang' => $lonNhat(demTheoHang($pdo)),
     ];
 }
 
@@ -625,6 +627,119 @@ function moTaSoNgay(array $chungChi): string
         return 'Quá hạn ' . max(abs($soNgay), 0) . ' ngày';
     }
     return 'Còn ' . $soNgay . ' ngày';
+}
+
+// ---------- Chấm hạng an toàn (chức năng mở rộng 3, user duyệt 09/11/2026) ----------
+// Hạng = mức nặng nhất trong các phát hiện: F nguy hiểm, C cần xử lý, B lưu ý; không vướng gì là A. Hạng chữ thay cho
+// điểm 0–100 vì cộng trừ điểm không biện minh được ("vì sao lỗi này trừ 10?"). Mỗi tiêu chí lấy từ quy định có thật và
+// ghi nguồn cạnh phát hiện, để người xem tự kiểm. Tính lúc xem từ các cột đã có, không lưu: không bao giờ cũ, không đổi
+// schema. Cố ý KHÔNG xét hết hạn, sắp hết hạn, thu hồi: đã có trạng thái riêng, xét nữa là tính một lỗi hai lần.
+const HANG_AN_TOAN = [
+    'A' => ['nhan' => 'A · Tốt', 'mau' => 'green'],
+    'B' => ['nhan' => 'B · Lưu ý', 'mau' => 'blue'],
+    'C' => ['nhan' => 'C · Cần xử lý', 'mau' => 'yellow'],
+    'F' => ['nhan' => 'F · Nguy hiểm', 'mau' => 'red'],
+];
+// Thứ tự nặng nhẹ khi lấy mức nặng nhất; 'i' là ghi chú, không hạ hạng.
+const MUC_NANG = ['F' => 4, 'C' => 3, 'B' => 2, 'i' => 1];
+
+// Thời hạn tối đa (ngày) của chứng chỉ TLS công khai theo ngày cấp, Baseline Requirements của CA/Browser Forum:
+// 825 ngày từ 01/03/2018, 398 từ 01/09/2020, rồi lộ trình ballot SC-081v3 (thông qua 11/04/2025): 200 từ 15/03/2026,
+// 100 từ 15/03/2027, 47 từ 15/03/2029. Cấp trước 01/03/2018 thì không xét: luật khi đó tính theo tháng, và các chứng chỉ
+// đó nay đều đã hết hạn. Mốc mới nhất đứng đầu.
+const THOI_HAN_TOI_DA = ['2029-03-15' => 47, '2027-03-15' => 100, '2026-03-15' => 200, '2020-09-01' => 398, '2018-03-01' => 825];
+
+// Số ngày tối đa được phép với chứng chỉ cấp ngày $ngayCap ('Y-m-d H:i:s'); null nếu cấp trước mọi mốc.
+function thoiHanToiDa(string $ngayCap): ?int
+{
+    foreach (THOI_HAN_TOI_DA as $tuNgay => $soNgay) {
+        if ($ngayCap >= $tuNgay) {
+            return $soNgay;
+        }
+    }
+    return null;
+}
+
+// true nếu tên trong chứng chỉ ($ten, có thể là *.a.b) liên quan tên miền quản lý: trùng, là tên miền con của nó
+// (tên miền quản lý có thể là tên miền cha, chonTenMienChoDiaChi), hoặc wildcard phủ đúng một tầng (*.a.b phủ x.a.b).
+function tenLienQuanTenMien(string $ten, string $tenMien): bool
+{
+    $ten = strtolower(trim($ten));
+    $tenMien = strtolower(preg_replace('/^\*\./', '', trim($tenMien)));
+    $goc = preg_replace('/^\*\./', '', $ten);
+    if ($goc === $tenMien || str_ends_with($goc, '.' . $tenMien)) {
+        return true;
+    }
+    return str_starts_with($ten, '*.') && str_ends_with($tenMien, '.' . $goc)
+        && !str_contains(substr($tenMien, 0, -strlen($goc) - 1), '.');
+}
+
+// Chấm một chứng chỉ. $cc là một dòng của timChungChi()/danh sách: cần key_algorithm, key_size, signature_algorithm,
+// valid_from, valid_to, subject_cn, san, domain_name, ca_tin_cay. Trả về ['hang' => 'A'|'B'|'C'|'F',
+// 'phat_hien' => [['muc' => 'F'|'C'|'B'|'i', 'noi_dung' => ..., 'nguon' => ...], ...]] xếp nặng trước.
+function chamDiem(array $cc): array
+{
+    $ds = [];
+    $them = function (string $muc, string $noiDung, string $nguon) use (&$ds): void {
+        $ds[] = ['muc' => $muc, 'noi_dung' => $noiDung, 'nguon' => $nguon];
+    };
+    $ky = (string) $cc['signature_algorithm'];
+    $thuatToan = (string) $cc['key_algorithm'];
+    $doDai = (int) $cc['key_size'];
+
+    // Hàm băm của chữ ký: SHA-1, MD5 đã có cách tạo va chạm, kẻ xấu làm giả được chứng chỉ cùng chữ ký.
+    if (preg_match('/sha-?1(?!\d)|md5|md2/i', $ky) === 1) {
+        $them('F', "Chữ ký dùng hàm băm yếu ($ky): đã tạo được va chạm, chứng chỉ có thể bị làm giả. Trình duyệt từ chối.",
+            'CA/Browser Forum Baseline Requirements: cấm SHA-1 từ 01/01/2016');
+    }
+    if ($thuatToan === 'RSA' && $doDai < 2048) {
+        $them('F', "Khoá RSA $doDai bit: dưới mức tối thiểu 2048 bit, phá được bằng máy tính đủ mạnh.",
+            'CA/Browser Forum Baseline Requirements (RSA tối thiểu 2048 bit); NIST SP 800-131A');
+    } elseif ($thuatToan === 'RSA' && $doDai < 3072) {
+        $them('B', "Khoá RSA $doDai bit: đủ an toàn tới hết 2030, sau đó cần từ 3072 bit (hoặc ECDSA P-256).",
+            'NIST SP 800-57 phần 1 và SP 800-131A');
+    } elseif ($thuatToan === 'ECDSA' && $doDai < 256) {
+        $them('F', "Khoá ECDSA $doDai bit: dưới đường cong P-256 tối thiểu.", 'CA/Browser Forum Baseline Requirements (P-256, P-384, P-521)');
+    }
+    // GOST: chuẩn mật mã của Nga, trình duyệt phổ thông không hỗ trợ; không phải yếu, nhưng chỉ dùng được ở Nga.
+    if ($thuatToan === 'GOST' || preg_match('/gost|1\.2\.643/i', $ky) === 1) {
+        $them('B', 'Dùng thuật toán GOST (chuẩn mật mã Nga): chỉ trình duyệt hỗ trợ GOST (Yandex Browser...) mở được, Chrome, Firefox thì không.',
+            'GOST R 34.10-2012, GOST R 34.11-2012; danh sách thuật toán được phép trong Baseline Requirements');
+    }
+    if (!(int) $cc['ca_tin_cay']) {
+        $them('C', 'Tổ chức cấp không được tin cậy (tự ký, gốc lạ, hoặc thiếu chứng chỉ trung gian lúc đọc): trình duyệt sẽ báo lỗi.',
+            'Kho CA gốc của trình duyệt (Mozilla Root Store, Chrome Root Program)');
+    }
+    $cacTen = array_values(array_filter(array_map('trim', [$cc['subject_cn'], ...explode(',', (string) $cc['san'])])));
+    if (!array_filter($cacTen, fn(string $ten): bool => tenLienQuanTenMien($ten, (string) $cc['domain_name']))) {
+        $them('C', "Không tên nào trong chứng chỉ thuộc tên miền quản lý {$cc['domain_name']}: gắn nhầm tên miền, hoặc máy chủ đang dùng chứng chỉ của tên khác.",
+            'CA/Browser Forum Baseline Requirements: tên miền phải nằm trong subjectAltName');
+    }
+    $toiDa = thoiHanToiDa((string) $cc['valid_from']);
+    $soNgay = (int) floor((strtotime($cc['valid_to']) - strtotime($cc['valid_from'])) / 86400);
+    if ($toiDa !== null && strtotime($cc['valid_to']) - strtotime($cc['valid_from']) > $toiDa * 86400) {
+        $them('C', "Thời hạn $soNgay ngày, dài hơn mức tối đa $toiDa ngày cho chứng chỉ cấp ngày " . date('d/m/Y', strtotime($cc['valid_from']))
+            . ': tổ chức cấp không theo luật chung, hoặc nhập sai ngày.', 'CA/Browser Forum Baseline Requirements; ballot SC-081v3 (lộ trình 200, 100, 47 ngày)');
+    }
+    if (array_filter($cacTen, fn(string $ten): bool => str_starts_with($ten, '*.'))) {
+        $them('i', 'Chứng chỉ wildcard (*.): lộ khoá thì mọi tên miền con cùng bị ảnh hưởng. Chỉ ghi chú, không hạ hạng.',
+            'Khuyến nghị chung; Baseline Requirements cho phép wildcard');
+    }
+
+    usort($ds, fn(array $a, array $b): int => MUC_NANG[$b['muc']] <=> MUC_NANG[$a['muc']]);
+    $nangNhat = $ds !== [] ? $ds[0]['muc'] : 'i';
+    return ['hang' => $nangNhat === 'i' ? 'A' : $nangNhat, 'phat_hien' => $ds];
+}
+
+// Số chứng chỉ theo hạng, đủ 4 hạng theo thứ tự A, B, C, F (hạng không có là 0), cùng bộ lọc với danh sách.
+// Hạng tính bằng PHP (chamDiem) nên phải lấy cả danh sách; vài trăm chứng chỉ vẫn nhanh.
+function demTheoHang(PDO $pdo, array $loc = []): array
+{
+    $so = array_fill_keys(array_keys(HANG_AN_TOAN), 0);
+    foreach (tatCaChungChi($pdo, $loc) as $cc) {
+        $so[chamDiem($cc)['hang']]++;
+    }
+    return $so;
 }
 
 // ---------- Đọc chứng chỉ từ máy chủ (chức năng mở rộng 2) ----------

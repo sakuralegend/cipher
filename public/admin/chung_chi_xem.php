@@ -119,6 +119,32 @@ require __DIR__ . '/../../views/tieu_de_trang.php';
                         <?php endif; ?>
                     </div>
                 </div>
+                <?php // Mở rộng 3: hạng = mức nặng nhất trong các phát hiện, mỗi phát hiện kèm nguồn (chamDiem trong src/chung_chi.php). ?>
+                <?php $danhGia = chamDiem($cc); $nhanMuc = ['F' => ['Nguy hiểm', 'red'], 'C' => ['Cần xử lý', 'yellow'], 'B' => ['Lưu ý', 'blue'], 'i' => ['Ghi chú', 'secondary']]; ?>
+                <div class="card mt-3">
+                    <div class="card-header">
+                        <h2 class="card-title">Đánh giá an toàn</h2>
+                        <div class="card-actions">
+                            <span class="badge bg-<?= HANG_AN_TOAN[$danhGia['hang']]['mau'] ?>-lt"><?= e(HANG_AN_TOAN[$danhGia['hang']]['nhan']) ?></span>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <?php if ($danhGia['phat_hien'] === []): ?>
+                            <p class="text-secondary mb-0">Khoá, chữ ký, tổ chức cấp, tên miền và thời hạn đều đạt.</p>
+                        <?php else: ?>
+                            <ul class="list-unstyled ds-nhap mb-0">
+                                <?php foreach ($danhGia['phat_hien'] as $p): ?>
+                                    <li>
+                                        <span class="badge bg-<?= $nhanMuc[$p['muc']][1] ?>-lt"><?= e($nhanMuc[$p['muc']][0]) ?></span>
+                                        <div class="mt-1"><?= e($p['noi_dung']) ?></div>
+                                        <div class="text-secondary small">Nguồn: <?= e($p['nguon']) ?></div>
+                                    </li>
+                                <?php endforeach; ?>
+                            </ul>
+                        <?php endif; ?>
+                        <div class="text-secondary small mt-2">Không xét hết hạn hay thu hồi: đã có ở trạng thái.</div>
+                    </div>
+                </div>
             </div>
             <div class="col-12">
                 <div class="card">
