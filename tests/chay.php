@@ -1638,6 +1638,35 @@ function test_mau_trang_thai_theo_mot_bo_bien_va_chi_to_chi_tiet_nho(PDO $pdo): 
     }
 }
 
+// Luật: Chữ quan trọng trong khu quản trị là chữ trắng (tên mục menu, tiêu đề trang, tiêu đề thẻ, chữ trong bảng); màu xám chỉ cho chữ phụ và biểu tượng.
+// Vì sao: User 09/11/2026: "những chỗ quan trọng bạn lại làm chữ xám rất khó nhìn. Nhìn của web chuẩn họ làm màu trắng là tiêu đề" (app Better Stack).
+// Đỏ nghĩa là: Ô menu .qt-o lại lấy màu xám --qt-chu-phu cho chữ, tiêu đề trang mất màu trắng, hoặc chữ thân trang quay về xám xanh --cc-chu.
+// Đừng: Hạ chữ menu xuống xám cho "tinh tế"; muốn nhấn mục đang mở thì dùng nền ô và vạch tím.
+// Nhóm: Giao diện, triển khai (Giao diện)
+function test_chu_quan_trong_trong_quan_tri_la_chu_trang(PDO $pdo): void
+{
+    $css = file_get_contents(__DIR__ . '/../public/assets/app.css');
+    kiem(preg_match('/^\.qt-o \{([^}]*)\}/m', $css, $o) === 1 && str_contains($o[1], 'color: var(--qt-chu-muc)'), 'Chữ ô menu .qt-o phải là --qt-chu-muc (trắng)');
+    kiem(preg_match('/--qt-chu-muc: #([0-9a-f]{6})/', $css, $m) === 1 && hexdec(substr($m[1], 0, 2)) >= 0xd0, '--qt-chu-muc phải là chữ trắng');
+    kiem(preg_match('/^\.page-title,\s*\.card-title[^{]*\{([^}]*)\}/m', $css, $t) === 1 && str_contains($t[1], 'var(--cc-chu-dam)'), 'Tiêu đề trang và tiêu đề thẻ phải trắng (--cc-chu-dam)');
+    kiem(str_contains($css, '--tblr-body-color: var(--qt-chu-than)'), 'Chữ thân khu quản trị phải dùng --qt-chu-than (trắng ngà)');
+}
+
+// Luật: Danh sách chứng chỉ trên điện thoại hiện đủ cột, chữ không xuống dòng, bảng tràn thì kéo ngang; trang không có nút Thêm chứng chỉ riêng.
+// Vì sao: User 09/11/2026: "trên điện thoại bị cắt nhiều thông tin. Tôi muốn khi tràn thông tin thì phải được quyền kéo sang trái để xem"; nút Thêm đã có trong bảng phụ của khu Chứng chỉ.
+// Đỏ nghĩa là: Một cột của bảng lại ẩn theo cỡ màn hình (d-none ... -table-cell), bảng mất lớp bang-keo-ngang, hoặc chung_chi.php đặt lại $nutThem.
+// Đừng: Ẩn cột cho "vừa màn hình"; người dùng muốn kéo để xem đủ.
+// Nhóm: Giao diện, triển khai (Giao diện)
+function test_danh_sach_chung_chi_keo_ngang_tren_dien_thoai(PDO $pdo): void
+{
+    $trang = file_get_contents(__DIR__ . '/../public/admin/chung_chi.php');
+    kiem(!preg_match('/d-none d-(md|lg)-table-cell/', $trang), 'chung_chi.php không được ẩn cột theo cỡ màn hình');
+    kiem(str_contains($trang, 'bang-keo-ngang'), 'Bảng danh sách phải có lớp bang-keo-ngang');
+    kiem(!str_contains(codeKhongChuThich(__DIR__ . '/../public/admin/chung_chi.php'), '$nutThem'), 'Trang danh sách không còn nút Thêm chứng chỉ riêng');
+    $css = file_get_contents(__DIR__ . '/../public/assets/app.css');
+    kiem(preg_match('/\.bang-keo-ngang[^{]*\{[^}]*white-space: nowrap/', $css) === 1, 'Ô của bảng kéo ngang không được xuống dòng');
+}
+
 // Luật: Web chỉ có giao diện tối: thẻ <html> luôn data-bs-theme="dark", không nạp tabler-theme.min.js, không còn nút hay mục đổi giao diện.
 // Vì sao: User 09/11/2026 làm lại giao diện theo Better Stack: "nếu betterstack chỉ có tối thì làm mỗi tối thôi" (QD-25 thay QD-21).
 // Đỏ nghĩa là: Nút đổi sáng/tối quay lại (data-doi-giao-dien), hoặc trang mở ra theo lựa chọn cũ còn lưu trong trình duyệt (tabler-theme).
@@ -1674,7 +1703,7 @@ function test_ban_in_luon_nen_trang_chu_toi(PDO $pdo): void
 
 // Luật: Menu quản trị hai tầng theo app Better Stack: thanh khu Tổng quan, Cảnh báo, Chứng chỉ, Hạ tầng (+ Hệ thống cho Admin), bảng phụ chỉ cho khu nhiều trang, tài khoản ở đáy thanh; điện thoại là ngăn kéo trượt từ phải.
 // Vì sao: User 09/11/2026 duyệt mẫu: ghép 5 khu, mỗi tầng thu gọn riêng (nhớ trên máy), đại diện vuông bo góc hình nhân, ngăn kéo bên phải mở ra chỉ thấy khu lớn.
-// Đỏ nghĩa là: Thứ tự khu đổi, thiếu lối Thêm chứng chỉ, Nhập hàng loạt, ngăn kéo không còn offcanvas-end, đại diện quay lại chữ cái đầu, hoặc app.js không nhớ trạng thái thu gọn.
+// Đỏ nghĩa là: Thứ tự khu đổi, thiếu lối Thêm chứng chỉ, Nhập hàng loạt, ngăn kéo không còn offcanvas-end, đại diện quay lại chữ cái đầu, app.js không nhớ trạng thái thu gọn, hoặc logo lại là nút thu (mất lối về landing).
 // Đừng: Đưa lại menu xổ xuống của Tabler (navbar-collapse) cho điện thoại; user muốn trượt ngang từ phía nút ba gạch.
 // Nhóm: Giao diện, triển khai (Giao diện)
 function test_menu_quan_tri_hai_tang_nam_khu(PDO $pdo): void
@@ -1690,6 +1719,9 @@ function test_menu_quan_tri_hai_tang_nam_khu(PDO $pdo): void
     kiem(!str_contains($dauTrang, "mb_substr(\$nguoi['full_name']"), 'Ảnh đại diện không dùng chữ cái đầu, chưa có ảnh thì là hình nhân');
     $js = file_get_contents(__DIR__ . '/../public/assets/app.js');
     kiem(str_contains($js, "'qt-no-thanh'") && str_contains($js, "'qt-thu-phu'"), 'app.js phải nhớ trạng thái thu gọn của hai tầng');
+    // User 09/11/2026: "Phải bấm vào nút thu gọn thì mới thu chứ không phải cả mảng to cipher cert"; logo và tên là lối về landing.
+    kiem(str_contains($dauTrang, "<a class=\"qt-o qt-logo\" href=\"<?= e(url('index.php')) ?>\""), 'Logo và tên ở đầu thanh khu phải là liên kết về landing');
+    kiem(preg_match('/<button[^>]*class="qt-o qt-thu-nut"[^>]*data-qt-doi="thanh"/', $dauTrang) === 1, 'Nút thu/nở thanh khu phải là nút riêng (qt-thu-nut), không phải logo');
 }
 
 // Luật: Nền trang trí là gradient; chấm chỉ được rải như sao trên nền vũ trụ (vị trí ngẫu nhiên cố định, cỡ và độ sáng khác nhau), không lưới chấm lặp đều.

@@ -36,7 +36,6 @@ $tieuDeCot = function (string $cot, string $nhan, string $lop = '') use ($sapXep
 
 $tieuDe = 'Chứng chỉ';
 $trangHienTai = 'chung_chi';
-$nutThem = ['nhan' => 'Thêm chứng chỉ', 'dich' => 'admin/chung_chi_form.php'];
 require __DIR__ . '/../../views/dau_trang.php';
 require __DIR__ . '/../../views/tieu_de_trang.php';
 ?>
@@ -44,20 +43,22 @@ require __DIR__ . '/../../views/tieu_de_trang.php';
     <div class="container-xl">
         <?php require __DIR__ . '/../../views/bo_loc.php'; ?>
 
+        <?php // Điện thoại: hiện đủ cột, chữ không xuống dòng, bảng tràn thì kéo ngang (user 09/11/2026: "khi tràn thông tin
+              // thì phải được quyền kéo sang trái để xem"). Thêm chứng chỉ nằm ở bảng phụ của khu Chứng chỉ. ?>
         <div class="card">
             <div class="table-responsive">
-                <table class="table table-vcenter card-table">
+                <table class="table table-vcenter card-table bang-keo-ngang">
                     <thead>
                         <tr>
                             <?= $tieuDeCot('ma', 'Mã') ?>
                             <?= $tieuDeCot('ten', 'Tên chính') ?>
-                            <?= $tieuDeCot('to_chuc', 'Tổ chức cấp', 'd-none d-md-table-cell') ?>
-                            <?= $tieuDeCot('het_han', 'Hết hạn', 'd-none d-md-table-cell') ?>
+                            <?= $tieuDeCot('to_chuc', 'Tổ chức cấp') ?>
+                            <?= $tieuDeCot('het_han', 'Hết hạn') ?>
                             <?= $tieuDeCot('con_lai', 'Còn lại') ?>
                             <?= $tieuDeCot('trang_thai', 'Trạng thái') ?>
-                            <?php // Hạng an toàn tính bằng PHP (chamDiem) nên không xếp theo được; ẩn dưới 992px cho bảng khỏi tràn. ?>
-                            <th class="d-none d-lg-table-cell">An toàn</th>
-                            <th class="w-1 d-none d-md-table-cell"><span class="visually-hidden">Thao tác</span></th>
+                            <?php // Hạng an toàn tính bằng PHP (chamDiem) nên không xếp theo được. ?>
+                            <th>An toàn</th>
+                            <th class="w-1"><span class="visually-hidden">Thao tác</span></th>
                         </tr>
                     </thead>
                     <tbody>
@@ -67,8 +68,8 @@ require __DIR__ . '/../../views/tieu_de_trang.php';
                                     <a href="<?= e(url('admin/chung_chi_xem.php?id=' . (int) $dong['id'])) ?>"><?= e($dong['cert_code']) ?></a>
                                 </td>
                                 <td><?= tenMienNgatDong($dong['subject_cn']) ?></td>
-                                <td class="d-none d-md-table-cell"><?= e($dong['ca_name']) ?></td>
-                                <td class="d-none d-md-table-cell"><?= e(date('d/m/Y', strtotime($dong['valid_to']))) ?></td>
+                                <td><?= e($dong['ca_name']) ?></td>
+                                <td><?= e(date('d/m/Y', strtotime($dong['valid_to']))) ?></td>
                                 <td><?= e(moTaSoNgay($dong)) ?></td>
                                 <td>
                                     <?php
@@ -76,11 +77,11 @@ require __DIR__ . '/../../views/tieu_de_trang.php';
                                     require __DIR__ . '/../../views/nhan_trang_thai.php';
                                     ?>
                                 </td>
-                                <td class="d-none d-lg-table-cell">
+                                <td>
                                     <?php $hangDong = chamDiem($dong)['hang']; ?>
                                     <span class="badge bg-<?= HANG_AN_TOAN[$hangDong]['mau'] ?>-lt" title="<?= e(HANG_AN_TOAN[$hangDong]['nhan']) ?>"><?= $hangDong ?></span>
                                 </td>
-                                <td class="d-none d-md-table-cell">
+                                <td>
                                     <div class="btn-list flex-nowrap">
                                         <?php // Đã thu hồi thì không sửa được (luuChungChi chặn), nên không hiện nút. ?>
                                         <?php if ($dong['status'] !== 'revoked'): ?>

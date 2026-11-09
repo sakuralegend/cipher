@@ -170,13 +170,19 @@ if ($nguoi !== null) {
 <body>
 <?php if ($nguoi !== null): ?>
 <div class="qt">
-    <?php // Tầng 1, máy tính: thanh khu. Thu còn biểu tượng; rê vào logo hiện nút nở/thu (app.js: data-qt-doi). ?>
+    <?php // Tầng 1, máy tính: thanh khu. Đầu thanh như app Better Stack (user 09/11/2026): logo và tên là liên kết về
+          // landing, nút thu là nút riêng bên phải. Thanh đã thu chỉ còn logo; rê vào thì nút mở hiện đè lên logo.
+          // app.js bắt data-qt-doi. ?>
     <nav class="qt-thanh d-print-none" aria-label="Menu chính">
-        <button type="button" class="qt-o qt-logo" data-qt-doi="thanh" aria-label="Nở hoặc thu menu" title="Nở hoặc thu menu">
-            <svg class="qt-logo-dau" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" aria-hidden="true"><?= $hinhLogo ?></svg>
-            <span class="qt-logo-nut"><?= bieuTuongMenu('mo_cot', 'qt-khi-thu') ?><?= bieuTuongMenu('thu_cot', 'qt-khi-no') ?></span>
-            <span class="qt-chu"><?= e($phanTen[0]) ?><?= isset($phanTen[1]) ? ' <span class="ten-phu">' . e($phanTen[1]) . '</span>' : '' ?></span>
-        </button>
+        <div class="qt-thanh-dau">
+            <a class="qt-o qt-logo" href="<?= e(url('index.php')) ?>" title="Trang giới thiệu">
+                <svg class="qt-logo-dau" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" aria-hidden="true"><?= $hinhLogo ?></svg>
+                <span class="qt-chu"><?= e($phanTen[0]) ?><?= isset($phanTen[1]) ? ' <span class="ten-phu">' . e($phanTen[1]) . '</span>' : '' ?></span>
+            </a>
+            <button type="button" class="qt-o qt-thu-nut" data-qt-doi="thanh" aria-label="Thu hoặc mở menu" title="Thu hoặc mở menu">
+                <?= bieuTuongMenu('mo_cot', 'qt-khi-thu') ?><?= bieuTuongMenu('thu_cot', 'qt-khi-no') ?>
+            </button>
+        </div>
         <?php foreach ($khuMenu as $maKhu => [$nhanKhu, $cacTrang]): ?>
             <a class="qt-o<?= $maKhu === $khuHienTai ? ' mo' : '' ?>" href="<?= e(url($cacTrang[0][1])) ?>" title="<?= e($nhanKhu) ?>"<?= $maKhu === $khuHienTai ? ' aria-current="true"' : '' ?>>
                 <?= bieuTuongMenu($maKhu === 'chung_chi' ? 'khu_chung_chi' : $maKhu, '') ?>

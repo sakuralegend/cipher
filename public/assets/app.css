@@ -37,7 +37,9 @@
     --qt-re: #2f3647; /* rê chuột */
     --qt-vien: #2f3647; /* đường kẻ */
     --qt-dai-dien: #3a4256; /* gần nền menu cho đỡ tương phản (user 09/11/2026) */
-    --qt-chu-phu: #8e99b3; /* 5,2:1 trên thẻ */
+    --qt-chu-than: #dfe3ec; /* chữ thân trang, trong bảng: 12:1 trên thẻ */
+    --qt-chu-muc: #dbdcde; /* tên mục menu: trắng như app Better Stack (user 09/11/2026: chữ quan trọng không để xám) */
+    --qt-chu-phu: #8e99b3; /* chữ phụ, biểu tượng, tiêu đề cột: 5,2:1 trên thẻ */
     --qt-lien-ket: #9aa3fa; /* 6,3:1 trên thẻ; tím gốc #7c87f7 chỉ 4,7:1 */
 }
 
@@ -48,8 +50,8 @@
         --tblr-font-sans-serif: "Inter", "Segoe UI", system-ui, -apple-system, sans-serif;
         --tblr-body-font-family: var(--tblr-font-sans-serif);
         --tblr-body-line-height: 1.5;
-        --tblr-body-color: var(--cc-chu);
-        --tblr-body-color-rgb: 201, 211, 238;
+        --tblr-body-color: var(--qt-chu-than);
+        --tblr-body-color-rgb: 223, 227, 236;
         --tblr-heading-color: var(--cc-chu-dam);
         --tblr-emphasis-color: var(--cc-chu-dam);
         --tblr-secondary: var(--qt-chu-phu);
@@ -159,6 +161,61 @@
 .badge.bg-green-lt { background-color: color-mix(in srgb, var(--cc-xanh) 15%, transparent) !important; color: var(--cc-xanh-chu) !important; }
 .badge.bg-blue-lt { background-color: color-mix(in srgb, var(--cc-lam) 15%, transparent) !important; color: var(--cc-lam-chu) !important; }
 .badge.bg-secondary-lt { background-color: color-mix(in srgb, var(--cc-xam) 15%, transparent) !important; color: var(--cc-xam-chu) !important; }
+
+/* Chữ quan trọng trắng như app Better Stack (user 09/11/2026): tiêu đề trang, tiêu đề thẻ. Chữ phụ mới xám. */
+.page-title,
+.card-title {
+    color: var(--cc-chu-dam);
+}
+
+/* Khu quản trị: nút và ô nhập bo 8px, nút nhỏ 7px, thẻ 12px, cho nút gốc của Tabler (bo khoảng 4px) liền với nút tím,
+   ô menu và thẻ xung quanh (user 09/11/2026). Nút thường thành khối nền đặc xám xanh, chữ trắng, không viền, như nút
+   phụ của Better Stack; nút có màu riêng (btn-primary, btn-danger, btn-outline-*...) giữ màu của nó. */
+.qt-trang .btn {
+    --tblr-btn-border-radius: 8px;
+}
+
+.qt-trang .btn-sm {
+    --tblr-btn-border-radius: 7px;
+}
+
+.qt-trang .btn:not([class*="btn-primary"]):not([class*="btn-danger"]):not([class*="btn-outline"]):not([class*="btn-ghost"]):not(.btn-link) {
+    --tblr-btn-bg: var(--qt-chon);
+    --tblr-btn-border-color: transparent;
+    --tblr-btn-color: var(--cc-chu-dam);
+    --tblr-btn-hover-bg: var(--qt-re);
+    --tblr-btn-hover-border-color: transparent;
+    --tblr-btn-hover-color: var(--cc-chu-dam);
+    --tblr-btn-active-bg: var(--qt-re);
+    --tblr-btn-active-border-color: transparent;
+    --tblr-btn-box-shadow: none;
+}
+
+.qt-trang .form-control,
+.qt-trang .form-select,
+.qt-trang .input-group-text {
+    border-radius: 8px;
+}
+
+.qt-trang .card {
+    --tblr-card-border-radius: 12px;
+    border-radius: 12px;
+}
+
+/* Bảng kéo ngang (danh sách chứng chỉ): dưới 992px hiện đủ cột, chữ không xuống dòng; bảng rộng hơn màn hình thì
+   .table-responsive cho kéo ngang (user 09/11/2026: "khi tràn thông tin thì phải được quyền kéo sang trái để xem"). */
+@media (max-width: 991.98px) {
+    .bang-keo-ngang td,
+    .bang-keo-ngang th {
+        white-space: nowrap;
+    }
+
+    /* tenMienNgatDong() chèn <wbr> sau dấu chấm (cho Dashboard), và Chrome vẫn ngắt ở <wbr> dù đã nowrap: ẩn nó đi
+       thì mất chỗ ngắt, tên miền nằm một dòng (chụp 390px 09/11/2026). */
+    .bang-keo-ngang wbr {
+        display: none;
+    }
+}
 
 /* Dòng bảng cao vừa phải: thấp hơn mặc định của Tabler (khoảng 57px) để thấy được nhiều chứng chỉ hơn,
    nhưng đủ thoáng cho font Inter (user yêu cầu nới ra 07/11/2026). */
@@ -379,7 +436,7 @@ input[type="datetime-local"].is-invalid {
     background: none;
     border: 0;
     border-radius: 10px;
-    color: var(--qt-chu-phu);
+    color: var(--qt-chu-muc);
     display: flex;
     flex-shrink: 0;
     font-size: 0.875rem;
@@ -396,10 +453,17 @@ input[type="datetime-local"].is-invalid {
 }
 
 .qt-o .icon {
+    color: var(--qt-chu-phu);
     flex-shrink: 0;
     height: 1.25rem;
     margin: 0;
     width: 1.25rem;
+}
+
+.qt-o:hover .icon,
+.qt-o:focus-visible .icon,
+.qt-o.mo .icon {
+    color: var(--cc-chu-dam);
 }
 
 .qt-o:hover,
@@ -437,13 +501,24 @@ html:not(.qt-no-thanh) .qt-thanh .qt-chu,
     display: none;
 }
 
-/* Logo ở đầu thanh: rê vào thì đổi thành nút nở/thu trong ô vuông. */
+/* Đầu thanh khu như app Better Stack (user 09/11/2026): logo và tên là liên kết về landing, nút thu |< là nút riêng bên
+   phải. Thanh đã thu chỉ còn logo; rê vào thì nút mở >| hiện đè lên chỗ logo trong ô vuông. */
+.qt-thanh-dau {
+    align-items: center;
+    display: flex;
+    gap: 0.25rem;
+    margin-bottom: 0.875rem;
+    position: relative;
+}
+
 .qt-logo {
     color: var(--cc-chu-dam);
+    flex: 1;
     font-size: 1rem;
     font-weight: 650;
     letter-spacing: -0.02em;
-    margin-bottom: 0.875rem;
+    margin: 0;
+    min-width: 0;
     padding: 0 0.375rem;
 }
 
@@ -451,27 +526,30 @@ html:not(.qt-no-thanh) .qt-thanh .qt-chu,
     color: var(--qt-chu-phu);
 }
 
-.qt-logo-dau,
-.qt-logo-nut {
+.qt-logo-dau {
     flex-shrink: 0;
     height: 1.75rem;
     width: 1.75rem;
 }
 
-.qt-logo-nut {
-    align-items: center;
-    display: none;
+.qt-thu-nut {
     justify-content: center;
+    margin: 0;
+    padding: 0;
+    width: 2.5rem;
 }
 
-.qt-logo:hover .qt-logo-dau,
-.qt-logo:focus-visible .qt-logo-dau {
-    display: none;
+html:not(.qt-no-thanh) .qt-thu-nut {
+    background: var(--qt-re);
+    inset: 0;
+    opacity: 0;
+    position: absolute;
+    width: auto;
 }
 
-.qt-logo:hover .qt-logo-nut,
-.qt-logo:focus-visible .qt-logo-nut {
-    display: flex;
+html:not(.qt-no-thanh) .qt-thanh-dau:hover .qt-thu-nut,
+html:not(.qt-no-thanh) .qt-thu-nut:focus-visible {
+    opacity: 1;
 }
 
 html:not(.qt-no-thanh) .qt-khi-no,
@@ -793,7 +871,7 @@ html:not(.qt-thu-phu) .qt-khi-thu-phu {
 .qt-ngan-con a,
 .qt-ngan-con .dropdown-item {
     border-radius: 10px;
-    color: var(--qt-chu-phu);
+    color: var(--qt-chu-muc);
     display: flex;
     font-size: 0.84375rem;
     gap: 0.625rem;
