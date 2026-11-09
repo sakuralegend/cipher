@@ -86,7 +86,7 @@ C:\xampp\mysql\bin\mysql.exe -u root -e "CREATE DATABASE cipher_test CHARACTER S
 C:\xampp\php\php.exe tests\chay.php
 ```
 
-Dòng cuối phải là `XANH: 96 test`. Kết quả chi tiết ở [KIEM_THU.md](docs/KIEM_THU.md).
+Dòng cuối phải là `XANH: 97 test`. Kết quả chi tiết ở [KIEM_THU.md](docs/KIEM_THU.md).
 
 ### Cấu hình
 

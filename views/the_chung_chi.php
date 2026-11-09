@@ -2,6 +2,11 @@
 // Thẻ chứng chỉ minh hoạ, dùng chung cho landing và trang đăng nhập. app.js (taoPhimThe) cho thẻ chạy vòng đời
 // qua các thuộc tính data-ld-*. HTML dưới đây sẵn là một khung hoàn chỉnh (còn 7 ngày, đủ 3 cảnh báo):
 // tắt JavaScript hoặc bật giảm chuyển động thì người xem vẫn thấy trọn nội dung, chỉ là không chạy.
+// Thanh thời gian là thang tuyến tính từ $ngayDauRay ngày (đầu trái) tới 0 (Hết hạn), nên khoảng cách giữa các vạch
+// đúng tỉ lệ số ngày (user 09/11/2026). Đầu thang 45: vạch 7 rơi vào 84%, chữ "Hết hạn" không đè lên nó.
+// app.js đọc cùng con số qua data-ld-ngay-dau, không giữ bảng vị trí riêng.
+$ngayDauRay = 45;
+$viTriRay = fn(int $soNgay): float => round(1 - $soNgay / $ngayDauRay, 4);
 ?>
 <div class="ld-chong-the" data-ld-chong-the>
     <!-- Hai thẻ phía sau chỉ để tạo chiều sâu: còn nhiều chứng chỉ khác. -->
@@ -17,12 +22,12 @@
             <span class="ld-so" data-ld-so>7</span>
             <span class="ld-don-vi">ngày còn lại</span>
         </div>
-        <div class="ld-ray" aria-hidden="true" data-ld-ray style="--ld-ray: 0.84">
+        <div class="ld-ray" aria-hidden="true" data-ld-ray data-ld-ngay-dau="<?= $ngayDauRay ?>" style="--ld-ray: <?= $viTriRay(7) ?>">
             <div class="ld-ray-nen"><div class="ld-ray-day"></div></div>
             <div class="ld-ray-con"><i></i></div>
-            <span class="ld-ray-moc" style="left: 40%">30</span>
-            <span class="ld-ray-moc" style="left: 62%">15</span>
-            <span class="ld-ray-moc" style="left: 84%">7</span>
+            <?php foreach ([30, 15, 7] as $moc): ?>
+                <span class="ld-ray-moc" style="left: <?= $viTriRay($moc) * 100 ?>%"><?= $moc ?></span>
+            <?php endforeach; ?>
             <span class="ld-ray-moc ld-ray-het" style="left: 100%">Hết hạn</span>
         </div>
         <ul class="ld-nhat-ky">

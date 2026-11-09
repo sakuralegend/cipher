@@ -31,13 +31,13 @@ Hệ thống được kiểm ở 3 lớp:
    được chụp màn hình ở khổ máy tính và khổ điện thoại 390px trước khi giao.
 
 **Chạy lại:** cần MySQL đang bật và CSDL `cipher_test` đã tạo (README mục 2, bước 5), rồi
-`C:\xampp\php\php.exe tests\chay.php`. Mỗi test in ✅ hoặc ❌ kèm lý do; dòng cuối là `XANH: 96 test` hoặc
+`C:\xampp\php\php.exe tests\chay.php`. Mỗi test in ✅ hoặc ❌ kèm lý do; dòng cuối là `XANH: 97 test` hoặc
 `ĐỎ: số test đỏ/89`.
 
 ## 3. Danh sách test theo chức năng
 
 Tên test viết không dấu, bỏ tiền tố `test_`; tìm đúng tên đó trong `tests/chay.php` để xem code của test.
-Cột phải là câu Luật của test. Cả 96 test đều **đạt** ngày 09/11/2026.
+Cột phải là câu Luật của test. Cả 97 test đều **đạt** ngày 09/11/2026.
 
 | Nhóm | Số test | Phụ trách |
 |---|---|---|
@@ -52,8 +52,8 @@ Cột phải là câu Luật của test. Cả 96 test đều **đạt** ngày 09
 | Danh mục: tên miền, máy chủ, tổ chức cấp | 7 | Thành viên 3 |
 | Cảnh báo | 7 | Thành viên 3 |
 | Dashboard, thống kê, báo cáo | 8 | Thành viên 3 |
-| Giao diện, triển khai | 9 | Thành viên 3 |
-| **Tổng** | **96** | |
+| Giao diện, triển khai | 10 | Thành viên 3 |
+| **Tổng** | **97** | |
 
 ### Đăng nhập, phiên, phân quyền (11 test, Thành viên 1)
 
@@ -197,7 +197,7 @@ Cột phải là câu Luật của test. Cả 96 test đều **đạt** ngày 09
 | `csv_ngay_dang_nam_thang_ngay_khong_nham_ngay_thang` | Ngày trong CSV ở dạng năm-tháng-ngày, không kèm giờ. |
 | `xuat_bao_cao_lay_du_ket_qua_khong_chia_trang_va_theo_bo_loc` | Báo cáo lấy đủ kết quả, không bị chia trang, theo đúng bộ lọc và cách xếp đang chọn. |
 
-### Giao diện, triển khai (9 test, Thành viên 3)
+### Giao diện, triển khai (10 test, Thành viên 3)
 
 | Test | Quy tắc được kiểm |
 |---|---|
@@ -210,6 +210,7 @@ Cột phải là câu Luật của test. Cả 96 test đều **đạt** ngày 09
 | `chi_cham_con_hieu_luc_tren_dashboard_co_vong_sang` | Chỉ chấm "Còn hiệu lực" trên thẻ số Dashboard có vòng sáng lan ra (cham-song); máy giảm chuyển động thì đứng yên. |
 | `ten_mien_chi_xuong_dong_o_dau_cham` | Tên miền trong bảng chỉ được xuống dòng ngay sau dấu chấm, và vẫn được thoát ký tự HTML. |
 | `web_co_dia_chi_khong_duoi_cong` | Web có địa chỉ không đuôi cổng: cổng 80, Alt-Svc và cả địa chỉ gõ kèm :8443 đều dẫn về địa chỉ không đuôi, dữ liệu mẫu ghi cổng 443. |
+| `vach_thanh_thoi_gian_dung_ti_le_so_ngay` | Vạch 30, 15, 7 và "Hết hạn" trên thanh thời gian của thẻ minh hoạ nằm đúng tỉ lệ số ngày; HTML và app.js dùng chung một thang (data-ld-ngay-dau). |
 
 ## 4. Kiểm tay trên bản chạy thật
 

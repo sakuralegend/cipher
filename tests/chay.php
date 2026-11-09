@@ -2067,6 +2067,31 @@ function test_caddy_nhan_proxy_protocol_chi_tu_xray(PDO $pdo): void
     kiem(!str_contains(codeKhongChuThich(__DIR__ . '/../src/nhat_ky.php'), 'X_FORWARDED_FOR'), 'Nhật ký không được đọc IP từ header khách tự gõ được');
 }
 
+// Luật: Vạch 30, 15, 7 và "Hết hạn" trên thanh thời gian của thẻ minh hoạ nằm đúng tỉ lệ số ngày; HTML và app.js dùng chung một thang (data-ld-ngay-dau).
+// Vì sao: User 09/11/2026 thấy vạch lệch tỉ lệ: bảng vị trí đặt tay cho 30→15 (15 ngày) và 15→7 (8 ngày) cùng dài 22% thanh.
+// Đỏ nghĩa là: Một vạch không nằm ở (1 - ngày/ngày đầu thang) của thanh, hoặc app.js lại tự giữ một bảng vị trí riêng.
+// Đừng: Kéo dãn khoảng 7 → Hết hạn cho chữ dễ đọc; muốn rộng hơn thì đổi ngày đầu thang ở một chỗ duy nhất.
+function test_vach_thanh_thoi_gian_dung_ti_le_so_ngay(PDO $pdo): void
+{
+    ob_start();
+    require __DIR__ . '/../views/the_chung_chi.php';
+    $the = ob_get_clean();
+    kiem(preg_match('/data-ld-ngay-dau="(\d+)"/', $the, $m) === 1, 'Thanh thời gian phải ghi ngày đầu thang (data-ld-ngay-dau)');
+    $ngayDau = (int) $m[1];
+    preg_match_all('/class="ld-ray-moc[^"]*" style="left: ([\d.]+)%">([^<]+)</', $the, $cacVach, PREG_SET_ORDER);
+    kiem(count($cacVach) === 4, 'Phải có đủ 4 vạch: 30, 15, 7, Hết hạn');
+    foreach ($cacVach as [, $trai, $nhan]) {
+        $ngay = $nhan === 'Hết hạn' ? 0 : (int) $nhan;
+        $dung = (1 - $ngay / $ngayDau) * 100;
+        kiem(abs((float) $trai - $dung) < 0.01, "Vạch $nhan ở $trai%, đúng tỉ lệ phải ở " . round($dung, 2) . '%');
+    }
+    kiem(preg_match('/--ld-ray: ([\d.]+)/', $the, $k) === 1 && abs((float) $k[1] - (1 - 7 / $ngayDau)) < 0.0001,
+        'Khung tĩnh (còn 7 ngày) phải đặt kim đúng vạch 7');
+    // Bỏ dòng chú thích của JS (codeKhongChuThich chỉ hiểu PHP), để chú thích nhắc tên cũ không làm test đỏ giả.
+    $js = preg_replace('~^\s*//.*$~m', '', file_get_contents(__DIR__ . '/../public/assets/app.js'));
+    kiem(str_contains($js, 'ray.dataset.ldNgayDau') && !str_contains($js, 'VI_TRI_RAY'), 'app.js phải đọc thang từ HTML, không giữ bảng vị trí riêng');
+}
+
 // Luật: Trang Nhật ký hiện IP ở mọi độ rộng màn hình: cột IP chỉ có từ 992px, màn hẹp hơn thì IP nằm dưới người làm.
 // Vì sao: User 08/11/2026 trên iPhone không xem được IP: cột bị ẩn hẳn (d-none d-lg-table-cell), kéo bảng cũng không thấy.
 // Đỏ nghĩa là: Dòng IP cho màn hẹp bị xoá, hoặc nó và cột IP không cùng mốc lg nên có khoảng độ rộng không hiện IP.

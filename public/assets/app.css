@@ -796,8 +796,9 @@ input[type="datetime-local"].is-invalid {
     white-space: nowrap;
 }
 
-/* Màn rất hẹp: chữ "Hết hạn" sẽ đè lên vạch 7. */
-@media (max-width: 23.75rem) {
+/* Màn điện thoại: chữ "Hết hạn" dính vào vạch 7 thành "7 Hết hạn" (chụp khổ 390px, 09/11/2026); đầu phải của
+   thanh đã tự nói là hết hạn. */
+@media (max-width: 26.25rem) {
     .ld-ray-het {
         display: none;
     }

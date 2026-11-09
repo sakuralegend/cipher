@@ -239,11 +239,15 @@ function taoPhimThe(goc) {
 
     // Lịch của phim: tới p nào thì còn bao nhiêu ngày. Từ 7 ngày phim dừng một nhịp rồi mới gia hạn,
     // để người xem kịp đọc trạng thái khẩn cấp nhất.
-    var LICH = [[0, 90], [0.22, 30], [0.42, 15], [0.6, 7], [0.74, 7]];
+    var LICH = [[0, 45], [0.22, 30], [0.42, 15], [0.6, 7], [0.74, 7]];
     var P_GIA_HAN = 0.76;
     var SO_NGAY_MOI = 365;
-    // Vị trí trên thanh thời gian ứng với số ngày, khớp các vạch 30, 15, 7 trong views/the_chung_chi.php.
-    var VI_TRI_RAY = [[90, 0], [30, 0.4], [15, 0.62], [7, 0.84], [0, 1]];
+    // Vị trí trên thanh thời gian: thang tuyến tính từ ngày đầu thang (0) tới hết hạn (1), cùng con số với các vạch
+    // 30, 15, 7 mà views/the_chung_chi.php đặt, nên khoảng cách đúng tỉ lệ số ngày.
+    var NGAY_DAU_RAY = Number(ray.dataset.ldNgayDau);
+    function viTriRay(soNgay) {
+        return chan(1 - soNgay / NGAY_DAU_RAY, 0, 1);
+    }
 
     // Trạng thái đang hiện, để chỉ ghi vào trang khi thật sự đổi.
     var hienTai = {so: null, muc: null, chuong: null};
@@ -257,10 +261,10 @@ function taoPhimThe(goc) {
             var diTiep = chan((p - P_GIA_HAN) / 0.07, 0, 1);
             var diem = 1 - Math.pow(1 - diTiep, 3);
             soNgay = Math.round(7 + (SO_NGAY_MOI - 7) * diem);
-            viTri = 0.84 * (1 - diem);
+            viTri = viTriRay(7) * (1 - diem);
         } else {
             soNgay = Math.round(noiSuy(LICH, Math.min(p, 0.74)));
-            viTri = noiSuy(VI_TRI_RAY, soNgay);
+            viTri = viTriRay(soNgay);
         }
 
         var muc = 'xanh';
