@@ -1594,6 +1594,27 @@ function test_landing_khong_co_hieu_ung_theo_cuon_phim_the_tu_chay(PDO $pdo): vo
     }
 }
 
+// Luật: Màu trạng thái lấy từ một bộ biến (--cc-xanh, --cc-vang, --cc-cam, --cc-do theo Better Stack); thẻ chứng chỉ chỉ tô màu trạng thái ở chi tiết nhỏ, số lớn và quầng sáng không đổi màu theo trạng thái.
+// Vì sao: User 09/11/2026: video thẻ "bị chói, màu nóng, bị lệch tông với toàn trang"; đo ra vàng, cam của Tabler sáng 8-10:1 so với 6:1 của cả trang, tô cả số 88px lẫn quầng sáng 700px. User chọn phương án C trong trang so sánh.
+// Đỏ nghĩa là: Màu trạng thái gốc của Tabler (#2fb344, #f5b301, #ff8a3d, #ff5c5c) quay lại app.css, hoặc số lớn (.ld-so), quầng sáng (.ld-anh-sang) lại lấy màu --ld-mau.
+// Đừng: Đẩy độ bão hoà lên cho "nổi"; trạng thái đọc được nhờ nhãn có chữ và chấm màu, không nhờ mảng màu lớn.
+// Nhóm: Giao diện, triển khai (Giao diện)
+function test_mau_trang_thai_theo_mot_bo_bien_va_chi_to_chi_tiet_nho(PDO $pdo): void
+{
+    $css = file_get_contents(__DIR__ . '/../public/assets/app.css');
+    foreach (['--cc-xanh: #00af79', '--cc-vang: #d57b16', '--cc-cam: #e56a4e', '--cc-do: #e0687d'] as $bien) {
+        kiem(str_contains($css, $bien), "app.css thiếu biến màu trạng thái $bien");
+    }
+    // Hiện chỉ soát phần landing và đăng nhập (cuối app.css, từ chú thích "Landing:"); nhãn trạng thái khu quản trị
+    // đổi sang bộ biến này ở bước làm lại giao diện quản trị.
+    $cssLanding = substr($css, (int) strpos($css, '/* Landing:'));
+    kiem(!preg_match('/#(2fb344|f5b301|ff8a3d|ff5c5c)\b/i', $cssLanding), 'CSS landing còn màu trạng thái gốc của Tabler');
+    foreach (['.ld-so', '.ld-anh-sang'] as $lop) {
+        kiem(preg_match('/^' . preg_quote($lop, '/') . ' \{([^}]*)\}/m', $css, $khoi) === 1, "Không thấy khối $lop trong app.css");
+        kiem(!str_contains($khoi[1], '--ld-mau'), "$lop không được đổi màu theo trạng thái");
+    }
+}
+
 // Luật: Nền trang trí trên cả web chỉ là gradient, không có lưới chấm.
 // Vì sao: User 09/11/2026: "bỏ luôn kiểu nền có chấm đằng sau, nếu muốn dùng thì chỉ dùng nền gradient thôi".
 // Đỏ nghĩa là: app.css lại có mẫu chấm radial-gradient(... 1px, transparent 1px) lặp theo ô (hero, nửa trái đăng nhập, menu).

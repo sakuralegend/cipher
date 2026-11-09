@@ -432,7 +432,7 @@ input[type="datetime-local"].is-invalid {
 /* Màu trạng thái đăng ký kiểu <color> để trình duyệt đổi dần được; trình duyệt cũ thì đổi ngay, vẫn đúng. */
 @property --ld-mau {
     inherits: true;
-    initial-value: #2fb344;
+    initial-value: #00af79;
     syntax: "<color>";
 }
 
@@ -451,6 +451,13 @@ input[type="datetime-local"].is-invalid {
     --cc-nhan: #7c87f7; /* 6,2:1; chữ trắng trên nền màu này chỉ 3,15:1, nên nút dùng --cc-nut */
     --cc-nut: #5b63e8; /* chữ trắng 4,8:1 */
     --cc-nut-re: #545ce0; /* rê chuột: đậm lên (5,3:1); sáng lên #6870f0 thì tụt còn 4,1:1 */
+    /* Màu trạng thái: biến --color-brand-* trong CSS của betterstack.com, khớp pixel trên ảnh sản phẩm của họ (đo
+       09/11/2026). Cùng độ sáng với màu nhấn (6-7:1), ngả tông lạnh; màu của Tabler sáng 8-10:1 nên chói (user chọn
+       phương án C: chỉ tô chi tiết nhỏ). */
+    --cc-xanh: #00af79; /* 6,9:1 */
+    --cc-vang: #d57b16; /* 6,2:1 */
+    --cc-cam: #e56a4e; /* 6,0:1 */
+    --cc-do: #e0687d; /* 6,0:1 */
 }
 
 /* Vùng mang bảng màu: đổi luôn biến của Tabler, để chữ phụ, viền, nền thẻ của Tabler bên trong theo cùng màu. */
@@ -515,7 +522,7 @@ body:has(> main.ld-vung) {
 /* Khối bọc thẻ chứng chỉ (mục Vòng đời ở landing, nửa trái trang đăng nhập): màu trạng thái --ld-mau đổi theo
    data-ld-muc do phim thẻ trong app.js đặt, thẻ và quầng sáng bên trong cùng đổi theo. */
 [data-ld-muc] {
-    --ld-mau: #2fb344;
+    --ld-mau: var(--cc-xanh);
     transition: --ld-mau 0.5s ease;
 }
 
@@ -526,9 +533,9 @@ body:has(> main.ld-vung) {
     transition: none !important;
 }
 
-[data-ld-muc="vang"] { --ld-mau: #f5b301; }
-[data-ld-muc="cam"] { --ld-mau: #ff8a3d; }
-[data-ld-muc="do"] { --ld-mau: #ff5c5c; }
+[data-ld-muc="vang"] { --ld-mau: var(--cc-vang); }
+[data-ld-muc="cam"] { --ld-mau: var(--cc-cam); }
+[data-ld-muc="do"] { --ld-mau: var(--cc-do); }
 
 /* Hero kiểu Better Stack: chữ căn giữa, bên dưới là ảnh giao diện nằm nghiêng mờ dần vào nền.
    overflow: clip cắt phần ảnh nghiêng thò ra hai bên mà không làm trang kéo ngang được. */
@@ -779,9 +786,10 @@ body:has(> main.ld-vung) {
     }
 }
 
-/* Quầng sáng mang màu trạng thái của thẻ, đặt sau thẻ. */
+/* Quầng sáng sau thẻ: vệt tím rất nhạt đứng yên. Trước đây đổi theo màu trạng thái, rộng khoảng 700px, nên khi phim
+   chạy cả mục nhấp nháy xanh, vàng, đỏ (user 09/11/2026: "chói, màu nóng"). */
 .ld-anh-sang {
-    background: radial-gradient(closest-side, color-mix(in srgb, var(--ld-mau) 32%, transparent), transparent);
+    background: radial-gradient(closest-side, rgba(124, 135, 247, 0.12), transparent);
     height: 44rem;
     left: 70%;
     margin: -22rem 0 0 -28rem;
@@ -832,7 +840,7 @@ body:has(> main.ld-vung) {
 .ld-the {
     background: #0e1830;
     view-transition-name: the-chung-chi;
-    border: 1px solid color-mix(in srgb, var(--ld-mau) 38%, rgba(255, 255, 255, 0.1));
+    border: 1px solid var(--cc-vien);
     border-radius: 1rem;
     box-shadow: 0 1.5rem 4rem rgba(0, 0, 0, 0.5);
     margin: 0;
@@ -881,9 +889,10 @@ body:has(> main.ld-vung) {
     margin: 1.5rem 0 1.75rem;
 }
 
-/* tabular-nums: chữ số rộng bằng nhau, số đổi liên tục mà không rung ngang. */
+/* tabular-nums: chữ số rộng bằng nhau, số đổi liên tục mà không rung ngang. Số trung tính: màu trạng thái chỉ ở nhãn,
+   chấm và thanh thời gian (phương án C, user chọn 09/11/2026). */
 .ld-so {
-    color: var(--ld-mau);
+    color: var(--cc-chu-dam);
     display: inline-block;
     font-size: clamp(4rem, 8vw, 5.5rem);
     font-variant-numeric: tabular-nums;
@@ -929,7 +938,7 @@ body:has(> main.ld-vung) {
 .ld-ray-con i {
     background: #fff;
     border-radius: 50%;
-    box-shadow: 0 0 0 0.25rem color-mix(in srgb, var(--ld-mau) 45%, transparent), 0 0 1.25rem var(--ld-mau);
+    box-shadow: 0 0 0 0.25rem color-mix(in srgb, var(--ld-mau) 40%, transparent), 0 0 0.5rem var(--ld-mau);
     display: block;
     height: 0.875rem;
     margin: -0.25rem 0 0 -0.4375rem;
@@ -987,10 +996,10 @@ body:has(> main.ld-vung) {
 
 .ld-nhat-ky li.ld-bat { opacity: 1; }
 .ld-nhat-ky li.ld-bat i { background: currentColor; }
-.ld-nhat-ky [data-ld-dong="30"].ld-bat i { color: #f5b301; }
-.ld-nhat-ky [data-ld-dong="15"].ld-bat i { color: #ff8a3d; }
-.ld-nhat-ky [data-ld-dong="7"].ld-bat i { color: #ff5c5c; }
-.ld-nhat-ky [data-ld-dong="gia-han"].ld-bat i { color: #2fb344; }
+.ld-nhat-ky [data-ld-dong="30"].ld-bat i { color: var(--cc-vang); }
+.ld-nhat-ky [data-ld-dong="15"].ld-bat i { color: var(--cc-cam); }
+.ld-nhat-ky [data-ld-dong="7"].ld-bat i { color: var(--cc-do); }
+.ld-nhat-ky [data-ld-dong="gia-han"].ld-bat i { color: var(--cc-xanh); }
 
 /* Đặt ngang hàng số to, chỗ luôn trống; để dưới đáy sẽ đè lên dòng nhật ký dài trên điện thoại. */
 .ld-the-chan {
@@ -1191,9 +1200,8 @@ body:has(> main.ld-vung) {
     }
 }
 
-/* Dải cuối: không có thẻ chứng chỉ nên quầng sáng dùng màu nhấn thay cho màu trạng thái. */
+/* Dải cuối: quầng sáng tím nằm ở mép dưới, sau chân trang. */
 .ld-dai-cuoi {
-    --ld-mau: var(--cc-nhan);
     padding-top: clamp(3.5rem, 8vw, 6.5rem);
     overflow: clip;
     position: relative;
