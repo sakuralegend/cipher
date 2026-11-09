@@ -1,5 +1,5 @@
 <?php
-// Thẻ chứng chỉ minh hoạ, dùng chung cho landing và trang đăng nhập. app.js (taoPhimThe) cho thẻ chạy vòng đời
+// Thẻ chứng chỉ minh hoạ ở mục Vòng đời của landing. app.js (taoPhimThe) cho thẻ chạy vòng đời
 // qua các thuộc tính data-ld-*. HTML dưới đây sẵn là một khung hoàn chỉnh (còn 7 ngày, đủ 3 cảnh báo):
 // tắt JavaScript hoặc bật giảm chuyển động thì người xem vẫn thấy trọn nội dung, chỉ là không chạy.
 // Thanh thời gian là thang tuyến tính từ $ngayDauRay ngày (đầu trái) tới 0 (Hết hạn), nên khoảng cách giữa các vạch

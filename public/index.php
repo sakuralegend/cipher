@@ -17,7 +17,7 @@ $nutChinh = $daDangNhap
 $tieuDe = 'Giới thiệu';
 $tieuDeTab = TEN_THUONG_HIEU . ' | Quản lý chứng chỉ số'; // Trang đầu tiên khách thấy: brand đứng trước.
 $coThanhRieng = true;
-$coChuyenCanh = true; // Bấm Đăng nhập: thẻ chứng chỉ bay sang trang đăng nhập.
+$coChuyenCanh = true; // Bấm Đăng nhập: trang mờ chuyển sang trang đăng nhập.
 require __DIR__ . '/../views/dau_trang.php';
 
 // Khung giữ chỗ cho ảnh chụp giao diện: user 09/11/2026 muốn chụp ảnh thật sau khi làm xong giao diện mới,

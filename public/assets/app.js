@@ -219,7 +219,7 @@ function noiSuy(bang, x) {
     return bang[bang.length - 1][1];
 }
 
-// Phim thẻ chứng chỉ (QD-23), dùng chung cho landing và trang đăng nhập. Cả "bộ phim" là một hàm veKhung(p),
+// Phim thẻ chứng chỉ (QD-23) ở landing. Cả "bộ phim" là một hàm veKhung(p),
 // p từ 0 đến 1. goc là phần tử bọc thẻ và mang data-ld-muc, để CSS đổi màu trạng thái cho cả quầng sáng.
 // Không có JavaScript hoặc máy bật giảm chuyển động thì giữ nguyên khung tĩnh trong views/the_chung_chi.php.
 function taoPhimThe(goc) {
@@ -333,7 +333,7 @@ function taoPhimThe(goc) {
     });
 }
 
-// Landing và trang đăng nhập: mọi khối có data-ld-phim cho phim thẻ tự chạy lặp như video. Không có hiệu ứng
+// Landing: khối có data-ld-phim cho phim thẻ tự chạy lặp như video. Không có hiệu ứng
 // theo cuộn (user 09/11/2026: "bỏ hiệu ứng cuộn đi, chỉ giữ lại video thôi"). Máy bật giảm chuyển động thì thẻ đứng yên.
 if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
     document.querySelectorAll('[data-ld-phim]').forEach(taoPhimThe);

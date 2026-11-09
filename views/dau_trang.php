@@ -7,7 +7,7 @@
 $nguoi ??= null;
 $trangHienTai ??= '';
 $coThanhRieng ??= false;
-// $coChuyenCanh:   bật chuyển cảnh giữa các trang có cờ này (landing, đăng nhập): thẻ chứng chỉ bay sang trang mới.
+// $coChuyenCanh:   bật chuyển cảnh giữa các trang có cờ này (landing, đăng nhập): trang cũ mờ đi, trang mới hiện lên.
 $coChuyenCanh ??= false;
 
 // Tab trình duyệt: "Tên trang | Cipher Cert" (user chốt 08/11/2026), mở nhiều tab vẫn biết tab nào là trang nào.
@@ -78,6 +78,31 @@ $phanTen = explode(' ', TEN_THUONG_HIEU, 2);
 $thuongHieu = '<span class="thuong-hieu"><svg class="logo-dau" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" aria-hidden="true">'
     . $hinhLogo . '</svg><span>' . e($phanTen[0])
     . (isset($phanTen[1]) ? ' <span class="ten-phu">' . e($phanTen[1]) . '</span>' : '') . '</span></span>';
+
+// Nền sao (trang đăng nhập): sao rải như trên nền vũ trụ, lệch nhau tự nhiên, cỡ và độ sáng khác nhau, dày hơn
+// một chút quanh giữa trang. User 09/11/2026: "điểm xuyết vài chấm nhỏ như những ngôi sao trên nền vũ trụ rất tự
+// nhiên, không phải là chấm theo grid kiểu AI". Hạt giống cố định nên lần nào mở trang sao cũng nằm đúng chỗ cũ;
+// gieo lại hạt ngẫu nhiên sau khi dùng để không ảnh hưởng chỗ khác gọi mt_rand. SVG co giãn phủ kín khung (slice).
+mt_srand(69);
+$cacSao = '';
+for ($i = 0; $i < 150; $i++) {
+    if ($i % 3 === 0) {
+        // Một phần ba số sao gom quanh giữa: cộng ba số ngẫu nhiên cho phân bố hình chuông.
+        $x = 800 + (mt_rand(0, 1000) + mt_rand(0, 1000) + mt_rand(0, 1000) - 1500) * 0.42;
+        $y = 520 + (mt_rand(0, 1000) + mt_rand(0, 1000) + mt_rand(0, 1000) - 1500) * 0.3;
+    } else {
+        $x = mt_rand(0, 16000) / 10;
+        $y = mt_rand(0, 10000) / 10;
+    }
+    $sang = mt_rand(0, 100);
+    $banKinh = $sang > 94 ? 1.5 : ($sang > 75 ? 1.1 : 0.7); // Đa số sao rất nhỏ, vài sao sáng.
+    $doMo = round(0.18 + mt_rand(0, 55) / 100, 2);
+    $mau = mt_rand(0, 5) === 0 ? '#a5b0ff' : '#c9d3ee'; // Thỉnh thoảng một sao ánh tím.
+    $cacSao .= sprintf('<circle cx="%.1f" cy="%.1f" r="%.1f" fill="%s" opacity="%.2f"/>', $x, $y, $banKinh, $mau, $doMo);
+}
+mt_srand();
+$nenSao = '<svg class="nen-sao" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 1000" preserveAspectRatio="xMidYMid slice"'
+    . ' aria-hidden="true" focusable="false">' . $cacSao . '</svg>';
 
 // Biểu tượng tab: cùng hình logo, màu trắng trong ô nền tối, vì dấu một màu đứng riêng sẽ biến mất trên thanh tab
 // sáng. Nhúng thẳng vào trang nên không thêm file và không thêm một lượt tải.

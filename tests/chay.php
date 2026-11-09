@@ -1579,9 +1579,9 @@ function test_chuyen_canh_chi_bat_o_landing_va_dang_nhap(PDO $pdo): void
     kiem($cacTrang === ['index.php', 'login.php'], 'Trang bật chuyển cảnh phải đúng là index.php và login.php, đang là: ' . implode(', ', $cacTrang));
 }
 
-// Luật: Landing không có hiệu ứng theo độ cuộn; phim thẻ chứng chỉ luôn tự chạy lặp như video, ở landing và trang đăng nhập.
+// Luật: Landing không có hiệu ứng theo độ cuộn; phim thẻ chứng chỉ luôn tự chạy lặp như video (chỉ landing có, trang đăng nhập đã bỏ).
 // Vì sao: User 09/11/2026 khi làm lại giao diện kiểu Better Stack: "bỏ hiệu ứng cuộn đi, chỉ giữ lại video thôi". Hero ghim 380vh để tua phim làm trang trống cả mảng dài.
-// Đỏ nghĩa là: app.js lại nghe sự kiện cuộn, hoặc một trang có thẻ chứng chỉ mà phim không tự chạy (thiếu data-ld-phim).
+// Đỏ nghĩa là: app.js lại nghe sự kiện cuộn, hoặc landing có thẻ chứng chỉ mà phim không tự chạy (thiếu data-ld-phim).
 // Đừng: Ghim lại hero hay cho phần tử hiện dần theo cuộn vì "sinh động hơn"; chuyển động chỉ còn phim tự chạy và hiệu ứng rê chuột.
 // Nhóm: Giao diện, triển khai (Giao diện)
 function test_landing_khong_co_hieu_ung_theo_cuon_phim_the_tu_chay(PDO $pdo): void
@@ -1589,9 +1589,20 @@ function test_landing_khong_co_hieu_ung_theo_cuon_phim_the_tu_chay(PDO $pdo): vo
     $js = preg_replace('~^\s*//.*$~m', '', file_get_contents(__DIR__ . '/../public/assets/app.js'));
     kiem(!preg_match("/addEventListener\\(\\s*'scroll'/", $js), "app.js không được nghe sự kiện 'scroll'");
     kiem(!str_contains($js, 'scrollRestoration'), 'app.js không được tự đặt lại vị trí cuộn');
-    foreach (['public/index.php', 'public/login.php'] as $tep) {
-        kiem(str_contains(file_get_contents(__DIR__ . '/../' . $tep), 'data-ld-phim'), "$tep phải gắn data-ld-phim cho khối chứa thẻ để phim tự chạy");
-    }
+    kiem(str_contains(file_get_contents(__DIR__ . '/../public/index.php'), 'data-ld-phim'), 'index.php phải gắn data-ld-phim cho khối chứa thẻ để phim tự chạy');
+}
+
+// Luật: Trang đăng nhập theo trang đăng nhập của Better Stack: một cột giữa trên nền sao, logo, tiêu đề, form; không video thẻ, không nút sáng/tối.
+// Vì sao: User 09/11/2026 gửi ảnh trang đăng nhập Better Stack: "Bỏ luôn cái hình video đi, làm theo trang của họ".
+// Đỏ nghĩa là: login.php lại nạp thẻ chứng chỉ (the_chung_chi.php, data-ld-phim), lại có nút đổi giao diện, hoặc mất nền sao.
+// Đừng: Đưa lại nửa trái minh hoạ cho "đỡ trống"; khoảng trống quanh form là chủ đích của kiểu trang này.
+// Nhóm: Giao diện, triển khai (Giao diện)
+function test_trang_dang_nhap_mot_cot_giua_khong_video(PDO $pdo): void
+{
+    $trang = file_get_contents(__DIR__ . '/../public/login.php');
+    kiem(!str_contains($trang, 'the_chung_chi.php') && !str_contains($trang, 'data-ld-phim'), 'login.php không còn video thẻ chứng chỉ');
+    kiem(!str_contains($trang, '$nutGiaoDien'), 'login.php không còn nút đổi giao diện (web chỉ tối)');
+    kiem(str_contains($trang, '$nenSao'), 'login.php phải có nền sao ($nenSao)');
 }
 
 // Luật: Màu trạng thái lấy từ một bộ biến (--cc-xanh, --cc-vang, --cc-cam, --cc-do theo Better Stack); thẻ chứng chỉ chỉ tô màu trạng thái ở chi tiết nhỏ, số lớn và quầng sáng không đổi màu theo trạng thái.
@@ -1615,15 +1626,17 @@ function test_mau_trang_thai_theo_mot_bo_bien_va_chi_to_chi_tiet_nho(PDO $pdo): 
     }
 }
 
-// Luật: Nền trang trí trên cả web chỉ là gradient, không có lưới chấm.
-// Vì sao: User 09/11/2026: "bỏ luôn kiểu nền có chấm đằng sau, nếu muốn dùng thì chỉ dùng nền gradient thôi".
-// Đỏ nghĩa là: app.css lại có mẫu chấm radial-gradient(... 1px, transparent 1px) lặp theo ô (hero, nửa trái đăng nhập, menu).
-// Đừng: Vẽ lưới chấm bằng ảnh hay SVG để né test; muốn chiều sâu thì dùng vệt sáng gradient.
+// Luật: Nền trang trí là gradient; chấm chỉ được rải như sao trên nền vũ trụ (vị trí ngẫu nhiên cố định, cỡ và độ sáng khác nhau), không lưới chấm lặp đều.
+// Vì sao: User 09/11/2026: "bỏ luôn kiểu nền có chấm đằng sau, nếu muốn dùng thì chỉ dùng nền gradient thôi"; sau đó cho phép "vài chấm nhỏ như những ngôi sao trên nền vũ trụ rất tự nhiên, không phải là chấm theo grid kiểu AI".
+// Đỏ nghĩa là: app.css lại có mẫu chấm radial-gradient(... 1px, transparent 1px) lặp theo ô, hoặc nền sao không còn sinh ngẫu nhiên có hạt giống ($nenSao, mt_srand).
+// Đừng: Vẽ lưới chấm bằng ảnh hay SVG để né test; sao phải lệch nhau tự nhiên, muốn chiều sâu thì thêm vệt sáng gradient.
 // Nhóm: Giao diện, triển khai (Giao diện)
 function test_nen_trang_tri_chi_la_gradient_khong_luoi_cham(PDO $pdo): void
 {
     $css = file_get_contents(__DIR__ . '/../public/assets/app.css');
     kiem(!preg_match('/1px,\s*transparent\s+1px\)/', $css), 'app.css còn nền lưới chấm');
+    $dauTrang = file_get_contents(__DIR__ . '/../views/dau_trang.php');
+    kiem(str_contains($dauTrang, '$nenSao = ') && str_contains($dauTrang, 'mt_srand('), 'Nền sao phải sinh ngẫu nhiên có hạt giống trong dau_trang.php ($nenSao, mt_srand)');
 }
 
 // Luật: Landing không có hình minh hoạ vẽ giả giao diện; chỗ cần hình là ảnh chụp thật của hệ thống hoặc khung giữ chỗ chờ ảnh.
