@@ -2317,64 +2317,64 @@ function kiemTaiLieuKhopCode(): void
    - ", $loi));
 }
 
-// Sơ đồ ERD dạng Mermaid, sinh từ chính CSDL vừa nạp schema.sql (user chốt 09/11/2026): ERD dán vào tài liệu lúc nào
-// cũng đúng bằng code. Chạy "php tests/chay.php --erd" (cần MySQL), dán kết quả vào docs/ERD.md trong khối ```mermaid;
-// --tai-lieu so lại. Chú thích một cột = chú thích cuối dòng ("-- ...") của cột đó trong schema.sql; dòng chú thích
-// nằm riêng phía trên một cột là lý do thiết kế, dành cho SPEC, không đưa vào sơ đồ cho gọn.
-function sinhErd(PDO $pdo): string
-{
-    $chuThich = [];
-    $bang = null;
-    foreach (file(__DIR__ . '/../database/schema.sql', FILE_IGNORE_NEW_LINES) as $dong) {
-        if (preg_match('/^CREATE TABLE (\w+)/', $dong, $m) === 1) {
-            $bang = $m[1];
-        } elseif (str_starts_with($dong, ')')) {
-            $bang = null;
-        } elseif ($bang !== null && preg_match('/^\s+(\w+)\s.*?--\s*(.+)$/', $dong, $m) === 1) {
-            // Mermaid đặt chú thích trong ngoặc kép: đổi ngoặc kép trong câu thành ngoặc đơn.
-            $chuThich[$bang][$m[1]] = str_replace('"', "'", trim($m[2]));
-        }
-    }
-
-    $csdl = $pdo->query('SELECT DATABASE()')->fetchColumn();
-    $cau = $pdo->prepare("SELECT TABLE_NAME, COLUMN_NAME, REFERENCED_TABLE_NAME FROM information_schema.KEY_COLUMN_USAGE
-                          WHERE TABLE_SCHEMA = ? AND REFERENCED_TABLE_NAME IS NOT NULL ORDER BY TABLE_NAME, COLUMN_NAME");
-    $cau->execute([$csdl]);
-    $khoaNgoai = $cau->fetchAll();
-    $laKhoaNgoai = array_flip(array_map(fn(array $k): string => $k['TABLE_NAME'] . '.' . $k['COLUMN_NAME'], $khoaNgoai));
-
-    // Chỉ bảng thật: v_certificates là view tính từ certificates, không phải thực thể riêng.
-    $cau = $pdo->prepare("SELECT c.TABLE_NAME, c.COLUMN_NAME, c.DATA_TYPE, c.IS_NULLABLE, c.COLUMN_KEY
-                          FROM information_schema.COLUMNS c
-                          JOIN information_schema.TABLES t ON t.TABLE_SCHEMA = c.TABLE_SCHEMA AND t.TABLE_NAME = c.TABLE_NAME
-                          WHERE c.TABLE_SCHEMA = ? AND t.TABLE_TYPE = 'BASE TABLE'
-                          ORDER BY c.TABLE_NAME, c.ORDINAL_POSITION");
-    $cau->execute([$csdl]);
-    $cacBang = [];
-    $choPhepTrong = [];
-    foreach ($cau->fetchAll() as $c) {
-        $ten = $c['TABLE_NAME'] . '.' . $c['COLUMN_NAME'];
-        $choPhepTrong[$ten] = $c['IS_NULLABLE'] === 'YES';
-        $khoa = array_filter([$c['COLUMN_KEY'] === 'PRI' ? 'PK' : null, isset($laKhoaNgoai[$ten]) ? 'FK' : null,
-            $c['COLUMN_KEY'] === 'UNI' ? 'UK' : null]);
-        $cacBang[$c['TABLE_NAME']][] = "        {$c['DATA_TYPE']} {$c['COLUMN_NAME']}" . ($khoa !== [] ? ' ' . implode(', ', $khoa) : '')
-            . (isset($chuThich[$c['TABLE_NAME']][$c['COLUMN_NAME']]) ? ' "' . $chuThich[$c['TABLE_NAME']][$c['COLUMN_NAME']] . '"' : '');
-    }
-
-    $ra = ['erDiagram'];
-    // Một khoá ngoại là một quan hệ 1-n; cột khoá ngoại được trống thì phía cha là "không hoặc một".
-    foreach ($khoaNgoai as $k) {
-        $cha = $choPhepTrong[$k['TABLE_NAME'] . '.' . $k['COLUMN_NAME']] ? '|o' : '||';
-        $ra[] = "    {$k['REFERENCED_TABLE_NAME']} $cha--o{ {$k['TABLE_NAME']} : \"{$k['COLUMN_NAME']}\"";
-    }
-    foreach ($cacBang as $bang => $cacCot) {
-        $ra[] = "    $bang {";
-        array_push($ra, ...$cacCot);
-        $ra[] = '    }';
-    }
-    return implode("\n", $ra) . "\n";
-}
-
+// Sơ đồ ERD dạng Mermaid, sinh từ chính CSDL vừa nạp schema.sql (user chốt 09/11/2026): ERD dán vào tài liệu lúc nào
+// cũng đúng bằng code. Chạy "php tests/chay.php --erd" (cần MySQL), dán kết quả vào docs/ERD.md trong khối ```mermaid;
+// --tai-lieu so lại. Chú thích một cột = chú thích cuối dòng ("-- ...") của cột đó trong schema.sql; dòng chú thích
+// nằm riêng phía trên một cột là lý do thiết kế, dành cho SPEC, không đưa vào sơ đồ cho gọn.
+function sinhErd(PDO $pdo): string
+{
+    $chuThich = [];
+    $bang = null;
+    foreach (file(__DIR__ . '/../database/schema.sql', FILE_IGNORE_NEW_LINES) as $dong) {
+        if (preg_match('/^CREATE TABLE (\w+)/', $dong, $m) === 1) {
+            $bang = $m[1];
+        } elseif (str_starts_with($dong, ')')) {
+            $bang = null;
+        } elseif ($bang !== null && preg_match('/^\s+(\w+)\s.*?--\s*(.+)$/', $dong, $m) === 1) {
+            // Mermaid đặt chú thích trong ngoặc kép: đổi ngoặc kép trong câu thành ngoặc đơn.
+            $chuThich[$bang][$m[1]] = str_replace('"', "'", trim($m[2]));
+        }
+    }
+
+    $csdl = $pdo->query('SELECT DATABASE()')->fetchColumn();
+    $cau = $pdo->prepare("SELECT TABLE_NAME, COLUMN_NAME, REFERENCED_TABLE_NAME FROM information_schema.KEY_COLUMN_USAGE
+                          WHERE TABLE_SCHEMA = ? AND REFERENCED_TABLE_NAME IS NOT NULL ORDER BY TABLE_NAME, COLUMN_NAME");
+    $cau->execute([$csdl]);
+    $khoaNgoai = $cau->fetchAll();
+    $laKhoaNgoai = array_flip(array_map(fn(array $k): string => $k['TABLE_NAME'] . '.' . $k['COLUMN_NAME'], $khoaNgoai));
+
+    // Chỉ bảng thật: v_certificates là view tính từ certificates, không phải thực thể riêng.
+    $cau = $pdo->prepare("SELECT c.TABLE_NAME, c.COLUMN_NAME, c.DATA_TYPE, c.IS_NULLABLE, c.COLUMN_KEY
+                          FROM information_schema.COLUMNS c
+                          JOIN information_schema.TABLES t ON t.TABLE_SCHEMA = c.TABLE_SCHEMA AND t.TABLE_NAME = c.TABLE_NAME
+                          WHERE c.TABLE_SCHEMA = ? AND t.TABLE_TYPE = 'BASE TABLE'
+                          ORDER BY c.TABLE_NAME, c.ORDINAL_POSITION");
+    $cau->execute([$csdl]);
+    $cacBang = [];
+    $choPhepTrong = [];
+    foreach ($cau->fetchAll() as $c) {
+        $ten = $c['TABLE_NAME'] . '.' . $c['COLUMN_NAME'];
+        $choPhepTrong[$ten] = $c['IS_NULLABLE'] === 'YES';
+        $khoa = array_filter([$c['COLUMN_KEY'] === 'PRI' ? 'PK' : null, isset($laKhoaNgoai[$ten]) ? 'FK' : null,
+            $c['COLUMN_KEY'] === 'UNI' ? 'UK' : null]);
+        $cacBang[$c['TABLE_NAME']][] = "        {$c['DATA_TYPE']} {$c['COLUMN_NAME']}" . ($khoa !== [] ? ' ' . implode(', ', $khoa) : '')
+            . (isset($chuThich[$c['TABLE_NAME']][$c['COLUMN_NAME']]) ? ' "' . $chuThich[$c['TABLE_NAME']][$c['COLUMN_NAME']] . '"' : '');
+    }
+
+    $ra = ['erDiagram'];
+    // Một khoá ngoại là một quan hệ 1-n; cột khoá ngoại được trống thì phía cha là "không hoặc một".
+    foreach ($khoaNgoai as $k) {
+        $cha = $choPhepTrong[$k['TABLE_NAME'] . '.' . $k['COLUMN_NAME']] ? '|o' : '||';
+        $ra[] = "    {$k['REFERENCED_TABLE_NAME']} $cha--o{ {$k['TABLE_NAME']} : \"{$k['COLUMN_NAME']}\"";
+    }
+    foreach ($cacBang as $bang => $cacCot) {
+        $ra[] = "    $bang {";
+        array_push($ra, ...$cacCot);
+        $ra[] = '    }';
+    }
+    return implode("\n", $ra) . "\n";
+}
+
 // Chế độ sinh ERD (xem sinhErd): nạp lại cipher_test rồi in sơ đồ, không chạy test thường.
 if (in_array('--erd', $argv, true)) {
     $pdo = ketNoiCsdl('cipher_test');
