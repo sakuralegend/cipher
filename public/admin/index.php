@@ -57,12 +57,12 @@ require __DIR__ . '/../../views/tieu_de_trang.php';
                         </div>
                     </div>
                     <div class="table-responsive">
-                        <table class="table table-vcenter card-table">
+                        <table class="table table-vcenter card-table bang-keo-ngang">
                             <thead>
                                 <tr>
                                     <th>Mã</th>
                                     <th>Tên chính</th>
-                                    <th class="d-none d-md-table-cell">Hết hạn</th>
+                                    <th>Hết hạn</th>
                                     <th>Còn lại</th>
                                     <th class="w-1"><span class="visually-hidden">Thao tác</span></th>
                                 </tr>
@@ -74,7 +74,7 @@ require __DIR__ . '/../../views/tieu_de_trang.php';
                                             <a href="<?= e(url('admin/chung_chi_xem.php?id=' . (int) $dong['id'])) ?>"><?= e($dong['cert_code']) ?></a>
                                         </td>
                                         <td><?= tenMienNgatDong($dong['subject_cn']) ?></td>
-                                        <td class="d-none d-md-table-cell"><?= e(date('d/m/Y', strtotime($dong['valid_to']))) ?></td>
+                                        <td><?= e(date('d/m/Y', strtotime($dong['valid_to']))) ?></td>
                                         <td class="text-nowrap"><?= e(moTaSoNgay($dong)) ?></td>
                                         <td>
                                             <a class="btn btn-sm" href="<?= e(url('admin/chung_chi_gia_han.php?id=' . (int) $dong['id'])) ?>">Gia hạn</a>

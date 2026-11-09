@@ -150,7 +150,7 @@ require __DIR__ . '/../../views/tieu_de_trang.php';
                 <div class="card">
                     <div class="card-header"><h2 class="card-title">Lịch sử gia hạn</h2></div>
                     <div class="table-responsive">
-                        <table class="table table-vcenter card-table">
+                        <table class="table table-vcenter card-table bang-keo-ngang">
                             <thead>
                                 <tr>
                                     <th>Thời điểm</th>

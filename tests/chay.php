@@ -1652,16 +1652,22 @@ function test_chu_quan_trong_trong_quan_tri_la_chu_trang(PDO $pdo): void
     kiem(str_contains($css, '--tblr-body-color: var(--qt-chu-than)'), 'Chữ thân khu quản trị phải dùng --qt-chu-than (trắng ngà)');
 }
 
-// Luật: Danh sách chứng chỉ trên điện thoại hiện đủ cột, chữ không xuống dòng, bảng tràn thì kéo ngang; trang không có nút Thêm chứng chỉ riêng.
-// Vì sao: User 09/11/2026: "trên điện thoại bị cắt nhiều thông tin. Tôi muốn khi tràn thông tin thì phải được quyền kéo sang trái để xem"; nút Thêm đã có trong bảng phụ của khu Chứng chỉ.
-// Đỏ nghĩa là: Một cột của bảng lại ẩn theo cỡ màn hình (d-none ... -table-cell), bảng mất lớp bang-keo-ngang, hoặc chung_chi.php đặt lại $nutThem.
-// Đừng: Ẩn cột cho "vừa màn hình"; người dùng muốn kéo để xem đủ.
+// Luật: Mọi bảng của khu quản trị hiện đủ cột ở mọi cỡ màn hình; dưới 992px chữ không xuống dòng (trừ ô dài đánh dấu o-xuong-dong) và bảng tràn thì kéo ngang. Trang danh sách chứng chỉ không có nút Thêm riêng.
+// Vì sao: User 09/11/2026: "trên điện thoại bị cắt nhiều thông tin. Tôi muốn khi tràn thông tin thì phải được quyền kéo sang trái để xem", rồi "áp cùng" cho mọi bảng; nút Thêm chứng chỉ đã có trong bảng phụ.
+// Đỏ nghĩa là: Một cột lại ẩn theo cỡ màn hình (d-none ... -table-cell), một bảng card-table thiếu lớp bang-keo-ngang, hoặc chung_chi.php đặt lại $nutThem.
+// Đừng: Ẩn cột hay dồn thông tin xuống dòng phụ chỉ hiện trên điện thoại cho "vừa màn hình"; người dùng muốn kéo để xem đủ.
 // Nhóm: Giao diện, triển khai (Giao diện)
-function test_danh_sach_chung_chi_keo_ngang_tren_dien_thoai(PDO $pdo): void
+function test_moi_bang_quan_tri_keo_ngang_tren_dien_thoai(PDO $pdo): void
 {
-    $trang = file_get_contents(__DIR__ . '/../public/admin/chung_chi.php');
-    kiem(!preg_match('/d-none d-(md|lg)-table-cell/', $trang), 'chung_chi.php không được ẩn cột theo cỡ màn hình');
-    kiem(str_contains($trang, 'bang-keo-ngang'), 'Bảng danh sách phải có lớp bang-keo-ngang');
+    foreach (glob(__DIR__ . '/../public/admin/*.php') as $tep) {
+        $trang = file_get_contents($tep);
+        $ten = basename($tep);
+        kiem(!preg_match('/d-none d-(sm|md|lg|xl)-table-cell/', $trang), "$ten không được ẩn cột theo cỡ màn hình");
+        preg_match_all('/<table class="([^"]*)"/', $trang, $cacBang);
+        foreach ($cacBang[1] as $lop) {
+            kiem(!str_contains($lop, 'card-table') || str_contains($lop, 'bang-keo-ngang'), "$ten có bảng thiếu lớp bang-keo-ngang");
+        }
+    }
     kiem(!str_contains(codeKhongChuThich(__DIR__ . '/../public/admin/chung_chi.php'), '$nutThem'), 'Trang danh sách không còn nút Thêm chứng chỉ riêng');
     $css = file_get_contents(__DIR__ . '/../public/assets/app.css');
     kiem(preg_match('/\.bang-keo-ngang[^{]*\{[^}]*white-space: nowrap/', $css) === 1, 'Ô của bảng kéo ngang không được xuống dòng');
@@ -2511,17 +2517,17 @@ function test_cham_hang_nhan_dien_gost_va_khong_tron_trang_thai(PDO $pdo): void
     kiem($hetHan['hang'] === 'A', 'Hết hạn, thu hồi không được làm đổi hạng');
 }
 
-// Luật: Trang Nhật ký hiện IP ở mọi độ rộng màn hình: cột IP chỉ có từ 992px, màn hẹp hơn thì IP nằm dưới người làm.
-// Vì sao: User 08/11/2026 trên iPhone không xem được IP: cột bị ẩn hẳn (d-none d-lg-table-cell), kéo bảng cũng không thấy.
-// Đỏ nghĩa là: Dòng IP cho màn hẹp bị xoá, hoặc nó và cột IP không cùng mốc lg nên có khoảng độ rộng không hiện IP.
-// Đừng: Bỏ d-none của cột IP cho "đơn giản"; bảng 5 cột tràn ngang trên điện thoại.
+// Luật: Trang Nhật ký có cột IP và cột Hành động ở mọi độ rộng màn hình; điện thoại kéo ngang bảng để xem, không còn dòng IP, nhãn hành động phụ chỉ hiện trên màn hẹp.
+// Vì sao: User 08/11/2026 trên iPhone không xem được IP (cột ẩn hẳn); 09/11/2026 user chốt mọi bảng hiện đủ cột và kéo ngang thay cho dồn thông tin xuống dòng.
+// Đỏ nghĩa là: Cột IP hay Hành động lại ẩn theo cỡ màn hình, hoặc còn bản sao chỉ hiện trên màn hẹp (d-lg-none, d-md-none) làm thông tin hiện hai lần khi kéo.
+// Đừng: Đưa lại dòng IP dưới người làm; ô mô tả dài đã được xuống dòng riêng (o-xuong-dong) nên bảng không dài vô hạn.
 // Nhóm: Nhật ký hoạt động (mở rộng 1) (Mở rộng 1)
 function test_nhat_ky_hien_ip_o_moi_do_rong_man_hinh(PDO $pdo): void
 {
     $trang = file_get_contents(__DIR__ . '/../public/admin/nhat_ky.php');
-    kiem(str_contains($trang, '<th class="d-none d-lg-table-cell">IP</th>'), 'Cột IP hiện từ mốc lg (992px)');
-    kiem(preg_match('/class="[^"]*\bd-lg-none\b[^"]*">IP <\?= e\(\$dong\[\'ip\'\]\) \?>/', $trang) === 1,
-        'Màn hẹp hơn lg phải có dòng IP thay cho cột IP');
+    kiem(str_contains($trang, '<th>IP</th>') && str_contains($trang, '<th>Hành động</th>'), 'Cột IP và Hành động phải hiện ở mọi độ rộng');
+    kiem(!preg_match('/d-(md|lg)-none/', $trang), 'Không còn bản sao IP, hành động chỉ hiện trên màn hẹp');
+    kiem(str_contains($trang, 'o-xuong-dong'), 'Ô mô tả dài phải được xuống dòng (o-xuong-dong)');
 }
 
 // KHÔNG phải test thường: chạy riêng bằng "php tests/chay.php --tai-lieu", lúc đồng bộ tài liệu nộp lần cuối.

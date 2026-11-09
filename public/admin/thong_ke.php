@@ -57,7 +57,7 @@ require __DIR__ . '/../../views/tieu_de_trang.php';
                         ], 'Biểu đồ số chứng chỉ theo trạng thái; số liệu ở bảng bên dưới.') ?>
                     </div>
                     <div class="table-responsive">
-                        <table class="table table-sm card-table">
+                        <table class="table table-sm card-table bang-keo-ngang">
                             <thead><tr><th>Trạng thái</th><th class="text-end">Số chứng chỉ</th></tr></thead>
                             <tbody>
                                 <?php foreach (TRANG_THAI as $khoa => $thongTin): ?>
@@ -83,7 +83,7 @@ require __DIR__ . '/../../views/tieu_de_trang.php';
                             'Biểu đồ số chứng chỉ hết hạn theo từng tháng; số liệu ở bảng bên dưới.') ?>
                     </div>
                     <div class="table-responsive">
-                        <table class="table table-sm card-table">
+                        <table class="table table-sm card-table bang-keo-ngang">
                             <thead><tr><th>Tháng</th><th class="text-end">Số chứng chỉ</th><th class="ps-5">Tháng</th><th class="text-end">Số chứng chỉ</th></tr></thead>
                             <tbody>
                                 <?php // Hai cặp cột, sáu hàng: bảng không dài gấp đôi biểu đồ bên cạnh. ?>
@@ -120,7 +120,7 @@ require __DIR__ . '/../../views/tieu_de_trang.php';
                                     $tieuDeThe . '; số liệu ở bảng bên dưới.') ?>
                             </div>
                             <div class="table-responsive">
-                                <table class="table table-sm card-table">
+                                <table class="table table-sm card-table bang-keo-ngang">
                                     <thead><tr><th><?= e($tenCot) ?></th><th class="text-end">Số chứng chỉ</th></tr></thead>
                                     <tbody>
                                         <?php foreach ($soLieu as $ten => $so): ?>

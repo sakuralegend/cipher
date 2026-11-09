@@ -24,7 +24,7 @@ require __DIR__ . '/../../views/tieu_de_trang.php';
     <div class="container-xl">
         <div class="card">
             <div class="table-responsive">
-                <table class="table table-vcenter card-table">
+                <table class="table table-vcenter card-table bang-keo-ngang">
                     <thead>
                         <tr>
                             <th>Tên máy chủ</th>

@@ -215,6 +215,12 @@
     .bang-keo-ngang wbr {
         display: none;
     }
+
+    /* Ô chữ dài (mô tả trong Nhật ký) vẫn xuống dòng trong khung đủ đọc, không kéo bảng dài cả trăm ký tự. */
+    .bang-keo-ngang td.o-xuong-dong {
+        min-width: 16rem;
+        white-space: normal;
+    }
 }
 
 /* Dòng bảng cao vừa phải: thấp hơn mặc định của Tabler (khoảng 57px) để thấy được nhiều chứng chỉ hơn,

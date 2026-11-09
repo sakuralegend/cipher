@@ -59,14 +59,14 @@ require __DIR__ . '/../../views/tieu_de_trang.php';
                 <div class="card-subtitle ms-md-auto text-secondary">Nhật ký chỉ được thêm, không ai sửa hay xoá được.</div>
             </div>
             <div class="table-responsive">
-                <table class="table table-vcenter card-table">
+                <table class="table table-vcenter card-table bang-keo-ngang">
                     <thead>
                         <tr>
                             <th>Thời gian</th>
                             <th>Người làm</th>
-                            <th class="d-none d-md-table-cell">Hành động</th>
+                            <th>Hành động</th>
                             <th>Đối tượng</th>
-                            <th class="d-none d-lg-table-cell">IP</th>
+                            <th>IP</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -88,16 +88,10 @@ require __DIR__ . '/../../views/tieu_de_trang.php';
                                         <?= e($dong['full_name']) ?>
                                         <div class="small text-secondary ma-so"><?= e($dong['username']) ?></div>
                                     <?php endif; ?>
-                                    <?php // Màn hẹp không có cột IP: IP nằm dưới người làm ("ai, từ đâu"). Không đặt ở ô Thời gian
-                                          // vì ô đó không xuống dòng, IPv6 dài sẽ đẩy bảng tràn ngang (iPhone 08/11/2026). ?>
-                                    <?php if ($dong['ip'] !== null): ?>
-                                        <div class="small text-secondary ma-so text-break d-lg-none">IP <?= e($dong['ip']) ?></div>
-                                    <?php endif; ?>
                                 </td>
-                                <td class="d-none d-md-table-cell"><span class="badge bg-<?= e($hd['mau']) ?>-lt"><?= e($hd['nhan']) ?></span></td>
-                                <td>
-                                    <?php // Màn hẹp không có cột Hành động: nhãn hành động nằm đầu ô này. ?>
-                                    <span class="badge bg-<?= e($hd['mau']) ?>-lt d-md-none mb-1"><?= e($hd['nhan']) ?></span>
+                                <td><span class="badge bg-<?= e($hd['mau']) ?>-lt"><?= e($hd['nhan']) ?></span></td>
+                                <?php // Mô tả có thể dài (lý do đọc chứng chỉ hỏng): ô này được xuống dòng kể cả khi bảng kéo ngang. ?>
+                                <td class="o-xuong-dong">
                                     <?php // Link chỉ đặt trên loại đối tượng: mô tả có thể kèm lý do ("nhanvien, sai mật khẩu"),
                                           // tô màu link cả câu thì lý do trông như một phần tên (review 08/11/2026).
                                           // Chỉ đặt link khi đối tượng còn trong CSDL; đã xoá thì vẫn đọc được tên lúc đó. ?>
@@ -112,7 +106,7 @@ require __DIR__ . '/../../views/tieu_de_trang.php';
                                     <?php endif; ?>
                                     <?= e($dong['detail']) ?>
                                 </td>
-                                <td class="d-none d-lg-table-cell small text-secondary ma-so"><?= e($dong['ip']) ?></td>
+                                <td class="small text-secondary ma-so"><?= e($dong['ip']) ?></td>
                             </tr>
                         <?php endforeach; ?>
                         <?php if ($ketQua['dong'] === []): ?>
