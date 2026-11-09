@@ -33,6 +33,11 @@ if ($id !== null) {
         datThongBao('danger', 'Chứng chỉ không còn tồn tại.');
         chuyenHuong('admin/chung_chi.php');
     }
+    // Đã thu hồi thì không sửa được (luuChungChi cũng chặn): báo ngay thay vì để người dùng điền xong mới bị từ chối.
+    if ($giaTri['is_revoked']) {
+        datThongBao('warning', 'Chứng chỉ đã thu hồi chỉ còn để tra cứu, không sửa được. Theo dõi chứng chỉ mới thì thêm mới.');
+        chuyenHuong('admin/chung_chi_xem.php?id=' . $id);
+    }
 }
 
 // Tab đang mở. Form sửa chỉ có nhập thủ công.

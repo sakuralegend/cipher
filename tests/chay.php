@@ -864,6 +864,30 @@ function test_thu_hoi_giu_du_lieu_va_khong_hoan_tac_duoc(PDO $pdo): void
     kiem(moTaSoNgay(timChungChi($pdo, 1)) === 'Không áp dụng', 'Đã thu hồi thì không đếm ngày');
 }
 
+// Luật: Chứng chỉ đã thu hồi không sửa được, kể cả gửi thẳng tới máy chủ; trang chi tiết không hiện nút Sửa, form sửa đẩy về trang chi tiết.
+// Vì sao: User 09/11/2026: thu hồi là trạng thái cuối, bản ghi chỉ còn để tra cứu. Cho sửa thì lách được luật chặn gia hạn (đổi vân tay, ngày, tên miền thành chứng chỉ khác) và mất dấu thông tin lúc thu hồi.
+// Đỏ nghĩa là: luuChungChi() ghi đè bản ghi đã thu hồi, hoặc trang chi tiết, form sửa lại mở đường sửa.
+// Đừng: Chỉ ẩn nút; gõ thẳng chung_chi_form.php?id= vẫn phải bị chặn ở PHP. Gõ sai trước khi thu hồi thì Admin xoá rồi thêm lại.
+// Nhóm: Chứng chỉ: thêm, sửa, thu hồi, xoá (D1, D4, D5, Nf)
+function test_chung_chi_da_thu_hoi_khong_sua_duoc(PDO $pdo): void
+{
+    kiem(thuHoiChungChi($pdo, 1) === null, 'Phải thu hồi được');
+    $loi = luuChungChi($pdo, 1, chungChiHopLe(['cert_code' => 'CERT-001', 'subject_cn' => 'doi-ten.congty.example']), 1);
+    kiem($loi !== [], 'Sửa chứng chỉ đã thu hồi phải bị từ chối');
+    kiem(timChungChi($pdo, 1)['subject_cn'] === 'congty.example', 'Dữ liệu chứng chỉ đã thu hồi phải giữ nguyên');
+    kiem(luuChungChi($pdo, 2, chungChiHopLe(['cert_code' => 'CERT-002', 'subject_cn' => 'portal2.congty.example']), 1) === [],
+        'Chứng chỉ chưa thu hồi vẫn sửa được');
+
+    $xem = codeKhongChuThich(__DIR__ . '/../public/admin/chung_chi_xem.php');
+    kiem(preg_match('/<\?php if \(!\$cc\[\'is_revoked\'\]\): \?>\s*(?:(?!endif).)*?chung_chi_form\.php\?id=/s', $xem) === 1,
+        'Nút Sửa ở trang chi tiết phải nằm trong khối chỉ hiện khi chưa thu hồi');
+    $ds = codeKhongChuThich(__DIR__ . '/../public/admin/chung_chi.php');
+    kiem(preg_match('/<\?php if \(\$dong\[\'status\'\] !== \'revoked\'\): \?>\s*<a[^>]*chung_chi_form\.php\?id=/', $ds) === 1,
+        'Nút Sửa ở danh sách phải ẩn với chứng chỉ đã thu hồi');
+    $form = codeKhongChuThich(__DIR__ . '/../public/admin/chung_chi_form.php');
+    kiem(preg_match('/if \(\$giaTri\[\'is_revoked\'\]\) \{\s*datThongBao\(/', $form) === 1, 'Form sửa chứng chỉ đã thu hồi phải báo rồi đẩy về');
+}
+
 // Luật: Danh sách chia trang 20 dòng, chứng chỉ gấp nhất lên đầu, và hai trang không trùng dòng.
 // Vì sao: Mục đích hệ thống là không để sót chứng chỉ sắp hết hạn; dữ liệu mẫu có 50 dòng.
 // Đỏ nghĩa là: LIMIT, OFFSET trong danhSachChungChi() đã đổi.

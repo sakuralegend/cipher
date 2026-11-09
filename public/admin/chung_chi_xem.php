@@ -94,10 +94,13 @@ require __DIR__ . '/../../views/tieu_de_trang.php';
                 <div class="card">
                     <div class="card-header"><h2 class="card-title">Thao tác</h2></div>
                     <div class="card-body d-grid gap-2">
+                        <?php // Đã thu hồi là trạng thái cuối: không gia hạn, không sửa (user chốt 09/11/2026), chỉ còn Xoá cho Admin. ?>
                         <?php if (!$cc['is_revoked']): ?>
                             <a class="btn btn-primary" href="<?= e(url('admin/chung_chi_gia_han.php?id=' . (int) $cc['id'])) ?>">Gia hạn</a>
+                            <a class="btn" href="<?= e(url('admin/chung_chi_form.php?id=' . (int) $cc['id'])) ?>">Sửa</a>
+                        <?php else: ?>
+                            <p class="text-secondary small mb-0">Đã thu hồi: chỉ còn để tra cứu. Theo dõi chứng chỉ mới thì thêm mới.</p>
                         <?php endif; ?>
-                        <a class="btn" href="<?= e(url('admin/chung_chi_form.php?id=' . (int) $cc['id'])) ?>">Sửa</a>
                         <?php if (!$cc['is_revoked']): ?>
                             <form method="post" action="<?= e(url('admin/chung_chi_thao_tac.php')) ?>" class="d-grid"
                                   data-xac-nhan="Thu hồi chứng chỉ <?= e($cc['cert_code']) ?>? Không thể hoàn tác.">

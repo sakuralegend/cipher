@@ -76,7 +76,10 @@ require __DIR__ . '/../../views/tieu_de_trang.php';
                                 </td>
                                 <td class="d-none d-md-table-cell">
                                     <div class="btn-list flex-nowrap">
-                                        <a class="btn btn-sm" href="<?= e(url('admin/chung_chi_form.php?id=' . (int) $dong['id'])) ?>">Sửa</a>
+                                        <?php // Đã thu hồi thì không sửa được (luuChungChi chặn), nên không hiện nút. ?>
+                                        <?php if ($dong['status'] !== 'revoked'): ?>
+                                            <a class="btn btn-sm" href="<?= e(url('admin/chung_chi_form.php?id=' . (int) $dong['id'])) ?>">Sửa</a>
+                                        <?php endif; ?>
                                     </div>
                                 </td>
                             </tr>

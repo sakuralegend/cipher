@@ -100,6 +100,15 @@ function kiemTraChungChi(PDO $pdo, array $d): array
 // Cố ý không có is_revoked ở đây: thu hồi chỉ đi qua thuHoiChungChi(), nên form sửa không hoàn tác được.
 function luuChungChi(PDO $pdo, ?int $id, array $d, int $idNguoiTao): array
 {
+    // Đã thu hồi là trạng thái cuối, bản ghi chỉ còn để tra cứu (user chốt 09/11/2026): không sửa được, giống như không
+    // gia hạn được. Chặn ở đây chứ không chỉ ẩn nút, vì ai cũng gõ thẳng được chung_chi_form.php?id=.
+    if ($id !== null) {
+        $cau = $pdo->prepare('SELECT is_revoked FROM certificates WHERE id = ?');
+        $cau->execute([$id]);
+        if ((int) $cau->fetchColumn() === 1) {
+            return ['thu_hoi' => 'Chứng chỉ đã thu hồi chỉ còn để tra cứu, không sửa được. Theo dõi chứng chỉ mới thì thêm mới.'];
+        }
+    }
     $d['fingerprint_sha256'] = chuanHoaFingerprint($d['fingerprint_sha256']);
     $d['serial'] = chuanHoaSerial($d['serial']);
     $d['valid_from'] = chuanHoaNgay($d['valid_from']);
