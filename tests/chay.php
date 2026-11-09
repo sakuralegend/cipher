@@ -1579,6 +1579,21 @@ function test_chuyen_canh_chi_bat_o_landing_va_dang_nhap(PDO $pdo): void
     kiem($cacTrang === ['index.php', 'login.php'], 'Trang bật chuyển cảnh phải đúng là index.php và login.php, đang là: ' . implode(', ', $cacTrang));
 }
 
+// Luật: Landing không có hiệu ứng theo độ cuộn; phim thẻ chứng chỉ luôn tự chạy lặp như video, ở landing và trang đăng nhập.
+// Vì sao: User 09/11/2026 khi làm lại giao diện kiểu Better Stack: "bỏ hiệu ứng cuộn đi, chỉ giữ lại video thôi". Hero ghim 380vh để tua phim làm trang trống cả mảng dài.
+// Đỏ nghĩa là: app.js lại nghe sự kiện cuộn, hoặc một trang có thẻ chứng chỉ mà phim không tự chạy (thiếu data-ld-phim).
+// Đừng: Ghim lại hero hay cho phần tử hiện dần theo cuộn vì "sinh động hơn"; chuyển động chỉ còn phim tự chạy và hiệu ứng rê chuột.
+// Nhóm: Giao diện, triển khai (Giao diện)
+function test_landing_khong_co_hieu_ung_theo_cuon_phim_the_tu_chay(PDO $pdo): void
+{
+    $js = preg_replace('~^\s*//.*$~m', '', file_get_contents(__DIR__ . '/../public/assets/app.js'));
+    kiem(!preg_match("/addEventListener\\(\\s*'scroll'/", $js), "app.js không được nghe sự kiện 'scroll'");
+    kiem(!str_contains($js, 'scrollRestoration'), 'app.js không được tự đặt lại vị trí cuộn');
+    foreach (['public/index.php', 'public/login.php'] as $tep) {
+        kiem(str_contains(file_get_contents(__DIR__ . '/../' . $tep), 'data-ld-phim'), "$tep phải gắn data-ld-phim cho khối chứa thẻ để phim tự chạy");
+    }
+}
+
 // Luật: app.css và app.js được nạp qua urlTep(), địa chỉ kèm ?v= là thời điểm sửa file.
 // Vì sao: Máy chủ không gửi Cache-Control; sau lần deploy 07/11/2026 Safari trên iPhone có thể giữ CSS cũ hàng giờ, ghép với HTML mới là trang vỡ.
 // Đỏ nghĩa là: Có chỗ nạp hai file này bằng url() trần, hoặc urlTep() không còn gắn thời điểm sửa file.

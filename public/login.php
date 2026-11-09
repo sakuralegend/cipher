@@ -32,8 +32,8 @@ require __DIR__ . '/../views/dau_trang.php';
 ?>
 <?php // Nửa trái luôn tối như hero của landing, có thẻ chứng chỉ tự chạy; cột phải là form theo sáng/tối (CSS mục "Trang đăng nhập"). ?>
 <main class="dn-trang">
-    <?php // data-ld-muc: màu trạng thái của thẻ và quầng sáng, app.js đổi theo phim (data-dn-phim). Khung tĩnh là "còn 7 ngày" nên bắt đầu bằng đỏ. ?>
-    <section class="dn-trai" data-bs-theme="dark" data-ld-muc="do" data-dn-phim>
+    <?php // data-ld-muc: màu trạng thái của thẻ và quầng sáng, app.js đổi theo phim (data-ld-phim). Khung tĩnh là "còn 7 ngày" nên bắt đầu bằng đỏ. ?>
+    <section class="dn-trai" data-bs-theme="dark" data-ld-muc="do" data-ld-phim>
         <div class="ld-anh-sang" aria-hidden="true"></div>
         <a class="dn-ve-landing" href="<?= e(url('index.php')) ?>">
             <svg class="icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M5 12l6 6M5 12l6-6"/></svg>

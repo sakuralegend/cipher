@@ -207,12 +207,6 @@ function chan(giaTri, thap, cao) {
     return Math.min(cao, Math.max(thap, giaTri));
 }
 
-// Từ 0 đến 1, chậm ở hai đầu, để chuyển cảnh không bắt đầu và dừng đột ngột.
-function muotMa(x) {
-    var t = chan(x, 0, 1);
-    return t * t * (3 - 2 * t);
-}
-
 // Nội suy trên bảng [[x, y], ...]; x tăng hoặc giảm đều dùng được.
 function noiSuy(bang, x) {
     for (var i = 0; i < bang.length - 1; i++) {
@@ -316,7 +310,6 @@ function taoPhimThe(goc) {
     var THOI_LUONG_TU_CHAY = 18000;
     var dangThay = true;
     var mocTuChay = 0;
-    var khungTuChay = null;
     new IntersectionObserver(function (muc) {
         dangThay = muc[0].isIntersecting;
     }).observe(goc);
@@ -325,209 +318,23 @@ function taoPhimThe(goc) {
         if (dangThay) {
             veKhung((((gio - mocTuChay) % THOI_LUONG_TU_CHAY) + THOI_LUONG_TU_CHAY) % THOI_LUONG_TU_CHAY / THOI_LUONG_TU_CHAY);
         }
-        khungTuChay = requestAnimationFrame(tuChay);
+        requestAnimationFrame(tuChay);
     }
 
-    // Bắt đầu tự chạy từ vị trí pBatDau của phim.
-    function batTuChay(pBatDau) {
-        cancelAnimationFrame(khungTuChay);
-        mocTuChay = performance.now() - pBatDau * THOI_LUONG_TU_CHAY;
-        khungTuChay = requestAnimationFrame(tuChay);
-    }
-
-    function dungTuChay() {
-        cancelAnimationFrame(khungTuChay);
-    }
-
-    // Đợi hai khung hình: trình duyệt phải vẽ xong khung đầu rồi mới bật hiệu ứng đổi màu, nếu không
-    // trang vừa mở đã chạy hiệu ứng từ khung tĩnh (đỏ, 7 ngày) sang đầu phim (xanh, 90 ngày).
+    // Vẽ ngay khung đầu phim (xanh, 45 ngày), rồi đợi hai khung hình mới bật hiệu ứng đổi màu: bật sớm thì
+    // trang vừa mở sẽ loé từ khung tĩnh trong HTML (đỏ, 7 ngày) sang xanh.
+    veKhung(0);
+    mocTuChay = performance.now();
+    requestAnimationFrame(tuChay);
     requestAnimationFrame(function () {
         requestAnimationFrame(function () {
             goc.classList.add('ld-da-chay');
         });
     });
-
-    return {veKhung: veKhung, batTuChay: batTuChay, dungTuChay: dungTuChay};
 }
 
-// Landing: màn hình rộng lấy p của phim thẻ từ độ cuộn ở lần xem đầu tiên, sau đó và trên màn hình hẹp
-// thì phim tự chạy lặp lại.
-(function () {
-    var sanKhau = document.querySelector('[data-ld-san-khau]');
-    if (!sanKhau) {
-        return;
-    }
-
-    // Thanh trên cùng: qua khỏi hero thì theo giao diện của trang, tới dải cuối thì lại tối để hoà vào nền.
-    // Phần này chạy cả khi giảm chuyển động.
-    var thanhTren = document.querySelector('[data-ld-thanh-tren]');
-    var daiCuoi = document.querySelector('[data-ld-dai-cuoi]');
-    function capNhatThanhTren() {
-        var caoThanh = thanhTren.offsetHeight;
-        var daQua = sanKhau.getBoundingClientRect().bottom <= caoThanh
-            && daiCuoi.getBoundingClientRect().top > caoThanh;
-        thanhTren.classList.toggle('ld-qua-hero', daQua);
-        if (daQua) {
-            thanhTren.removeAttribute('data-bs-theme');
-        } else {
-            thanhTren.setAttribute('data-bs-theme', 'dark');
-        }
-    }
-    window.addEventListener('scroll', capNhatThanhTren, {passive: true});
-    capNhatThanhTren();
-
-    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-        return;
-    }
-
-    var phim = taoPhimThe(sanKhau);
-    var cotChu = sanKhau.querySelector('.ld-cot-chu');
-    var chongThe = sanKhau.querySelector('[data-ld-chong-the]');
-
-    var cheDoCuon = window.matchMedia('(min-width: 992px) and (min-height: 640px)');
-    var dangChoVe = false;
-    // Phim theo tay cuộn chỉ chạy một lần trong mỗi lần mở trang: cuộn ngược qua đoạn giữ màn hình dài rất vô lý.
-    // Cố ý không lưu lại: tải lại trang là phim chạy lại từ đầu (user chốt 07/11/2026).
-    var daXemHet = false;
-    // Tải lại luôn về đầu trang. Để trình duyệt tự trả về vị trí cũ thì trang sẽ mở ở giữa phim hoặc qua hết phim.
-    history.scrollRestoration = 'manual';
-    // Tới đây cột chữ đã trở lại hẳn, nên bố cục lúc này trùng với bố cục tĩnh của hero.
-    var P_XEM_HET = 0.97;
-    // Số ngày đã lên hẳn 365 từ mốc này: bắt đầu tự chạy từ đây thì thẻ giữ nguyên hình đang hiện vài giây
-    // rồi mới quay về đầu vòng, không bị nhảy số ngay lúc chuyển.
-    var P_GIA_HAN_XONG = 0.83;
-
-    // Xoá các giá trị bố cục do phim đặt, trả hero về bố cục tĩnh trong CSS.
-    function xoaBoCucPhim() {
-        chongThe.style.removeProperty('--ld-nghieng');
-        chongThe.style.removeProperty('--ld-troi');
-        sanKhau.style.removeProperty('--ld-tap-trung');
-        sanKhau.style.removeProperty('--ld-goi-y');
-        cotChu.classList.remove('ld-da-an');
-    }
-
-    // Bỏ đoạn giữ màn hình cho tới khi tải lại trang. Trang ngắn đi bao nhiêu thì lùi vị trí cuộn bấy nhiêu,
-    // để mọi thứ đứng yên trên màn hình lúc chuyển; đang ở đầu trang thì trình duyệt tự dừng ở 0, vẫn khớp.
-    function chuyenSangVideo() {
-        // Phải đọc vị trí cuộn trước khi trang ngắn lại: đọc sau thì trình duyệt đã kẹp nó vào độ dài mới,
-        // người đang lướt nhanh qua hero sẽ bị kéo về đầu trang.
-        var cuonCu = window.scrollY;
-        var caoCu = sanKhau.offsetHeight;
-        daXemHet = true;
-        sanKhau.classList.add('ld-da-xem');
-        xoaBoCucPhim();
-        window.scrollTo({top: cuonCu - (caoCu - sanKhau.offsetHeight), behavior: 'instant'});
-        phim.batTuChay(P_GIA_HAN_XONG);
-    }
-
-    function veTheoCuon() {
-        var khung = sanKhau.getBoundingClientRect();
-        var p = chan(-khung.top / (khung.height - window.innerHeight), 0, 1);
-        if (p >= P_XEM_HET) {
-            chuyenSangVideo();
-            return;
-        }
-        phim.veKhung(p);
-        // Đầu phim thẻ hơi nghiêng rồi phẳng dần; hai thẻ phía sau tách ra theo độ cuộn.
-        var phang = chan(p / 0.14, 0, 1);
-        chongThe.style.setProperty('--ld-nghieng', (1 - phang).toFixed(3));
-        chongThe.style.setProperty('--ld-troi', (1 + p * 0.6).toFixed(3));
-        sanKhau.style.setProperty('--ld-goi-y', chan(1 - p / 0.04, 0, 1).toFixed(2));
-        // Chuyển cảnh: thẻ lên giữa màn hình trong lúc phim chạy, gia hạn xong thì cột chữ và nút trở lại.
-        var tapTrung = muotMa((p - 0.03) / 0.13) * (1 - muotMa((p - 0.87) / 0.1));
-        sanKhau.style.setProperty('--ld-tap-trung', tapTrung.toFixed(3));
-        // Cột chữ đã mờ hẳn thì ẩn thật, để phím Tab không nhảy vào nút không nhìn thấy.
-        cotChu.classList.toggle('ld-da-an', tapTrung > 0.99);
-    }
-
-    // Các mục dưới hero, chạy theo độ cuộn trên mọi cỡ màn hình.
-    var sanAnh = document.querySelector('[data-ld-san-anh]');
-    var khoiBuoc = document.querySelector('[data-ld-cac-buoc]');
-    var cacBuoc = khoiBuoc.querySelectorAll('.ld-buoc');
-
-    function veCacMuc() {
-        var caoManHinh = window.innerHeight;
-        // Khung ảnh Dashboard dựng thẳng dần trong lúc đi lên.
-        var moAnh = muotMa((caoManHinh - sanAnh.getBoundingClientRect().top) / (caoManHinh * 0.7));
-        sanAnh.style.setProperty('--ld-mo', moAnh.toFixed(3));
-
-        // Đường nối ba bước: tiến độ 0 đến 1, mỗi đoạn vẽ trong một nửa. Cuộn hết trang mà chưa đủ
-        // (màn hình rất cao) thì vẫn coi là xong, để bước cuối không bao giờ bị tối.
-        var khung = khoiBuoc.getBoundingClientRect();
-        var tienDo = chan((caoManHinh * 0.8 - khung.top) / (khung.height + caoManHinh * 0.2), 0, 1);
-        if (caoManHinh + window.scrollY >= document.documentElement.scrollHeight - 2) {
-            tienDo = 1;
-        }
-        cacBuoc.forEach(function (buoc, i) {
-            buoc.style.setProperty('--ld-doan', chan(tienDo * 2 - i, 0, 1).toFixed(3));
-            buoc.classList.toggle('ld-chua-toi', i === 0 ? tienDo <= 0 : tienDo * 2 < i);
-        });
-
-        // Quầng sáng dải cuối lớn dần khi dải đi lên.
-        var lan = chan((caoManHinh - daiCuoi.getBoundingClientRect().top) / (caoManHinh * 0.8), 0, 1);
-        daiCuoi.style.setProperty('--ld-lan', lan.toFixed(3));
-    }
-
-    function veKhiCuon() {
-        dangChoVe = false;
-        if (cheDoCuon.matches && !daXemHet) {
-            veTheoCuon();
-        }
-        veCacMuc();
-    }
-
-    function khiCuon() {
-        if (!dangChoVe) {
-            dangChoVe = true;
-            requestAnimationFrame(veKhiCuon);
-        }
-    }
-
-    // Hiện dần các phần tử .ld-hien khi cuộn tới, mỗi phần tử một lần. Phần tử đứng cùng hàng hiện lần lượt.
-    var quanSatHien = new IntersectionObserver(function (cacMuc) {
-        cacMuc.forEach(function (muc) {
-            if (muc.isIntersecting) {
-                muc.target.classList.add('ld-da-hien');
-                quanSatHien.unobserve(muc.target);
-            }
-        });
-    }, {rootMargin: '0px 0px -8% 0px', threshold: 0.1});
-
-    document.querySelectorAll('.ld-hien').forEach(function (phan) {
-        var viTri = Array.prototype.indexOf.call(phan.parentElement.children, phan);
-        phan.style.setProperty('--ld-tre', (viTri * 0.12) + 's');
-        phan.classList.add('ld-cho-hien');
-        quanSatHien.observe(phan);
-    });
-
-    // Màn hình hẹp tự chạy phim (không giữ lại khi cuộn vì dễ giật, thanh địa chỉ co giãn làm đổi chiều cao).
-    function chonCheDo() {
-        phim.dungTuChay();
-        sanKhau.classList.toggle('ld-theo-cuon', cheDoCuon.matches);
-        sanKhau.classList.toggle('ld-da-xem', daXemHet);
-        if (cheDoCuon.matches && !daXemHet) {
-            veTheoCuon();
-        } else {
-            xoaBoCucPhim();
-            phim.veKhung(0);
-            phim.batTuChay(0);
-        }
-    }
-
-    window.addEventListener('scroll', khiCuon, {passive: true});
-    window.addEventListener('resize', khiCuon);
-    cheDoCuon.addEventListener('change', chonCheDo);
-    chonCheDo();
-    veCacMuc();
-})();
-
-// Trang đăng nhập: thẻ tự chạy vòng đời như landing trên màn hình hẹp. Màn hẹp ẩn thẻ, phim tự ngừng vẽ.
-(function () {
-    var goc = document.querySelector('[data-dn-phim]');
-    if (!goc || window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-        return;
-    }
-    var phim = taoPhimThe(goc);
-    phim.veKhung(0);
-    phim.batTuChay(0);
-})();
+// Landing và trang đăng nhập: mọi khối có data-ld-phim cho phim thẻ tự chạy lặp như video. Không có hiệu ứng
+// theo cuộn (user 09/11/2026: "bỏ hiệu ứng cuộn đi, chỉ giữ lại video thôi"). Máy bật giảm chuyển động thì thẻ đứng yên.
+if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    document.querySelectorAll('[data-ld-phim]').forEach(taoPhimThe);
+}

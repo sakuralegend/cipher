@@ -432,34 +432,62 @@ input[type="datetime-local"].is-invalid {
     syntax: "<color>";
 }
 
-/* Thanh trên cùng: nền tối mờ, hoà vào hero và vẫn đọc được nếu JavaScript không chạy.
-   Cuộn qua hero thì app.js gắn ld-qua-hero để nó theo giao diện của trang.
+/* Bảng màu tối giản nền tối theo betterstack.com (user chốt 09/11/2026), lấy từ mã trang của họ: nền đen ngả xanh,
+   chữ xám xanh thay cho trắng tinh, một màu nhấn tím-chàm. Tỉ lệ tương phản đo trên --cc-nen ngày 09/11/2026.
+   Hiện chỉ vùng .ld-vung (landing) dùng; các bước sau của việc làm lại giao diện dùng cho cả web. */
+:root {
+    --cc-nen: #0b0c14;
+    --cc-nen-sau: #0f101a;
+    --cc-the: #171926;
+    --cc-vien: rgba(201, 211, 238, 0.1);
+    --cc-chu-dam: #f1f4fd; /* tiêu đề */
+    --cc-chu: #c9d3ee; /* 13:1 */
+    --cc-chu-phu: #939db8; /* 7,2:1 */
+    --cc-chu-mo: #727da1; /* 4,8:1; trên --cc-the chỉ còn 4,3:1 nên không dùng cho chữ nhỏ trên thẻ */
+    --cc-nhan: #7c87f7; /* 6,2:1; chữ trắng trên nền màu này chỉ 3,15:1, nên nút dùng --cc-nut */
+    --cc-nut: #5b63e8; /* chữ trắng 4,8:1 */
+    --cc-nut-re: #545ce0; /* rê chuột: đậm lên (5,3:1); sáng lên #6870f0 thì tụt còn 4,1:1 */
+}
+
+/* Vùng mang bảng màu: đổi luôn biến của Tabler, để chữ phụ, viền, nền thẻ của Tabler bên trong theo cùng màu. */
+.ld-vung {
+    --tblr-body-color: var(--cc-chu);
+    --tblr-body-color-rgb: 201, 211, 238;
+    --tblr-heading-color: var(--cc-chu-dam);
+    --tblr-secondary: var(--cc-chu-phu);
+    --tblr-secondary-color: var(--cc-chu-phu);
+    --tblr-secondary-rgb: 147, 157, 184;
+    --tblr-border-color: var(--cc-vien);
+    --tblr-bg-surface: var(--cc-the);
+    --tblr-bg-surface-secondary: var(--cc-nen-sau);
+    background-color: var(--cc-nen);
+    color: var(--cc-chu);
+}
+
+/* Nền của chính trang landing cũng tối: không thì kéo quá đầu, quá cuối trang trên iPhone sẽ lộ nền sáng. */
+body:has(> main.ld-vung) {
+    background-color: var(--cc-nen);
+}
+
+/* Thanh trên cùng: nền tối mờ có viền mảnh, luôn như nhau từ đầu tới cuối trang.
    Dùng fixed, không dùng sticky: Tabler đặt body cao 100%, nên sticky trôi mất sau màn hình đầu. */
 .navbar.ld-thanh-tren {
     -webkit-backdrop-filter: blur(12px);
     backdrop-filter: blur(12px);
-    background: rgba(6, 13, 28, 0.72);
-    border-bottom: 1px solid transparent;
+    background: rgba(11, 12, 20, 0.72);
+    border-bottom: 1px solid var(--cc-vien);
     box-shadow: none;
     height: 3.75rem;
     left: 0;
     position: fixed;
     right: 0;
     top: 0;
-    transition: background-color 0.3s ease, border-color 0.3s ease;
     z-index: 1030;
 }
 
-.navbar.ld-thanh-tren.ld-qua-hero {
-    background: color-mix(in srgb, var(--tblr-body-bg) 82%, transparent);
-    border-bottom-color: var(--tblr-border-color);
-}
-
-/* Nền tối dùng chung cho hero, dải cuối landing và nửa trái trang đăng nhập: xanh đen (navy), chấm lưới
-   ánh cyan và một vệt sáng xanh dương ở góc trên, theo chủ đề màu công nghệ (user chốt 07/11/2026).
+/* Nền tối navy của nửa trái trang đăng nhập và cột menu quản trị: chấm lưới ánh cyan và một vệt sáng xanh dương
+   ở góc trên (user chốt 07/11/2026). Landing đã sang bảng màu --cc-*; hai chỗ này đổi ở bước sau.
    Phải đặt lại color: chữ thừa hưởng màu đã tính ở body, tức màu tối của giao diện sáng. */
-.ld-san-khau,
-.ld-dai-cuoi,
 .dn-trai,
 .menu-doc {
     background:
@@ -469,7 +497,7 @@ input[type="datetime-local"].is-invalid {
     color: var(--tblr-body-color);
 }
 
-/* Chữ tô sáng trong tiêu đề: dải cyan sang xanh dương. */
+/* Chữ tô sáng trong tiêu đề: dải cyan sang xanh dương (trang đăng nhập); landing dùng dải xám xanh sang tím. */
 .ld-chu-sang {
     -webkit-background-clip: text;
     background-clip: text;
@@ -477,7 +505,11 @@ input[type="datetime-local"].is-invalid {
     color: transparent;
 }
 
-/* Khối bọc thẻ chứng chỉ (hero landing, nửa trái trang đăng nhập): màu trạng thái --ld-mau đổi theo
+.ld-vung .ld-chu-sang {
+    background-image: linear-gradient(90deg, var(--cc-chu), var(--cc-nhan));
+}
+
+/* Khối bọc thẻ chứng chỉ (mục Vòng đời ở landing, nửa trái trang đăng nhập): màu trạng thái --ld-mau đổi theo
    data-ld-muc do phim thẻ trong app.js đặt, thẻ và quầng sáng bên trong cùng đổi theo. */
 [data-ld-muc] {
     --ld-mau: #2fb344;
@@ -485,7 +517,7 @@ input[type="datetime-local"].is-invalid {
 }
 
 /* Trước khung hình đầu tiên không chạy hiệu ứng đổi màu, nếu không trang mở ra sẽ loé từ khung tĩnh
-   (đỏ, 7 ngày) sang đầu phim (xanh, 90 ngày). Lớp ld-da-chay do app.js gắn sau khung đầu. */
+   (đỏ, 7 ngày) sang đầu phim (xanh, 45 ngày). Lớp ld-da-chay do app.js gắn sau khung đầu. */
 [data-ld-muc]:not(.ld-da-chay),
 [data-ld-muc]:not(.ld-da-chay) * {
     transition: none !important;
@@ -495,119 +527,88 @@ input[type="datetime-local"].is-invalid {
 [data-ld-muc="cam"] { --ld-mau: #ff8a3d; }
 [data-ld-muc="do"] { --ld-mau: #ff5c5c; }
 
-/* Sân khấu hero. overflow: clip cắt được quầng sáng mà không làm hỏng position: sticky bên trong
-   (overflow: hidden thì có hỏng). */
-.ld-san-khau {
-    --ld-tap-trung: 0;
-    border-radius: 0 0 2rem 2rem;
+/* Hero kiểu Better Stack: chữ căn giữa, bên dưới là ảnh giao diện nằm nghiêng mờ dần vào nền.
+   overflow: clip cắt phần ảnh nghiêng thò ra hai bên mà không làm trang kéo ngang được. */
+.ld-hero {
     overflow: clip;
-}
-
-.ld-dinh {
-    padding: 5.75rem 0 4.5rem;
+    padding-top: clamp(7rem, 14vw, 10rem);
     position: relative;
+    text-align: center;
 }
 
-.ld-dinh-trong {
-    position: relative;
-}
-
-/* Khi cuộn được: sân khấu cao gấp nhiều màn hình, phần ruột dính lại để độ cuộn thành "tua phim". */
-.ld-san-khau.ld-theo-cuon {
-    height: 380vh;
-}
-
-.ld-theo-cuon .ld-dinh {
-    align-items: center;
-    display: flex;
-    height: 100vh;
-    padding: 3.75rem 0 0;
-    position: sticky;
-    top: 0;
-}
-
-/* Đã xem hết phim một lần: bỏ đoạn giữ màn hình, hero thành mục thường cao đúng một màn hình và thẻ tự chạy.
-   Giữ nguyên chiều cao và bố cục ở trên để không có gì nhảy lúc chuyển. */
-.ld-san-khau.ld-theo-cuon.ld-da-xem {
-    height: auto;
-}
-
-.ld-theo-cuon.ld-da-xem .ld-dinh {
-    position: relative;
-}
-
-.ld-theo-cuon.ld-da-xem .ld-chong-the {
-    --ld-troi: 1.6;
-}
-
-.ld-theo-cuon.ld-da-xem .ld-goi-y-cuon {
-    display: none;
-}
-
-/* Chuyển cảnh theo cuộn. --ld-tap-trung đi từ 0 (bố cục hai cột) tới 1 (thẻ ở giữa màn hình):
-   cột chữ lùi đi, cột thẻ dịch đúng nửa bề rộng của nó là vào giữa, quầng sáng đi theo. */
-.ld-theo-cuon .ld-cot-chu {
-    /* Mờ nhanh hơn thẻ di chuyển, để chữ đã tan trước khi thẻ đi ngang qua. */
-    opacity: calc(1 - 1.8 * var(--ld-tap-trung));
-    transform: translateX(calc(-8rem * var(--ld-tap-trung)));
-}
-
-.ld-theo-cuon .ld-cot-chu.ld-da-an {
-    visibility: hidden;
-}
-
-.ld-theo-cuon .ld-cot-phim {
-    transform: translateX(calc(-50% * var(--ld-tap-trung))) scale(calc(1 + 0.14 * var(--ld-tap-trung)));
-}
-
-/* Quầng sáng mang màu trạng thái, là một khối riêng để di chuyển bằng transform (không phải vẽ lại). */
-.ld-anh-sang {
-    background: radial-gradient(closest-side, color-mix(in srgb, var(--ld-mau) 32%, transparent), transparent);
-    height: 44rem;
-    left: 74%;
-    margin: -22rem 0 0 -28rem;
+/* Nền hero: vệt sáng tím ở giữa phía trên và lưới chấm mờ, cả hai tan dần xuống dưới. */
+.ld-hero-nen {
+    -webkit-mask-image: linear-gradient(to bottom, #000 30%, transparent 85%);
+    background:
+        radial-gradient(52rem 30rem at 50% 0%, rgba(124, 135, 247, 0.2), transparent 70%),
+        radial-gradient(rgba(201, 211, 238, 0.09) 1px, transparent 1px) 0 0 / 1.5rem 1.5rem;
+    inset: 0;
+    mask-image: linear-gradient(to bottom, #000 30%, transparent 85%);
     pointer-events: none;
     position: absolute;
-    top: 50%;
-    transform: translateX(calc(-24vw * var(--ld-tap-trung))) scale(calc(1 + 0.3 * var(--ld-tap-trung)));
-    width: 56rem;
 }
 
-/* Màn hình hẹp: thẻ xếp dưới chữ, quầng sáng nằm giữa theo chiều ngang và không làm trang rộng ra. */
-@media (max-width: 61.99rem) {
-    .ld-anh-sang {
-        left: 50%;
-        top: 70%;
-    }
+.ld-hero-chu {
+    position: relative;
 }
 
+/* Nhãn nhỏ dạng viên thuốc phía trên tiêu đề, chấm tím ở đầu. */
 .ld-nhan-nho {
-    color: var(--tblr-secondary);
-    font-size: 0.875rem;
+    align-items: center;
+    background: rgba(23, 25, 38, 0.6);
+    border: 1px solid var(--cc-vien);
+    border-radius: 2rem;
+    color: var(--cc-chu-phu);
+    display: inline-flex;
+    font-size: 0.8125rem;
     font-weight: 500;
-    margin-bottom: 1rem;
+    gap: 0.625rem;
+    margin-bottom: 1.75rem;
+    padding: 0.375rem 0.875rem;
+}
+
+.ld-nhan-nho i {
+    background: var(--cc-nhan);
+    border-radius: 50%;
+    box-shadow: 0 0 0 0.25rem rgba(124, 135, 247, 0.2);
+    height: 0.4375rem;
+    width: 0.4375rem;
 }
 
 .ld-tieu-de {
-    font-size: clamp(2.375rem, 4.6vw, 3.75rem);
+    color: var(--cc-chu-dam);
+    font-size: clamp(2.5rem, 6.4vw, 4.75rem);
     font-weight: 700;
-    letter-spacing: -0.03em;
-    line-height: 1.12;
-    margin-bottom: 1.25rem;
-    text-wrap: balance; /* Chia dòng đều, tránh một chữ "ngờ" trơ lại ở dòng cuối. */
+    letter-spacing: -0.04em;
+    line-height: 1.06;
+    margin: 0 auto 1.5rem;
+    max-width: 52rem;
+    text-wrap: balance;
+}
+
+/* Cụm "hết hạn bất ngờ" luôn đứng chung một dòng. */
+.ld-tieu-de .ld-chu-sang {
+    white-space: nowrap;
 }
 
 .ld-mo-ta {
-    color: var(--tblr-secondary);
+    color: var(--cc-chu-phu);
     font-size: 1.125rem;
     line-height: 1.6;
-    margin-bottom: 2rem;
-    max-width: 34rem;
+    margin: 0 auto 2.25rem;
+    max-width: 40rem;
 }
 
-/* Nút chính của landing, thay màu xanh mặc định của Tabler: xanh đen trên nền sáng, dải cyan sang xanh dương
-   trên nền tối (chữ tối trên dải màu đạt từ 5:1 trở lên). Ghi đè bằng biến của .btn để cả lúc rê chuột,
-   lúc bấm cũng đúng màu. */
+.ld-hang-nut {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    justify-content: center;
+}
+
+/* Nút chính, thay màu xanh mặc định của Tabler: xanh đen trên nền sáng, dải cyan sang xanh dương trên nền tối
+   (trang đăng nhập), tím-chàm chữ trắng ở landing. Ghi đè bằng biến của .btn để cả lúc rê chuột, lúc bấm cũng
+   đúng màu. */
 .ld-nut-chinh {
     --ld-nut-bong: rgba(11, 23, 48, 0.28);
     --tblr-btn-active-bg: #050b17;
@@ -646,7 +647,160 @@ input[type="datetime-local"].is-invalid {
     filter: brightness(1.1);
 }
 
-/* Chồng thẻ minh hoạ. --ld-nghieng (1 ở đầu phim, 0 khi đã phẳng) và --ld-troi do app.js đặt. */
+/* Đặt sau hai quy tắc tối ở trên để thắng chúng (cùng độ cụ thể). Viền sáng mảnh ở mép trên như nút của Better Stack. */
+.ld-vung .ld-nut-chinh {
+    --ld-nut-bong: rgba(91, 99, 232, 0.45);
+    --tblr-btn-active-bg: var(--cc-nut-re);
+    --tblr-btn-active-color: #fff;
+    --tblr-btn-bg: var(--cc-nut);
+    --tblr-btn-color: #fff;
+    --tblr-btn-hover-bg: var(--cc-nut-re);
+    --tblr-btn-hover-color: #fff;
+    background-image: none;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+.ld-vung .ld-nut-chinh:hover,
+.ld-vung .ld-nut-chinh:focus-visible {
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2), 0 0.5rem 1.75rem var(--ld-nut-bong);
+    filter: none;
+}
+
+/* Nút phụ: nền thẻ trong suốt, viền mảnh. */
+.ld-nut-phu {
+    --tblr-btn-active-bg: var(--cc-the);
+    --tblr-btn-active-border-color: rgba(201, 211, 238, 0.22);
+    --tblr-btn-active-color: var(--cc-chu-dam);
+    --tblr-btn-bg: rgba(23, 25, 38, 0.6);
+    --tblr-btn-border-color: var(--cc-vien);
+    --tblr-btn-box-shadow: none;
+    --tblr-btn-color: var(--cc-chu);
+    --tblr-btn-hover-bg: var(--cc-the);
+    --tblr-btn-hover-border-color: rgba(201, 211, 238, 0.22);
+    --tblr-btn-hover-color: var(--cc-chu-dam);
+    font-weight: 600;
+}
+
+/* Khu trưng bày ảnh giao diện: máy tính và điện thoại nghiêng về sau như ảnh trên trang chủ Better Stack.
+   Khung cao cố định và mờ dần ở đáy, nên phần ảnh nghiêng thò xuống dưới tan vào nền thay vì bị cắt ngang. */
+.ld-trung-bay {
+    -webkit-mask-image: linear-gradient(to bottom, #000 40%, transparent 96%);
+    height: clamp(17rem, 52vw, 40rem);
+    margin-top: clamp(3rem, 7vw, 5rem);
+    mask-image: linear-gradient(to bottom, #000 40%, transparent 96%);
+    perspective: 110rem;
+    position: relative;
+}
+
+.ld-trung-bay-trong {
+    margin-inline: auto;
+    max-width: 60rem;
+    position: relative;
+    transform: rotateX(30deg) rotateY(-12deg) rotateZ(7deg);
+    transform-origin: 50% 0;
+    transform-style: preserve-3d;
+}
+
+/* Khung giữ chỗ ảnh chụp ($khungChoAnh trong index.php): đúng tỉ lệ ảnh sẽ đặt vào, sọc chéo rất mờ để nhìn ra
+   là chỗ trống có chủ đích. */
+.ld-cho-anh {
+    background: var(--cc-nen-sau);
+    border: 1px solid var(--cc-vien);
+    border-radius: 1rem;
+    box-shadow: 0 2rem 6rem rgba(0, 0, 0, 0.55);
+    margin: 0;
+    overflow: hidden;
+}
+
+.ld-cho-anh-dau {
+    border-bottom: 1px solid var(--cc-vien);
+    display: flex;
+    gap: 0.375rem;
+    padding: 0.75rem 1rem;
+}
+
+.ld-cho-anh-dau i {
+    background: rgba(201, 211, 238, 0.14);
+    border-radius: 50%;
+    height: 0.625rem;
+    width: 0.625rem;
+}
+
+.ld-cho-anh-than {
+    align-items: center;
+    aspect-ratio: 16 / 10;
+    background: repeating-linear-gradient(135deg, transparent 0 1.25rem, rgba(201, 211, 238, 0.025) 1.25rem 2.5rem);
+    color: var(--cc-chu-phu);
+    display: flex;
+    flex-direction: column;
+    font-weight: 500;
+    gap: 0.25rem;
+    justify-content: center;
+    padding: 1rem;
+    text-align: center;
+}
+
+.ld-cho-anh-than small {
+    color: var(--cc-chu-mo);
+    font-size: 0.8125rem;
+}
+
+/* Điện thoại đặt chồng lên góc trái máy tính, nhô ra phía trước. */
+.ld-cho-anh-dt {
+    border-radius: 1.75rem;
+    left: 3%;
+    position: absolute;
+    top: 24%;
+    transform: translateZ(3rem);
+    width: 22%;
+}
+
+.ld-cho-anh-dt .ld-cho-anh-than {
+    aspect-ratio: 9 / 19.5;
+    font-size: 0.8125rem;
+}
+
+/* Màn hẹp: nghiêng ít hơn và lùi khối vào trong, không thì góc trái (chỗ đặt điện thoại) bị đẩy ra ngoài mép màn hình. */
+@media (max-width: 47.99rem) {
+    .ld-trung-bay-trong {
+        transform: rotateX(26deg) rotateY(-8deg) rotateZ(5deg);
+        width: 92%;
+    }
+
+    .ld-cho-anh-dt {
+        border-radius: 1.25rem;
+        left: 6%;
+        width: 30%;
+    }
+
+    .ld-cho-anh-dt .ld-cho-anh-than,
+    .ld-cho-anh-dt .ld-cho-anh-than small {
+        font-size: 0.6875rem;
+    }
+}
+
+/* Quầng sáng mang màu trạng thái của thẻ, đặt sau thẻ. */
+.ld-anh-sang {
+    background: radial-gradient(closest-side, color-mix(in srgb, var(--ld-mau) 32%, transparent), transparent);
+    height: 44rem;
+    left: 70%;
+    margin: -22rem 0 0 -28rem;
+    pointer-events: none;
+    position: absolute;
+    top: 55%;
+    width: 56rem;
+}
+
+/* Màn hình hẹp: thẻ xếp dưới chữ, quầng sáng nằm giữa theo chiều ngang và không làm trang rộng ra. */
+@media (max-width: 61.99rem) {
+    .ld-anh-sang {
+        left: 50%;
+        top: 70%;
+    }
+}
+
+/* Chồng thẻ minh hoạ. --ld-nghieng (0 là phẳng, 1 là nghiêng hẳn) và --ld-troi (độ tách của hai thẻ phía sau)
+   chỉ do CSS đặt: trang đăng nhập cho thẻ hơi nghiêng, landing tách thẻ sau rộng hơn. */
 .ld-chong-the {
     --ld-nghieng: 0;
     --ld-troi: 1;
@@ -847,27 +1001,25 @@ input[type="datetime-local"].is-invalid {
     top: 4.75rem;
 }
 
-/* Câu dẫn dưới thẻ: các câu chồng lên nhau trong một ô cố định, câu đang tới trượt lên. */
+/* Các bước của vòng đời cạnh thẻ: bước đang chạy sáng lên và có vạch màu trạng thái bên trái. */
 .ld-chuong {
     display: grid;
+    gap: 0.25rem;
     list-style: none;
-    margin: 1.25rem auto 0;
-    max-width: 30rem;
+    margin: 2rem 0 0;
     padding: 0;
 }
 
 .ld-chuong li {
-    font-weight: 500;
-    grid-area: 1 / 1;
-    opacity: 0;
-    text-align: center;
-    transform: translateY(0.75rem);
-    transition: opacity 0.35s ease, transform 0.35s ease;
+    border-left: 2px solid var(--tblr-border-color);
+    color: var(--cc-chu-mo);
+    padding: 0.5rem 0 0.5rem 1rem;
+    transition: color 0.35s ease, border-color 0.35s ease;
 }
 
 .ld-chuong li.ld-bat {
-    opacity: 1;
-    transform: none;
+    border-left-color: var(--ld-mau);
+    color: var(--tblr-body-color);
 }
 
 /* Khoảnh khắc gia hạn: vòng sáng lan ra từ thẻ; app.js gắn lớp đúng lúc qua mốc. */
@@ -886,43 +1038,11 @@ input[type="datetime-local"].is-invalid {
     to { opacity: 0; transform: scale(1.1); }
 }
 
-.ld-goi-y-cuon {
-    bottom: 1.5rem;
-    color: var(--tblr-secondary);
-    display: none;
-    font-size: 0.8125rem;
-    left: 0;
-    opacity: var(--ld-goi-y, 1);
-    position: absolute;
-    right: 0;
-    text-align: center;
-}
-
-.ld-theo-cuon .ld-goi-y-cuon {
-    display: block;
-}
-
-.ld-goi-y-cuon i {
-    animation: ld-nhun 1.6s ease-in-out infinite;
-    border-bottom: 2px solid currentColor;
-    border-right: 2px solid currentColor;
-    display: block;
-    height: 0.5rem;
-    margin: 0.5rem auto 0;
-    transform: rotate(45deg);
-    width: 0.5rem;
-}
-
-@keyframes ld-nhun {
-    50% { translate: 0 0.3rem; }
-}
-
 /* Máy bật giảm chuyển động: app.js không chạy phim, ở đây tắt nốt các hiệu ứng nhỏ. */
 @media (prefers-reduced-motion: reduce) {
-    .ld-san-khau *,
-    .ld-san-khau *::after,
-    .ld-nut-chinh,
-    .navbar.ld-thanh-tren {
+    [data-ld-muc] *,
+    [data-ld-muc] *::after,
+    .ld-nut-chinh {
         animation: none !important;
         transition: none !important;
     }
@@ -956,63 +1076,28 @@ input[type="datetime-local"].is-invalid {
     margin: 1rem 0 0;
 }
 
-/* Hiện dần khi cuộn tới. Chỉ ẩn khi app.js đã gắn ld-cho-hien, nên tắt JavaScript vẫn thấy đủ nội dung.
-   --ld-tre do app.js đặt để các phần tử cùng hàng hiện lần lượt. */
-.ld-cho-hien {
-    opacity: 0;
-    transform: translateY(1.75rem);
+/* Mục Vòng đời: quầng sáng định vị theo mục, thẻ phía sau tách rộng hơn trang đăng nhập; nền thẻ theo bảng màu mới. */
+.ld-vong-doi {
+    position: relative;
 }
 
-.ld-cho-hien.ld-da-hien {
-    opacity: 1;
-    transform: none;
-    transition: opacity 0.6s ease var(--ld-tre, 0s), transform 0.6s cubic-bezier(0.2, 0.7, 0.2, 1) var(--ld-tre, 0s);
+.ld-vong-doi .container-xl {
+    position: relative;
 }
 
-/* Khung ảnh Dashboard: nằm nghiêng ngả ra sau, cuộn tới thì dựng thẳng. --ld-mo (0 đến 1) do app.js đặt. */
-.ld-san-anh {
-    --ld-mo: 1;
-    perspective: 100rem;
+.ld-vong-doi .ld-chong-the {
+    --ld-troi: 1.6;
 }
 
-.ld-khung-anh {
-    background: var(--tblr-bg-surface);
-    border: 1px solid var(--tblr-border-color);
-    border-radius: 1rem;
-    box-shadow: 0 2rem 5rem rgba(10, 14, 20, 0.22);
-    margin: 0;
-    overflow: hidden;
-    transform: rotateX(calc(16deg * (1 - var(--ld-mo)))) scale(calc(0.92 + 0.08 * var(--ld-mo)));
-    transform-origin: 50% 0;
+.ld-vung .ld-the {
+    background: var(--cc-the);
 }
 
-.ld-khung-dau {
-    border-bottom: 1px solid var(--tblr-border-color);
-    display: flex;
-    gap: 0.375rem;
-    padding: 0.75rem 1rem;
+.ld-vung .ld-the-sau {
+    background: var(--cc-nen-sau);
 }
 
-.ld-khung-dau i {
-    background: var(--tblr-border-color);
-    border-radius: 50%;
-    height: 0.625rem;
-    width: 0.625rem;
-}
-
-.ld-khung-anh img {
-    height: auto;
-    width: 100%;
-}
-
-.ld-chu-thich-anh {
-    color: var(--tblr-secondary);
-    font-size: 0.8125rem;
-    margin: 1rem 0 0;
-    text-align: center;
-}
-
-/* Thẻ tính năng. Hiệu ứng rê chuột đặt ở thẻ, hiệu ứng hiện dần đặt ở cột ngoài, để hai bên không dẫm nhau. */
+/* Thẻ tính năng: nổi lên khi rê chuột. */
 .ld-the-tinh {
     background: var(--tblr-bg-surface);
     border: 1px solid var(--tblr-border-color);
@@ -1039,7 +1124,7 @@ input[type="datetime-local"].is-invalid {
 .ld-cham-lam { background: var(--tblr-blue); }
 .ld-cham-xam { background: var(--tblr-gray-500); }
 
-/* Hình minh hoạ nhỏ trong thẻ: cao bằng nhau, các chi tiết bên trong chạy sau khi thẻ đã hiện. */
+/* Hình minh hoạ nhỏ trong thẻ: cao bằng nhau. */
 .ld-minh-hoa {
     background: var(--tblr-bg-surface-secondary);
     border-radius: 0.75rem;
@@ -1092,32 +1177,7 @@ input[type="datetime-local"].is-invalid {
 .ld-minh-hoa-moc .badge:nth-child(2) { margin-left: 2rem; }
 .ld-minh-hoa-moc .badge:nth-child(3) { margin-left: 4rem; }
 
-.ld-minh-hoa > :nth-child(2) { --ld-tre-con: 0.15s; }
-.ld-minh-hoa > :nth-child(3) { --ld-tre-con: 0.3s; }
-.ld-minh-hoa > :nth-child(4) { --ld-tre-con: 0.45s; }
-.ld-minh-hoa > :nth-child(5) { --ld-tre-con: 0.6s; }
-
-.ld-cho-hien .ld-minh-hoa-ds > div,
-.ld-cho-hien .ld-minh-hoa-moc > .badge {
-    opacity: 0;
-    transform: translateX(-0.75rem);
-}
-
-.ld-cho-hien .ld-minh-hoa-cot > i {
-    transform: scaleY(0);
-}
-
-.ld-cho-hien.ld-da-hien .ld-minh-hoa-ds > div,
-.ld-cho-hien.ld-da-hien .ld-minh-hoa-moc > .badge,
-.ld-cho-hien.ld-da-hien .ld-minh-hoa-cot > i {
-    opacity: 1;
-    transform: none;
-    transition: opacity 0.5s ease, transform 0.6s cubic-bezier(0.2, 0.7, 0.2, 1);
-    transition-delay: calc(var(--ld-tre, 0s) + 0.25s + var(--ld-tre-con, 0s));
-}
-
-/* Ba bước. Mỗi bước có một đoạn nối tới bước sau: ::before là đường nền, ::after là phần đã vẽ.
-   --ld-doan (0 đến 1) do app.js đặt theo độ cuộn; mặc định 1 nên không có JavaScript vẫn đầy đủ. */
+/* Ba bước. Mỗi bước có một đoạn nối tới bước sau (::after). */
 .ld-cac-buoc {
     --ld-net: #0b1730;
     --ld-net-chu: #fff;
@@ -1129,18 +1189,16 @@ input[type="datetime-local"].is-invalid {
     padding: 0;
 }
 
-/* Cùng cặp màu với nút chính: xanh đen trên nền sáng, cyan trên nền tối. */
-[data-bs-theme="dark"] .ld-cac-buoc {
-    --ld-net: #22d3ee;
-    --ld-net-chu: #04111f;
+/* Landing tối: số tím-chàm chữ tối (6,2:1). */
+.ld-vung .ld-cac-buoc {
+    --ld-net: var(--cc-nhan);
+    --ld-net-chu: var(--cc-nen);
 }
 
 .ld-buoc {
-    --ld-doan: 1;
     position: relative;
 }
 
-.ld-buoc:not(:last-child)::before,
 .ld-buoc:not(:last-child)::after {
     content: "";
     height: 2px;
@@ -1150,14 +1208,8 @@ input[type="datetime-local"].is-invalid {
     width: calc(100% + 2rem - 2.5rem);
 }
 
-.ld-buoc:not(:last-child)::before {
-    background: var(--tblr-border-color);
-}
-
 .ld-buoc:not(:last-child)::after {
     background: var(--ld-net);
-    transform: scaleX(var(--ld-doan));
-    transform-origin: left;
 }
 
 .ld-so-buoc {
@@ -1172,13 +1224,6 @@ input[type="datetime-local"].is-invalid {
     margin-bottom: 1rem;
     transition: background-color 0.3s ease, color 0.3s ease, box-shadow 0.3s ease;
     width: 2.5rem;
-}
-
-/* app.js gắn ld-chua-toi cho bước mà đường nối chưa vẽ tới. */
-.ld-buoc.ld-chua-toi .ld-so-buoc {
-    background: var(--tblr-bg-surface-secondary);
-    box-shadow: inset 0 0 0 1px var(--tblr-border-color);
-    color: var(--tblr-secondary);
 }
 
 /* Màn hẹp: các bước xếp dọc, số nằm bên trái, đường nối chạy dọc xuống bước sau. */
@@ -1197,27 +1242,18 @@ input[type="datetime-local"].is-invalid {
         top: 0;
     }
 
-    .ld-buoc:not(:last-child)::before,
     .ld-buoc:not(:last-child)::after {
         height: calc(100% + 2rem - 2.5rem);
         left: calc(1.25rem - 1px);
         top: 2.5rem;
         width: 2px;
     }
-
-    .ld-buoc:not(:last-child)::after {
-        transform: scaleY(var(--ld-doan));
-        transform-origin: top;
-    }
 }
 
-/* Dải cuối: cùng nền với hero, quầng sáng lớn dần theo độ cuộn (--ld-lan do app.js đặt). Không có thẻ
-   chứng chỉ nên quầng sáng dùng màu cyan của chủ đề thay cho màu trạng thái. */
+/* Dải cuối: không có thẻ chứng chỉ nên quầng sáng dùng màu nhấn thay cho màu trạng thái. */
 .ld-dai-cuoi {
-    --ld-lan: 1;
-    --ld-mau: #22d3ee;
-    border-radius: 2rem 2rem 0 0;
-    margin-top: clamp(3.5rem, 8vw, 6.5rem);
+    --ld-mau: var(--cc-nhan);
+    padding-top: clamp(3.5rem, 8vw, 6.5rem);
     overflow: clip;
     position: relative;
     text-align: center;
@@ -1228,7 +1264,7 @@ input[type="datetime-local"].is-invalid {
     left: 50%;
     opacity: 0.6;
     top: 100%;
-    transform: scale(calc(0.5 + 0.7 * var(--ld-lan)));
+    transform: scale(1.2);
 }
 
 .ld-dai-cuoi-trong {
@@ -1502,23 +1538,5 @@ input[type="datetime-local"].is-invalid {
 
     .ld-the-tinh:hover {
         transform: none;
-    }
-}
-
-/* Bản in: bỏ phần giữ màn hình và hiện hết, không thì giấy trắng nhiều trang. */
-@media print {
-    .ld-san-khau.ld-theo-cuon {
-        height: auto;
-    }
-
-    .ld-theo-cuon .ld-dinh {
-        height: auto;
-        position: static;
-    }
-
-    .ld-cho-hien,
-    .ld-cho-hien * {
-        opacity: 1 !important;
-        transform: none !important;
     }
 }
