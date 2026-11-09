@@ -53,7 +53,7 @@ require __DIR__ . '/../views/dau_trang.php';
 
     <section class="dn-phai">
         <div class="dn-phai-dau">
-            <span class="dn-ten"><?= $logo ?><?= e(TEN_THUONG_HIEU) ?></span>
+            <span class="dn-ten"><?= $thuongHieu ?></span>
             <?= $nutGiaoDien ?>
         </div>
         <div class="dn-form">

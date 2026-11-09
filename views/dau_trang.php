@@ -66,16 +66,24 @@ HTML;
 
 // Logo: ổ khoá đóng, như ổ khoá HTTPS trên thanh địa chỉ, trong ô bo góc dải cyan sang xanh dương (user chốt 08/11/2026).
 // Dùng ở landing, menu quản trị, trang đăng nhập; cùng hình với biểu tượng tab ngay dưới.
-$logo = <<<'HTML'
-<span class="logo-khoa" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/><path d="M12 15.5v1.5"/></svg></span>
-HTML;
+// Logo "vòng thời hạn" (user chọn 09/11/2026 trong 4 phương án): vòng gần kín vừa là chữ C, vừa là vòng đếm ngược;
+// chấm ở chỗ hở là ngày hết hạn đang tới. Một màu như logo của Better Stack, không ô nền: tô bằng currentColor nên
+// trắng trên nền tối, tối trên nền sáng (cột form trang đăng nhập).
+$hinhLogo = '<path d="M23.4 8.6A10.5 10.5 0 1 0 23.4 23.4" fill="none" stroke="currentColor" stroke-width="4.4" stroke-linecap="round"/>'
+    . '<circle cx="26.6" cy="16" r="2.5" fill="currentColor"/>';
 
-// Biểu tượng tab: cùng hình logo, nhúng thẳng vào trang nên không thêm file và không thêm một lượt tải.
+// Logo kèm tên, dùng cho thanh trên landing, trang đăng nhập và đầu menu quản trị. Chữ cuối ("Cert") nhạt hơn
+// (user chọn 09/11/2026). Đổi logo thì đổi ở đây, trang không tự ghép.
+$phanTen = explode(' ', TEN_THUONG_HIEU, 2);
+$thuongHieu = '<span class="thuong-hieu"><svg class="logo-dau" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" aria-hidden="true">'
+    . $hinhLogo . '</svg><span>' . e($phanTen[0])
+    . (isset($phanTen[1]) ? ' <span class="ten-phu">' . e($phanTen[1]) . '</span>' : '') . '</span></span>';
+
+// Biểu tượng tab: cùng hình logo, màu trắng trong ô nền tối, vì dấu một màu đứng riêng sẽ biến mất trên thanh tab
+// sáng. Nhúng thẳng vào trang nên không thêm file và không thêm một lượt tải.
 $bieuTuongTab = 'data:image/svg+xml,' . rawurlencode('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">'
-    . '<defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#22d3ee"/><stop offset="1" stop-color="#3b82f6"/></linearGradient></defs>'
-    . '<rect width="32" height="32" rx="8" fill="url(#g)"/>'
-    . '<g fill="none" stroke="#04111f" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">'
-    . '<rect x="8.5" y="14.5" width="15" height="11" rx="2.5"/><path d="M11.5 14.5v-3.5a4.5 4.5 0 0 1 9 0v3.5"/><path d="M16 19v2"/></g></svg>');
+    . '<rect width="32" height="32" rx="7" fill="#0b0c14"/>'
+    . '<g transform="translate(4 4) scale(0.75)" color="#f1f4fd">' . $hinhLogo . '</g></svg>');
 
 // Khối tài khoản: máy tính đặt ở thanh trên, màn hẹp đặt cạnh nút mở menu. Dựng một lần, in hai chỗ.
 // Đổi sáng/tối nằm trong menu tài khoản cho thanh trên gọn (user yêu cầu 08/11/2026); app.js bắt mọi
@@ -142,7 +150,7 @@ if ($nguoi !== null) {
                 <span class="navbar-toggler-icon"></span>
             </button>
             <?php // Tên hệ thống dẫn về landing; về Dashboard đã có mục Dashboard ngay bên dưới. ?>
-            <a class="navbar-brand ten-thuong-hieu" href="<?= e(url('index.php')) ?>"><?= $logo ?><?= e(TEN_THUONG_HIEU) ?></a>
+            <a class="navbar-brand ten-thuong-hieu" href="<?= e(url('index.php')) ?>"><?= $thuongHieu ?></a>
             <div class="navbar-nav flex-row align-items-center thanh-tai-khoan d-lg-none"><?= $khoiTaiKhoan ?></div>
             <div class="collapse navbar-collapse" id="menu-chinh">
                 <ul class="navbar-nav">

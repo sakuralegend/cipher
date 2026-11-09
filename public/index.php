@@ -31,7 +31,7 @@ $khungChoAnh = function (string $ten, string $loai = 'may'): string {
 <?php // ld-vung: vùng mang bảng màu tối giản nền tối (biến --cc-* trong app.css). ?>
 <header class="navbar navbar-expand d-print-none ld-thanh-tren ld-vung" data-bs-theme="dark">
     <div class="container-xl">
-        <span class="navbar-brand d-inline-flex align-items-center"><?= $logo ?><?= e(TEN_THUONG_HIEU) ?></span>
+        <span class="navbar-brand d-inline-flex align-items-center"><?= $thuongHieu ?></span>
         <div class="navbar-nav flex-row ms-auto align-items-center">
             <a class="btn ld-nut-chinh" href="<?= e($nutChinh['dich']) ?>"><?= e($nutChinh['nhan']) ?></a>
         </div>
@@ -108,36 +108,18 @@ $khungChoAnh = function (string $ten, string $loai = 'may'): string {
             <div class="row row-cards">
                 <div class="col-md-4">
                     <div class="ld-the-tinh">
-                        <div class="ld-minh-hoa ld-minh-hoa-ds" aria-hidden="true">
-                            <div><i class="ld-cham-xanh"></i><span class="ma-so">portal.congty.example</span></div>
-                            <div><i class="ld-cham-cam"></i><span class="ma-so">mail.congty.example</span></div>
-                            <div><i class="ld-cham-do"></i><span class="ma-so">test.congty.example</span></div>
-                        </div>
                         <h3 class="ld-the-tinh-ten">Quản lý tập trung</h3>
                         <p class="text-secondary mb-0">Lưu chứng chỉ cùng tên miền, máy chủ và tổ chức cấp. Mỗi chứng chỉ có mã quản lý và dấu vân tay riêng.</p>
                     </div>
                 </div>
                 <div class="col-md-4">
                     <div class="ld-the-tinh">
-                        <div class="ld-minh-hoa ld-minh-hoa-moc" aria-hidden="true">
-                            <span class="badge bg-yellow-lt">Mốc 30 ngày</span>
-                            <span class="badge bg-orange-lt">Mốc 15 ngày</span>
-                            <span class="badge bg-red-lt">Mốc 7 ngày</span>
-                        </div>
                         <h3 class="ld-the-tinh-ten">Cảnh báo theo mốc</h3>
                         <p class="text-secondary mb-0">Trạng thái và số ngày còn lại luôn được tính theo ngày hiện tại. Sắp đến hạn thì cảnh báo hiện ngay.</p>
                     </div>
                 </div>
                 <div class="col-md-4">
                     <div class="ld-the-tinh">
-                        <!-- Chiều cao cột theo số liệu của bộ dữ liệu mẫu 50 chứng chỉ: 6, 13, 22, 3, 6. -->
-                        <div class="ld-minh-hoa ld-minh-hoa-cot" aria-hidden="true">
-                            <i class="ld-cham-do" style="height: 27%"></i>
-                            <i class="ld-cham-cam" style="height: 59%"></i>
-                            <i class="ld-cham-xanh" style="height: 100%"></i>
-                            <i class="ld-cham-lam" style="height: 14%"></i>
-                            <i class="ld-cham-xam" style="height: 27%"></i>
-                        </div>
                         <h3 class="ld-the-tinh-ten">Thống kê và báo cáo</h3>
                         <p class="text-secondary mb-0">Xem số liệu theo trạng thái bằng bảng và biểu đồ, giữ lịch sử gia hạn, xuất báo cáo khi cần.</p>
                     </div>

@@ -311,20 +311,26 @@ input[type="datetime-local"].is-invalid {
     }
 }
 
-/* Logo ổ khoá ($logo trong dau_trang.php): ổ khoá tối trong ô bo góc dải cyan sang xanh dương, cùng màu nút chính
-   của landing; đọc rõ trên cả nền sáng lẫn nền tối nên không cần đổi theo giao diện. */
-.logo-khoa {
+/* Logo kèm tên ($thuongHieu trong dau_trang.php): dấu "vòng thời hạn" một màu theo màu chữ, chữ đậm và khít như
+   logo Better Stack, chữ "Cert" nhạt hơn (user chọn 09/11/2026). Dùng chung cho landing, đăng nhập, menu quản trị. */
+.thuong-hieu {
     align-items: center;
-    background-image: linear-gradient(135deg, #22d3ee, #3b82f6);
-    border-radius: 0.5rem;
-    box-shadow: 0 0.25rem 0.75rem rgba(34, 211, 238, 0.25);
-    color: #04111f;
     display: inline-flex;
+    font-weight: 650;
+    letter-spacing: -0.02em;
+    white-space: nowrap;
+}
+
+.logo-dau {
     flex-shrink: 0;
-    height: 1.875rem;
-    justify-content: center;
-    margin-right: 0.75rem;
-    width: 1.875rem;
+    height: 1.75rem;
+    margin-right: 0.625rem;
+    width: 1.75rem;
+}
+
+.ten-phu {
+    color: var(--tblr-secondary);
+    font-weight: 500;
 }
 
 /* Giao diện tối của cả web: nền xanh đen cho liền với phần navy của landing và cột menu, thay màu xám của Tabler.
@@ -359,8 +365,6 @@ input[type="datetime-local"].is-invalid {
     display: inline-flex;
     justify-content: flex-start;
     font-size: 1.0625rem;
-    font-weight: 700;
-    letter-spacing: -0.01em;
 }
 
 /* Tên nhóm: chữ nhỏ in hoa, nhạt, để mắt lướt theo nhóm trước rồi mới đọc từng mục. */
@@ -485,13 +489,12 @@ body:has(> main.ld-vung) {
     z-index: 1030;
 }
 
-/* Nền tối navy của nửa trái trang đăng nhập và cột menu quản trị: chấm lưới ánh cyan và một vệt sáng xanh dương
-   ở góc trên (user chốt 07/11/2026). Landing đã sang bảng màu --cc-*; hai chỗ này đổi ở bước sau.
+/* Nền tối navy của nửa trái trang đăng nhập và cột menu quản trị: một vệt sáng xanh dương ở góc trên. Không lưới
+   chấm (user 09/11/2026: nền trang trí chỉ dùng gradient). Landing đã sang bảng màu --cc-*; hai chỗ này đổi ở bước sau.
    Phải đặt lại color: chữ thừa hưởng màu đã tính ở body, tức màu tối của giao diện sáng. */
 .dn-trai,
 .menu-doc {
     background:
-        radial-gradient(rgba(125, 211, 252, 0.12) 1px, transparent 1px) 0 0 / 1.75rem 1.75rem,
         radial-gradient(60rem 36rem at 0% 0%, rgba(59, 130, 246, 0.16), transparent 70%),
         #060d1c;
     color: var(--tblr-body-color);
@@ -536,14 +539,12 @@ body:has(> main.ld-vung) {
     text-align: center;
 }
 
-/* Nền hero: vệt sáng tím ở giữa phía trên và lưới chấm mờ, cả hai tan dần xuống dưới. */
+/* Nền hero: chỉ gradient (user 09/11/2026), vệt sáng tím ở giữa phía trên và một vệt nhạt hơn sau khu trưng bày ảnh. */
 .ld-hero-nen {
-    -webkit-mask-image: linear-gradient(to bottom, #000 30%, transparent 85%);
     background:
         radial-gradient(52rem 30rem at 50% 0%, rgba(124, 135, 247, 0.2), transparent 70%),
-        radial-gradient(rgba(201, 211, 238, 0.09) 1px, transparent 1px) 0 0 / 1.5rem 1.5rem;
+        radial-gradient(60rem 26rem at 50% 78%, rgba(91, 99, 232, 0.08), transparent 70%);
     inset: 0;
-    mask-image: linear-gradient(to bottom, #000 30%, transparent 85%);
     pointer-events: none;
     position: absolute;
 }
@@ -701,8 +702,7 @@ body:has(> main.ld-vung) {
     transform-style: preserve-3d;
 }
 
-/* Khung giữ chỗ ảnh chụp ($khungChoAnh trong index.php): đúng tỉ lệ ảnh sẽ đặt vào, sọc chéo rất mờ để nhìn ra
-   là chỗ trống có chủ đích. */
+/* Khung giữ chỗ ảnh chụp ($khungChoAnh trong index.php): đúng tỉ lệ ảnh sẽ đặt vào, gradient rất nhạt. */
 .ld-cho-anh {
     background: var(--cc-nen-sau);
     border: 1px solid var(--cc-vien);
@@ -729,7 +729,7 @@ body:has(> main.ld-vung) {
 .ld-cho-anh-than {
     align-items: center;
     aspect-ratio: 16 / 10;
-    background: repeating-linear-gradient(135deg, transparent 0 1.25rem, rgba(201, 211, 238, 0.025) 1.25rem 2.5rem);
+    background: linear-gradient(160deg, rgba(201, 211, 238, 0.045), transparent 60%);
     color: var(--cc-chu-phu);
     display: flex;
     flex-direction: column;
@@ -1118,65 +1118,6 @@ body:has(> main.ld-vung) {
     margin: 0 0 0.5rem;
 }
 
-.ld-cham-xanh { background: var(--tblr-green); }
-.ld-cham-cam { background: var(--tblr-orange); }
-.ld-cham-do { background: var(--tblr-red); }
-.ld-cham-lam { background: var(--tblr-blue); }
-.ld-cham-xam { background: var(--tblr-gray-500); }
-
-/* Hình minh hoạ nhỏ trong thẻ: cao bằng nhau. */
-.ld-minh-hoa {
-    background: var(--tblr-bg-surface-secondary);
-    border-radius: 0.75rem;
-    height: 8.5rem;
-    margin-bottom: 1.25rem;
-    padding: 1rem;
-}
-
-.ld-minh-hoa-ds {
-    display: flex;
-    flex-direction: column;
-    font-size: 0.8125rem;
-    gap: 0.625rem;
-    justify-content: center;
-}
-
-.ld-minh-hoa-ds div {
-    align-items: center;
-    display: flex;
-    gap: 0.625rem;
-}
-
-.ld-minh-hoa-ds i {
-    border-radius: 50%;
-    flex-shrink: 0;
-    height: 0.5rem;
-    width: 0.5rem;
-}
-
-.ld-minh-hoa-moc {
-    align-items: flex-start;
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-    justify-content: center;
-}
-
-.ld-minh-hoa-cot {
-    align-items: flex-end;
-    display: flex;
-    gap: 0.625rem;
-}
-
-.ld-minh-hoa-cot i {
-    border-radius: 0.25rem 0.25rem 0 0;
-    flex: 1;
-    transform-origin: bottom;
-}
-
-.ld-minh-hoa-moc .badge:nth-child(2) { margin-left: 2rem; }
-.ld-minh-hoa-moc .badge:nth-child(3) { margin-left: 4rem; }
-
 /* Ba bước. Mỗi bước có một đoạn nối tới bước sau (::after). */
 .ld-cac-buoc {
     --ld-net: #0b1730;
@@ -1417,9 +1358,7 @@ body:has(> main.ld-vung) {
 }
 
 .dn-ten {
-    align-items: center;
     display: inline-flex;
-    font-weight: 600;
 }
 
 .dn-form {

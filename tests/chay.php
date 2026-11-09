@@ -1594,6 +1594,48 @@ function test_landing_khong_co_hieu_ung_theo_cuon_phim_the_tu_chay(PDO $pdo): vo
     }
 }
 
+// Luật: Nền trang trí trên cả web chỉ là gradient, không có lưới chấm.
+// Vì sao: User 09/11/2026: "bỏ luôn kiểu nền có chấm đằng sau, nếu muốn dùng thì chỉ dùng nền gradient thôi".
+// Đỏ nghĩa là: app.css lại có mẫu chấm radial-gradient(... 1px, transparent 1px) lặp theo ô (hero, nửa trái đăng nhập, menu).
+// Đừng: Vẽ lưới chấm bằng ảnh hay SVG để né test; muốn chiều sâu thì dùng vệt sáng gradient.
+// Nhóm: Giao diện, triển khai (Giao diện)
+function test_nen_trang_tri_chi_la_gradient_khong_luoi_cham(PDO $pdo): void
+{
+    $css = file_get_contents(__DIR__ . '/../public/assets/app.css');
+    kiem(!preg_match('/1px,\s*transparent\s+1px\)/', $css), 'app.css còn nền lưới chấm');
+}
+
+// Luật: Landing không có hình minh hoạ vẽ giả giao diện; chỗ cần hình là ảnh chụp thật của hệ thống hoặc khung giữ chỗ chờ ảnh.
+// Vì sao: User 09/11/2026: "Tinh thần là phải lấy đúng ảnh thực tế, như Better Stack họ lấy từ sản phẩm của họ".
+// Đỏ nghĩa là: index.php lại có khối ld-minh-hoa (danh sách, nhãn, cột biểu đồ dựng bằng HTML), hoặc ảnh không nằm trong assets/landing/.
+// Đừng: Vẽ lại giao diện bằng HTML/CSS cho "nhanh"; chụp màn hình thật với dữ liệu mẫu rồi đặt vào assets/landing/.
+// Nhóm: Giao diện, triển khai (Giao diện)
+function test_landing_chi_dung_anh_chup_that(PDO $pdo): void
+{
+    $trang = file_get_contents(__DIR__ . '/../public/index.php');
+    kiem(!str_contains($trang, 'ld-minh-hoa'), 'index.php còn hình minh hoạ vẽ bằng HTML (ld-minh-hoa)');
+    preg_match_all('/<img[^>]+src="([^"]+)"/', $trang, $cacAnh);
+    foreach ($cacAnh[1] as $nguon) {
+        kiem(str_contains($nguon, 'assets/landing/'), "Ảnh $nguon phải là ảnh chụp đặt trong assets/landing/");
+    }
+}
+
+// Luật: Logo và tên thương hiệu dựng một chỗ ($thuongHieu trong dau_trang.php): dấu "vòng thời hạn" một màu, chữ "Cert" nhạt hơn; trang chỉ in biến đó.
+// Vì sao: User 09/11/2026 chọn phương án B (vòng gần kín vừa là chữ C vừa là vòng đếm ngược, dấu trắng, "Cert" nhạt) sau khi xem 4 phương án.
+// Đỏ nghĩa là: Một trang tự ghép $logo với TEN_THUONG_HIEU (lại lệch kiểu chữ), hoặc logo quay về ô màu, hoặc mất lớp ten-phu.
+// Đừng: Thêm logo thứ hai cho một trang riêng; đổi logo thì đổi ở $thuongHieu.
+// Nhóm: Giao diện, triển khai (Giao diện)
+function test_logo_va_ten_thuong_hieu_dung_mot_cho(PDO $pdo): void
+{
+    $dauTrang = file_get_contents(__DIR__ . '/../views/dau_trang.php');
+    kiem(str_contains($dauTrang, '$thuongHieu = '), 'dau_trang.php phải dựng $thuongHieu');
+    kiem(str_contains($dauTrang, 'class="ten-phu"'), 'Chữ cuối của tên thương hiệu phải nằm trong lớp ten-phu (nhạt hơn)');
+    kiem(!str_contains($dauTrang, 'linearGradient'), 'Logo và biểu tượng tab không còn dùng ô dải màu');
+    foreach (['views/dau_trang.php', 'public/index.php', 'public/login.php'] as $tep) {
+        kiem(!preg_match('/\$logo\s*\?>\s*<\?=\s*e\(TEN_THUONG_HIEU\)/', file_get_contents(__DIR__ . '/../' . $tep)), "$tep tự ghép logo với tên, phải dùng \$thuongHieu");
+    }
+}
+
 // Luật: app.css và app.js được nạp qua urlTep(), địa chỉ kèm ?v= là thời điểm sửa file.
 // Vì sao: Máy chủ không gửi Cache-Control; sau lần deploy 07/11/2026 Safari trên iPhone có thể giữ CSS cũ hàng giờ, ghép với HTML mới là trang vỡ.
 // Đỏ nghĩa là: Có chỗ nạp hai file này bằng url() trần, hoặc urlTep() không còn gắn thời điểm sửa file.
