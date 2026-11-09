@@ -7,7 +7,8 @@ require __DIR__ . '/../../src/chung_chi.php';
 $pdo = ketNoiCsdl();
 $nguoi = yeuCauDangNhap($pdo);
 
-// Cảnh báo được tạo khi có người xem, không dùng lịch chạy nền (docs/SPEC.md mục 5).
+// Cảnh báo được tạo khi có người xem (Dashboard và trang Cảnh báo), không dùng lịch chạy nền: cảnh báo chỉ hiển thị
+// trong hệ thống, nên chỉ cần có lúc có người mở xem; không phải nuôi thêm tác vụ chạy ngầm trên VPS.
 taoCanhBao($pdo);
 $soTheoTrangThai = demTheoTrangThai($pdo);
 $canXuLy = chungChiSapHetHan($pdo);

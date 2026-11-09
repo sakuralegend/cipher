@@ -2131,9 +2131,13 @@ function kiemTaiLieuKhopCode(): void
     $luat = array_combine($m[2], array_map('trim', $m[1]));
     $soTest = count(array_filter(get_defined_functions()['user'], fn(string $ten): bool => str_starts_with($ten, 'test_')));
     $bao(count($luat) === $soTest, "Có $soTest test nhưng chỉ " . count($luat) . ' test có dòng Luật ngay trên');
-    $kt = $noiDung['docs/KIEM_THU.md'];
+    // SPEC, ERD, USECASE, KIEM_THU bị xoá 09/11/2026 để dựng lại một lần trước khi nộp: chưa có thì báo thiếu.
+    foreach (['docs/SPEC.md', 'docs/ERD.md', 'docs/USECASE.md', 'docs/KIEM_THU.md'] as $tep) {
+        $bao(isset($noiDung[$tep]), "Chưa có $tep");
+    }
+    $kt = $noiDung['docs/KIEM_THU.md'] ?? '';
     foreach (['README.md' => '/`XANH: (\d+) test`/', 'docs/KIEM_THU.md' => '/`XANH: (\d+) test`/'] as $tep => $mau) {
-        $bao(preg_match($mau, $noiDung[$tep], $so) === 1 && (int) $so[1] === $soTest, "$tep ghi XANH: " . ($so[1] ?? '?') . ", thật là $soTest");
+        $bao(preg_match($mau, $noiDung[$tep] ?? '', $so) === 1 && (int) $so[1] === $soTest, "$tep ghi XANH: " . ($so[1] ?? '?') . ", thật là $soTest");
     }
     $bao(preg_match('/Cả (\d+) test đều \*\*đạt\*\*/', $kt, $so) === 1 && (int) $so[1] === $soTest, 'KIEM_THU ghi "Cả ' . ($so[1] ?? '?') . " test\", thật là $soTest");
     $bao(preg_match('/\| \*\*Tổng\*\* \| \*\*(\d+)\*\* \|/', $kt, $so) === 1 && (int) $so[1] === $soTest, 'Dòng Tổng của KIEM_THU ghi ' . ($so[1] ?? '?') . ", thật là $soTest");

@@ -13,7 +13,7 @@ $coChuyenCanh ??= false;
 // Tab trình duyệt: "Tên trang | Cipher Cert" (user chốt 08/11/2026), mở nhiều tab vẫn biết tab nào là trang nào.
 $tieuDeTab ??= $tieuDe . ' | ' . TEN_THUONG_HIEU;
 
-// Số cảnh báo trên menu chỉ đếm, không tạo: việc tạo chạy ở Dashboard và trang Cảnh báo (docs/SPEC.md mục 5),
+// Số cảnh báo trên menu chỉ đếm, không tạo: việc tạo chạy ở Dashboard và trang Cảnh báo (xem admin/index.php),
 // để mỗi lần mở trang không phải ghi CSDL. Trang quản trị nào cũng có sẵn $pdo.
 $soCanhBaoMenu = 0;
 if ($nguoi !== null) {
