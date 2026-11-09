@@ -2104,6 +2104,119 @@ function test_nhat_ky_hien_ip_o_moi_do_rong_man_hinh(PDO $pdo): void
         'Màn hẹp hơn lg phải có dòng IP thay cho cột IP');
 }
 
+// KHÔNG phải test thường: chạy riêng bằng "php tests/chay.php --tai-lieu", lúc đồng bộ tài liệu nộp lần cuối.
+// User chốt 09/11/2026: README và docs/ chỉ tạo, đồng bộ một lần trước khi nộp; giữa chừng mỗi lần sửa chỉ cần chú
+// thích trong code và thân commit đủ rõ. Để chung bộ test thường thì nó đỏ suốt tới lúc đó, che mất lỗi thật.
+// Kiểm: số test ở README, KIEM_THU (XANH, "Cả N", Tổng, tiêu đề nhóm, bảng tổng hợp) bằng số test thật; bảng KIEM_THU
+// có đúng một dòng cho mỗi test, câu trùng câu Luật; mọi `tênHàm()` được nhắc có thật; mọi link tới file trong repo
+// trỏ tới file có thật; tài liệu không có chữ VPN, Xray. Không kiểm được nghĩa câu chữ: phần đó rà theo git log.
+function kiemTaiLieuKhopCode(): void
+{
+    // Gom mọi chỗ lệch rồi báo một lượt, để sửa tài liệu một lần thay vì chạy lại từng lỗi.
+    $loi = [];
+    $bao = function (bool $dung, string $cau) use (&$loi): void {
+        if (!$dung) {
+            $loi[] = $cau;
+        }
+    };
+    $goc = __DIR__ . '/..';
+    $cacTep = ['README.md', ...array_map(fn(string $t): string => 'docs/' . basename($t), glob("$goc/docs/*.md"))];
+    $cacTep = array_values(array_diff($cacTep, ['docs/BAN_GIAO.md'])); // Ảnh chụp lúc khởi động dự án, cố ý không cập nhật.
+    // Máy Windows có thể lưu file với xuống dòng CRLF: đổi về LF để mẫu khớp cuối dòng ($) chạy như nhau mọi nơi.
+    $doc = fn(string $duong): string => str_replace("\r\n", "\n", file_get_contents($duong));
+    $noiDung = array_combine($cacTep, array_map(fn(string $t): string => $doc("$goc/$t"), $cacTep));
+
+    // (1) và (2): số test và bảng test trong KIEM_THU. Câu Luật lấy thẳng từ file này.
+    preg_match_all('/\/\/ Luật: (.+)\n(?:\/\/.*\n)*function\stest_(\w+)\(/', $doc(__FILE__), $m);
+    $luat = array_combine($m[2], array_map('trim', $m[1]));
+    $soTest = count(array_filter(get_defined_functions()['user'], fn(string $ten): bool => str_starts_with($ten, 'test_')));
+    $bao(count($luat) === $soTest, "Có $soTest test nhưng chỉ " . count($luat) . ' test có dòng Luật ngay trên');
+    $kt = $noiDung['docs/KIEM_THU.md'];
+    foreach (['README.md' => '/`XANH: (\d+) test`/', 'docs/KIEM_THU.md' => '/`XANH: (\d+) test`/'] as $tep => $mau) {
+        $bao(preg_match($mau, $noiDung[$tep], $so) === 1 && (int) $so[1] === $soTest, "$tep ghi XANH: " . ($so[1] ?? '?') . ", thật là $soTest");
+    }
+    $bao(preg_match('/Cả (\d+) test đều \*\*đạt\*\*/', $kt, $so) === 1 && (int) $so[1] === $soTest, 'KIEM_THU ghi "Cả ' . ($so[1] ?? '?') . " test\", thật là $soTest");
+    $bao(preg_match('/\| \*\*Tổng\*\* \| \*\*(\d+)\*\* \|/', $kt, $so) === 1 && (int) $so[1] === $soTest, 'Dòng Tổng của KIEM_THU ghi ' . ($so[1] ?? '?') . ", thật là $soTest");
+
+    // Test kiểm cấu hình máy chủ triển khai riêng của nhóm có nhắc VPN: tài liệu nộp không được có chữ này (a44b624),
+    // nên không có dòng trong bảng nhưng vẫn được đếm vào nhóm và tổng. [tên => nhóm]
+    $khongLietKe = ['landing_cong_khai_khong_nhac_den_vpn' => 'Giao diện, triển khai',
+        'caddy_nhan_proxy_protocol_chi_tu_xray' => 'Nhật ký hoạt động (mở rộng 1)'];
+    foreach ($noiDung as $tep => $chu) {
+        $bao(preg_match('/\bVPN\b|Xray/i', $chu) !== 1, "$tep có chữ VPN hoặc Xray; tài liệu nộp không được nhắc hạ tầng này");
+    }
+    $dongTest = [];
+    foreach (preg_split('/^### /m', $kt) as $phan) {
+        if (preg_match('/^(.+?) \((\d+) test,/', $phan, $nhom) !== 1) {
+            continue;
+        }
+        preg_match_all('/^\| `(\w+)` \| (.+) \|$/m', $phan, $dong, PREG_SET_ORDER);
+        $soNhom = count($dong) + count(array_keys($khongLietKe, $nhom[1], true));
+        $bao($soNhom === (int) $nhom[2], "Nhóm \"{$nhom[1]}\" ghi {$nhom[2]} test nhưng đếm được $soNhom");
+        $bao(preg_match('/^\| ' . preg_quote($nhom[1], '/') . ' \| (\d+) \|/m', $kt, $tongNhom) === 1 && (int) $tongNhom[1] === $soNhom,
+            "Bảng tổng hợp ghi nhóm \"{$nhom[1]}\" là " . ($tongNhom[1] ?? '?') . " test, đếm được $soNhom");
+        foreach ($dong as [, $ten, $cau]) {
+            $bao(!isset($dongTest[$ten]), "Test $ten có hai dòng trong KIEM_THU");
+            $dongTest[$ten] = $cau;
+        }
+    }
+    foreach (array_diff_key($luat, $khongLietKe) as $ten => $cau) {
+        $bao(isset($dongTest[$ten]), "KIEM_THU thiếu dòng cho test_$ten");
+        $bao(!isset($dongTest[$ten]) || $dongTest[$ten] === $cau, "Câu của $ten trong KIEM_THU khác câu Luật trong code:\n   KIEM_THU: " . ($dongTest[$ten] ?? '') . "\n   Code:     $cau");
+    }
+    $thua = array_diff(array_keys($dongTest), array_keys(array_diff_key($luat, $khongLietKe)));
+    $bao($thua === [], 'KIEM_THU còn dòng cho test không còn tồn tại: ' . implode(', ', $thua));
+
+    // (3) Tên hàm: tìm "function tên(" trong code PHP và JS của repo, hoặc là hàm có sẵn của PHP.
+    $code = '';
+    foreach (['config', 'src', 'public', 'views'] as $thuMuc) {
+        $duyet = new RecursiveIteratorIterator(new RecursiveDirectoryIterator("$goc/$thuMuc", FilesystemIterator::SKIP_DOTS));
+        foreach ($duyet as $tep) {
+            if (in_array($tep->getExtension(), ['php', 'js'], true) && !str_contains($tep->getPathname(), 'tabler')
+                && !str_contains($tep->getPathname(), 'chartjs')) {
+                $code .= file_get_contents($tep->getPathname());
+            }
+        }
+    }
+    $coSan = get_defined_functions()['internal'];
+    foreach ($noiDung as $tep => $chu) {
+        preg_match_all('/`([A-Za-z_]\w*)\(\)`/', $chu, $ham);
+        foreach (array_unique($ham[1]) as $ten) {
+            $bao(in_array(strtolower($ten), $coSan, true) || preg_match('/function ' . $ten . '\s*\(/', $code) === 1,
+                "$tep nhắc hàm $ten() nhưng code không có hàm này");
+        }
+    }
+
+    // (4) Link tới file trong repo, tính theo thư mục của tài liệu chứa link. Bỏ link ra ngoài và phần #neo.
+    foreach ($noiDung as $tep => $chu) {
+        preg_match_all('/\]\(([^)\s]+)\)/', $chu, $link);
+        foreach (array_unique($link[1]) as $dich) {
+            $duong = explode('#', $dich)[0];
+            if ($duong === '' || preg_match('/^[a-z]+:/i', $duong) === 1) {
+                continue;
+            }
+            $bao(file_exists($goc . '/' . dirname($tep) . '/' . rawurldecode($duong)), "$tep có link tới $dich nhưng file không tồn tại");
+        }
+    }
+    kiem($loi === [], count($loi) . " chỗ tài liệu lệch code:
+   - " . implode("
+   - ", $loi));
+}
+
+// Chế độ kiểm tài liệu (xem kiemTaiLieuKhopCode): không cần CSDL, không chạy test thường.
+if (in_array('--tai-lieu', $argv, true)) {
+    try {
+        kiemTaiLieuKhopCode();
+        echo "XANH: tài liệu khớp code
+";
+        exit(0);
+    } catch (RuntimeException $e) {
+        echo "ĐỎ: {$e->getMessage()}
+";
+        exit(1);
+    }
+}
+
 $pdo = ketNoiCsdl('cipher_test');
 $soLoi = 0;
 $danhSachTest = array_filter(
