@@ -17,10 +17,10 @@
 ## 🗂️ Sổ
 | QD | Chọn | Thay vì | Vì | Hết hạn khi (trạng thái đo được, không dùng ngày tuyệt đối) |
 |---|---|---|---|---|
-| QD-24 | Brand ngắn "Cipher Cert", logo ổ khoá, menu dọc navy cho khu quản trị | Giữ "Quản lý chứng chỉ số", menu ngang xanh Tabler | User chốt 08/11/2026: quản trị phải liền một sản phẩm với landing; tên đề tài đầy đủ giữ ở landing, đăng nhập, báo cáo | Đổi tên miền hoặc giao diện sau khi nộp |
+| QD-25 | Chỉ tối; quản trị nền xám xanh `#222838` như app Better Stack, landing đen xanh | Quản trị sáng có nút đổi (QD-21) | User chốt 09/11/2026 sau khi so mẫu: dùng cả ngày nên cần dịu mắt | Đã nộp và muốn đổi giao diện |
+| QD-24 | Brand ngắn "Cipher Cert" (logo, menu khoá bằng test) | Giữ "Quản lý chứng chỉ số" | User chốt 08/11/2026: quản trị liền một sản phẩm với landing; tên đề tài đầy đủ ở landing, đăng nhập, báo cáo | Đổi tên miền sau khi nộp |
 | QD-23 | Chuyển động bằng CSS + JS thuần, chỉ ở landing và trang đăng nhập (chuyển cảnh qua `@view-transition` có sẵn) | Thư viện Motion, GSAP | Hiệu ứng không cần thư viện; giữ tinh thần không CDN của QD-13 và không thêm thứ phải nuôi | Đã nộp và muốn hiệu ứng phức tạp hơn |
 | QD-22 | Font Inter (OFL) tải về repo, màu chữ theo GitHub | Font hệ thống, Mona Sans, CDN | So trên nội dung thật 07/11/2026: Inter dễ đọc nhất với chữ nhỏ và tiếng Việt; không CDN như QD-13 | Đã nộp và muốn đổi font |
-| QD-21 | Khu quản trị ưu tiên dễ nhìn, mặc định sáng; phần đẹp dồn vào landing | Làm đẹp đều toàn web, mặc định tối | User chốt 07/11/2026: quản trị để dùng hằng ngày, landing để gây ấn tượng | Đã nộp và muốn đổi giao diện |
 | QD-20 | Chart.js 4.6.1 (MIT) tải về repo, không CDN | CDN, tự vẽ SVG | Cùng lý do QD-13: demo không phụ thuộc mạng; đề và SPEC đã ghi Chart.js | Đã nộp và muốn đổi thư viện |
 | QD-19 | Code ở `/var/www/cipher`, PHP-FPM + MariaDB có trần RAM, nối khối vào `Caddyfile` chung | Caddy riêng, Docker | Ít đụng dịch vụ đang chạy nhất. Chạy lại `dungmoi.sh` của slushai sẽ xoá khối này (`deploy/dung_vps.sh caddy` thêm lại) | Chuyển VPS khác |
 | QD-17 | Vai DUYỆT, ưu tiên sản phẩm đẹp và SPEC, Use Case tốt | Vai HIỂU, ưu tiên code dễ giải thích | User chốt 06/11/2026: bài không có vấn đáp | Giảng viên yêu cầu vấn đáp |

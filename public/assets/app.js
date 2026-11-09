@@ -1,18 +1,33 @@
-// Nút đổi sáng/tối. tabler-theme.min.js đọc cùng khoá localStorage này khi tải trang,
-// nên lựa chọn được giữ khi chuyển trang và khi mở lại trình duyệt.
-document.querySelectorAll('[data-doi-giao-dien]').forEach(function (nut) {
-    nut.addEventListener('click', function () {
-        var html = document.documentElement;
-        var moi = html.getAttribute('data-bs-theme') === 'dark' ? 'light' : 'dark';
-        html.setAttribute('data-bs-theme', moi);
-        try {
-            localStorage.setItem('tabler-theme', moi);
-        } catch (loi) {
-            // Trình duyệt chặn lưu trữ thì giao diện vẫn đổi được trong trang hiện tại.
-        }
-        document.dispatchEvent(new Event('doi-giao-dien'));
+// Menu quản trị hai tầng (dau_trang.php): nút data-qt-doi="thanh" nở/thu thanh khu, "phu" thu/mở bảng phụ.
+// Trạng thái ghi lên thẻ html (lớp qt-no-thanh, qt-thu-phu) và nhớ trong localStorage; đoạn script nhỏ trong <head>
+// đọc lại trước khi vẽ trang, nên chuyển trang menu không nhảy.
+(function () {
+    var LOP = {thanh: 'qt-no-thanh', phu: 'qt-thu-phu'};
+    var html = document.documentElement;
+
+    function capNhatNut() {
+        document.querySelectorAll('[data-qt-doi]').forEach(function (nut) {
+            var lop = LOP[nut.dataset.qtDoi];
+            // "Đang mở rộng": thanh khu khi có lớp nở, bảng phụ khi không có lớp thu.
+            var moRong = nut.dataset.qtDoi === 'thanh' ? html.classList.contains(lop) : !html.classList.contains(lop);
+            nut.setAttribute('aria-expanded', String(moRong));
+        });
+    }
+
+    document.querySelectorAll('[data-qt-doi]').forEach(function (nut) {
+        nut.addEventListener('click', function () {
+            var lop = LOP[nut.dataset.qtDoi];
+            var co = html.classList.toggle(lop);
+            try {
+                localStorage.setItem(lop, co ? '1' : '0');
+            } catch (loi) {
+                // Trình duyệt chặn lưu trữ thì menu vẫn đổi được trong trang hiện tại.
+            }
+            capNhatNut();
+        });
     });
-});
+    capNhatNut();
+})();
 
 // Hỏi lại trước các thao tác khó hoàn tác, ví dụ xoá: <form data-xac-nhan="Câu hỏi">.
 document.querySelectorAll('form[data-xac-nhan]').forEach(function (form) {
@@ -116,19 +131,15 @@ document.querySelectorAll('[data-hien-mat-khau]').forEach(function (nut) {
         return;
     }
 
-    // Màu riêng cho từng giao diện. Cột chính lấy trong dải cyan sang xanh dương của landing (08/11/2026);
-    // lưới và trục ngả xanh theo nền navy của giao diện tối.
-    var BANG_MAU = {
-        light: {chinh: '#2f6fe4', chu: '#59636e', luoi: '#e3e8f0', truc: '#c5cdd9'},
-        dark: {chinh: '#38bdf8', chu: '#9fb0c8', luoi: '#1c2840', truc: '#2a3a58'},
-    };
-    var MAU_TRANG_THAI = {red: '#d03b3b', yellow: '#fab219', green: '#0ca30c', secondary: '#898781'};
+    // Web chỉ có giao diện tối (QD-25): cột chính là tím nhấn, chữ trục xám xanh, lưới và trục theo đường kẻ của
+    // nền xám xanh khu quản trị. Màu trạng thái là bộ --cc-* trong app.css (theo Better Stack, user 09/11/2026);
+    // canvas không đọc được biến CSS nên chép giá trị ở đây, đổi bên kia thì đổi theo.
+    var mau = {chinh: '#7c87f7', chu: '#8e99b3', luoi: '#2a3040', truc: '#3a4256'};
+    var MAU_TRANG_THAI = {red: '#e0687d', yellow: '#d57b16', green: '#00af79', blue: '#5b9fd6', secondary: '#8e99b3'};
     var cacBieuDo = [];
     Chart.defaults.font.family = '"Inter", "Segoe UI", system-ui, sans-serif';
 
     function ve() {
-        var ten = document.documentElement.getAttribute('data-bs-theme') === 'dark' ? 'dark' : 'light';
-        var mau = BANG_MAU[ten];
         cacBieuDo.forEach(function (bieuDo) {
             bieuDo.destroy();
         });
@@ -195,7 +206,6 @@ document.querySelectorAll('[data-hien-mat-khau]').forEach(function (nut) {
     }
 
     ve();
-    document.addEventListener('doi-giao-dien', ve);
     // Canvas không tự vẽ lại khi font tải xong, nên vẽ lại một lần để chữ trên trục dùng đúng Inter.
     if (document.fonts) {
         document.fonts.ready.then(ve);

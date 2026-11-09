@@ -1,49 +1,132 @@
-/* CSS riêng của hệ thống; phần còn lại dùng của Tabler. */
+/* CSS riêng của hệ thống; phần còn lại dùng của Tabler. Web chỉ có giao diện tối (QD-25, user 09/11/2026);
+   bản in có khối riêng ở dưới để luôn nền trắng chữ tối. */
 
-/* Font và màu chữ: màu theo GitHub, vì màu gốc của Tabler nhạt làm chữ trông mảnh (so sánh 07/11/2026). */
-:root,
-[data-bs-theme="light"] {
-    --tblr-font-sans-serif: "Inter", "Segoe UI", system-ui, -apple-system, sans-serif;
-    --tblr-body-font-family: var(--tblr-font-sans-serif);
-    --tblr-body-line-height: 1.5;
-    --tblr-body-color: #1f2328;
-    --tblr-secondary: #59636e;
-    --tblr-secondary-color: #59636e;
-    /* Màu thương hiệu thay xanh dương mặc định của Tabler, cho khu quản trị liền với landing (user chốt 08/11/2026):
-       nút chính, trang đang chọn, ô số trang là navy như nút Đăng nhập; liên kết là xanh dương trong dải màu
-       cyan sang xanh dương của landing, vì liên kết màu navy khó phân biệt với chữ thường.
-       Tabler tính các biến primary khác (darken, lt, nền nhạt) từ --tblr-primary nên đổi ở đây là đủ. */
-    --tblr-primary: #0b1730;
-    --tblr-primary-rgb: 11, 23, 48;
-    --tblr-primary-fg: #fff;
-    --tblr-link-color: #1f5fd6;
-    --tblr-link-color-rgb: 31, 95, 214;
-    --tblr-link-hover-color: #1a4fb3;
-    --tblr-link-hover-color-rgb: 26, 79, 179;
-    /* Nền trang ngả xanh rất nhẹ thay cho xám trung tính, hợp với cột menu navy. */
-    --tblr-body-bg: #f4f6fa;
+/* Bảng màu dùng chung (tỉ lệ tương phản đo 09/11/2026).
+   --cc-*: landing và trang đăng nhập, theo trang chủ betterstack.com: nền đen ngả xanh, chữ xám xanh, nhấn tím-chàm.
+   --qt-*: khu quản trị, nền xám xanh theo app Better Stack (đo từ ảnh user gửi; user chọn 09/11/2026).
+   Màu trạng thái: biến --color-brand-* trong CSS của betterstack.com, khớp pixel trên ảnh sản phẩm của họ; lam cho
+   "Chưa hiệu lực" là màu thêm (họ không có). Chữ trong nhãn trạng thái dùng bản -chu sáng hơn, vì nền pha màu của
+   nhãn làm màu gốc tụt dưới 4,5:1. */
+:root {
+    --cc-nen: #0b0c14;
+    --cc-nen-sau: #0f101a;
+    --cc-the: #171926;
+    --cc-vien: rgba(201, 211, 238, 0.1);
+    --cc-chu-dam: #f1f4fd; /* tiêu đề */
+    --cc-chu: #c9d3ee; /* 13:1 trên --cc-nen, 9,8:1 trên --qt-the */
+    --cc-chu-phu: #939db8; /* 7,2:1 */
+    --cc-chu-mo: #727da1; /* 4,8:1 trên --cc-nen; trên nền xám xanh chỉ 3,6:1 nên khu quản trị không dùng cho chữ */
+    --cc-nhan: #7c87f7; /* 6,2:1; chữ trắng trên nền màu này chỉ 3,15:1, nên nút dùng --cc-nut */
+    --cc-nut: #5b63e8; /* chữ trắng 4,8:1 */
+    --cc-nut-re: #545ce0; /* rê chuột: đậm lên (5,3:1); sáng lên #6870f0 thì tụt còn 4,1:1 */
+    --cc-xanh: #00af79; /* 6,9:1 trên --cc-nen */
+    --cc-vang: #d57b16; /* 6,2:1 */
+    --cc-cam: #e56a4e; /* 6,0:1 */
+    --cc-do: #e0687d; /* 6,0:1 */
+    --cc-lam: #5b9fd6;
+    --cc-xam: #8e99b3;
+    --cc-xanh-chu: #2cc994; /* chữ trong nhãn: 5,6:1 trên nền nhãn */
+    --cc-vang-chu: #eb9a45; /* 5,3:1 */
+    --cc-cam-chu: #f08b74; /* 5,0:1 */
+    --cc-do-chu: #f08c9c; /* 5,1:1 */
+    --cc-lam-chu: #86b9e6; /* 5,5:1 */
+    --cc-xam-chu: #a7b0c6; /* 5,3:1 */
+    --qt-nen: #1b1f2c; /* nền phần nội dung */
+    --qt-the: #222838; /* thẻ, thanh menu, bảng phụ, menu tài khoản */
+    --qt-chon: #293040; /* mục đang mở */
+    --qt-re: #2f3647; /* rê chuột */
+    --qt-vien: #2f3647; /* đường kẻ */
+    --qt-dai-dien: #3a4256; /* gần nền menu cho đỡ tương phản (user 09/11/2026) */
+    --qt-chu-phu: #8e99b3; /* 5,2:1 trên thẻ */
+    --qt-lien-ket: #9aa3fa; /* 6,3:1 trên thẻ; tím gốc #7c87f7 chỉ 4,7:1 */
 }
 
-/* Chỉ trên màn hình: bản in luôn nền trắng, nên in từ giao diện tối vẫn phải dùng chữ tối. */
+/* Biến của Tabler theo bảng màu trên. Chỉ trên màn hình: bản in đặt lại ở khối @media print bên dưới. */
 @media screen {
+    :root,
     [data-bs-theme="dark"] {
-        --tblr-body-color: #f0f6fc;
-        --tblr-secondary: #9198a1;
-        --tblr-secondary-color: #9198a1;
-        /* Nền tối navy thì nút navy chìm mất: nút chính đổi sang cyan, chữ tối, như nút chính của landing tối. */
-        --tblr-primary: #38bdf8;
-        --tblr-primary-rgb: 56, 189, 248;
-        --tblr-primary-fg: #04111f;
-        --tblr-link-color: #7cc4fa;
-        --tblr-link-color-rgb: 124, 196, 250;
-        --tblr-link-hover-color: #a5d8fd;
-        --tblr-link-hover-color-rgb: 165, 216, 253;
+        --tblr-font-sans-serif: "Inter", "Segoe UI", system-ui, -apple-system, sans-serif;
+        --tblr-body-font-family: var(--tblr-font-sans-serif);
+        --tblr-body-line-height: 1.5;
+        --tblr-body-color: var(--cc-chu);
+        --tblr-body-color-rgb: 201, 211, 238;
+        --tblr-heading-color: var(--cc-chu-dam);
+        --tblr-emphasis-color: var(--cc-chu-dam);
+        --tblr-secondary: var(--qt-chu-phu);
+        --tblr-secondary-color: var(--qt-chu-phu);
+        --tblr-secondary-rgb: 142, 153, 179;
+        --tblr-primary: var(--cc-nut);
+        --tblr-primary-rgb: 91, 99, 232;
+        --tblr-primary-fg: #fff;
+        --tblr-link-color: var(--qt-lien-ket);
+        --tblr-link-color-rgb: 154, 163, 250;
+        --tblr-link-hover-color: #b8befc;
+        --tblr-link-hover-color-rgb: 184, 190, 252;
+        /* Màu trạng thái cho nút, cảnh báo, chấm, biểu đồ của Tabler (bg-red, alert-danger...). */
+        --tblr-red: var(--cc-do);
+        --tblr-red-rgb: 224, 104, 125;
+        --tblr-danger: var(--cc-do);
+        --tblr-danger-rgb: 224, 104, 125;
+        --tblr-yellow: var(--cc-vang);
+        --tblr-yellow-rgb: 213, 123, 22;
+        --tblr-warning: var(--cc-vang);
+        --tblr-warning-rgb: 213, 123, 22;
+        --tblr-orange: var(--cc-cam);
+        --tblr-orange-rgb: 229, 106, 78;
+        --tblr-green: var(--cc-xanh);
+        --tblr-green-rgb: 0, 175, 121;
+        --tblr-success: var(--cc-xanh);
+        --tblr-success-rgb: 0, 175, 121;
+        --tblr-blue: var(--cc-lam);
+        --tblr-blue-rgb: 91, 159, 214;
+        --tblr-info: var(--cc-lam);
+        --tblr-info-rgb: 91, 159, 214;
+    }
+
+    /* Nền và đường kẻ: Tabler tính sẵn vài biến ở body (ô nhập lấy --tblr-btn-input-bg, đổi --tblr-bg-forms không
+       ăn), nên ghi đè ở đây. */
+    [data-bs-theme="dark"] body {
+        --tblr-body-bg: var(--qt-nen);
+        --tblr-bg-surface: var(--qt-the);
+        --tblr-bg-surface-secondary: #1f2432;
+        --tblr-bg-surface-tertiary: var(--qt-chon);
+        --tblr-border-color: var(--qt-vien);
+        --tblr-border-color-translucent: rgba(255, 255, 255, 0.07);
+        --tblr-btn-input-bg: var(--qt-nen);
+        --tblr-bg-forms: var(--qt-nen);
+    }
+}
+
+/* Bản in luôn nền trắng chữ tối: trình duyệt bỏ màu nền khi in, giữ chữ sáng của giao diện tối thì thành chữ trắng
+   trên giấy trắng. Trang in báo cáo dùng chung đầu trang, và người dùng cũng in từ trang khác bằng Ctrl+P. */
+@media print {
+    :root,
+    [data-bs-theme="dark"],
+    [data-bs-theme="dark"] body {
+        color-scheme: light;
+        --tblr-body-bg: #fff;
+        --tblr-body-color: #1f2328;
+        --tblr-body-color-rgb: 31, 35, 40;
+        --tblr-heading-color: #1f2328;
+        --tblr-emphasis-color: #1f2328;
+        --tblr-secondary: #59636e;
+        --tblr-secondary-color: #59636e;
+        --tblr-secondary-rgb: 89, 99, 110;
+        --tblr-bg-surface: #fff;
+        --tblr-bg-surface-secondary: #f6f8fa;
+        --tblr-border-color: #d0d7de;
+        --tblr-link-color: #1f2328;
+    }
+
+    body {
+        background: #fff !important;
+        color: #1f2328 !important;
     }
 }
 
 /* Màn hẹp: lề hai bên 16px thay cho 12px của Tabler, thẻ và bảng không dính sát mép điện thoại. */
 @media (max-width: 575.98px) {
-    .page .container-xl {
+    .qt-trang .container-xl {
         padding-left: 1rem;
         padding-right: 1rem;
     }
@@ -68,27 +151,14 @@
     position: relative;
 }
 
-/* Màu chữ nhãn trạng thái: màu gốc của Tabler chỉ đạt 1.97-4.33:1 ở giao diện sáng và 2.80-4.35:1 ở
-   giao diện tối (đo 07/11/2026). Các màu dưới đây đạt ít nhất 4.5:1 trên đúng nền của nhãn đó. */
-.badge.bg-red-lt { color: #a82828 !important; }
-.badge.bg-yellow-lt { color: #7f5200 !important; }
-.badge.bg-green-lt { color: #1c6e2e !important; }
-.badge.bg-blue-lt { color: #0a5299 !important; }
-.badge.bg-secondary-lt { color: #5a5a5a !important; }
-.badge.bg-orange-lt { color: #a84600 !important; }
-
-[data-bs-theme="dark"] .badge.bg-red-lt { color: #ff9c9c !important; }
-[data-bs-theme="dark"] .badge.bg-yellow-lt { color: #f59f00 !important; }
-[data-bs-theme="dark"] .badge.bg-green-lt { color: #2fb344 !important; }
-[data-bs-theme="dark"] .badge.bg-blue-lt { color: #8cc0f5 !important; }
-[data-bs-theme="dark"] .badge.bg-secondary-lt { color: #a3a3a3 !important; }
-[data-bs-theme="dark"] .badge.bg-orange-lt { color: #ffa263 !important; }
-
-/* Số cảnh báo trên menu. */
-.so-canh-bao {
-    background: #c92a2a;
-    color: #fff;
-}
+/* Nhãn trạng thái: nền pha 15% màu trạng thái, chữ bản sáng hơn (đạt từ 5:1 trên đúng nền nhãn, đo 09/11/2026).
+   Chỉ tô nhãn nhỏ, không tô mảng lớn (phương án C, user chọn 09/11/2026). */
+.badge.bg-red-lt { background-color: color-mix(in srgb, var(--cc-do) 15%, transparent) !important; color: var(--cc-do-chu) !important; }
+.badge.bg-yellow-lt { background-color: color-mix(in srgb, var(--cc-vang) 15%, transparent) !important; color: var(--cc-vang-chu) !important; }
+.badge.bg-orange-lt { background-color: color-mix(in srgb, var(--cc-cam) 15%, transparent) !important; color: var(--cc-cam-chu) !important; }
+.badge.bg-green-lt { background-color: color-mix(in srgb, var(--cc-xanh) 15%, transparent) !important; color: var(--cc-xanh-chu) !important; }
+.badge.bg-blue-lt { background-color: color-mix(in srgb, var(--cc-lam) 15%, transparent) !important; color: var(--cc-lam-chu) !important; }
+.badge.bg-secondary-lt { background-color: color-mix(in srgb, var(--cc-xam) 15%, transparent) !important; color: var(--cc-xam-chu) !important; }
 
 /* Dòng bảng cao vừa phải: thấp hơn mặc định của Tabler (khoảng 57px) để thấy được nhiều chứng chỉ hơn,
    nhưng đủ thoáng cho font Inter (user yêu cầu nới ra 07/11/2026). */
@@ -97,20 +167,15 @@
     padding-top: 0.6rem;
 }
 
-/* Menu thả xuống: khung bo tròn, từng dòng cũng bo tròn khi rê chuột. */
+/* Menu thả xuống: khung nổi bo tròn trên nền thẻ, từng dòng cũng bo tròn khi rê chuột. */
 .dropdown-menu {
-    border: 1px solid var(--tblr-border-color);
+    background: var(--qt-the);
+    border: 1px solid var(--qt-vien);
     border-radius: 12px;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.16);
-    margin-top: 0.375rem !important; /* Tách khỏi thanh trên; vị trí còn lại do thư viện tính. */
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.5);
+    margin-top: 0.375rem !important; /* Tách khỏi nút bấm; vị trí còn lại do thư viện tính. */
     min-width: 13.5rem;
     padding: 0.5rem;
-}
-
-/* Nền tối: bóng nhạt không thấy được, nên đậm hơn để khung tách khỏi trang. */
-[data-bs-theme="dark"] .dropdown-menu {
-    border-color: rgba(255, 255, 255, 0.16);
-    box-shadow: 0 8px 28px rgba(0, 0, 0, 0.6);
 }
 
 .dropdown-menu .dropdown-item {
@@ -120,12 +185,6 @@
     gap: 0.625rem;
     padding: 0.5rem 0.625rem;
     width: 100%;
-}
-
-/* Dòng đổi sáng/tối có hai cụm chữ, mỗi lúc ẩn một cụm: display: contents cho hình và chữ xếp thẳng theo dòng
-   như các dòng khác. Cụm bị ẩn vẫn ẩn, vì quy tắc ẩn của Tabler có !important. */
-.dropdown-item > [class^="hide-theme-"] {
-    display: contents;
 }
 
 .dropdown-menu .dropdown-item-icon {
@@ -164,11 +223,11 @@
     position: relative;
 }
 
-/* Form Thêm chứng chỉ, tab "Đọc từ máy chủ": thẻ tóm tắt chứng chỉ vừa đọc, viền trái màu thương hiệu. */
+/* Form Thêm chứng chỉ, tab "Đọc từ máy chủ": thẻ tóm tắt chứng chỉ vừa đọc, viền trái màu nhấn. */
 .the-doc {
     background: var(--tblr-bg-surface-secondary);
     border: 1px solid var(--tblr-border-color);
-    border-left: 3px solid #22d3ee;
+    border-left: 3px solid var(--cc-nhan);
     border-radius: 0.5rem;
     padding: 0.875rem 1rem;
 }
@@ -203,7 +262,7 @@
 }
 
 /* Chấm "Còn hiệu lực": vòng sáng lan ra rồi tan, 2 giây một lần, như đèn "đang chạy" (user chốt 07/11/2026).
-   Vẽ bằng box-shadow nên không đẩy chữ bên cạnh; màu là màu xanh trạng thái của Tabler. */
+   Vẽ bằng box-shadow nên không đẩy chữ bên cạnh; màu là màu xanh trạng thái. */
 .cham-song {
     animation: cham-song 2s ease-out infinite;
 }
@@ -219,12 +278,8 @@
     }
 }
 
-/* Bản in luôn nền sáng: trình duyệt bỏ màu nền khi in, nên giao diện tối sẽ thành chữ sáng trên giấy trắng. */
+/* Trang in: khổ A4 ngang, bảng chữ nhỏ, không cắt đôi một dòng giữa hai trang. */
 @media print {
-    html {
-        color-scheme: light !important;
-    }
-
     @page {
         size: A4 landscape;
         margin: 12mm;
@@ -246,73 +301,8 @@ input[type="datetime-local"].is-invalid {
     background-image: none;
 }
 
-/* Khu tài khoản trên thanh quản trị: thành khối có khung và nền riêng, để nhìn ra ngay chỗ bấm vào cài đặt
-   (user yêu cầu 07/11/2026). Đổi sáng/tối nằm trong menu của khối này (08/11/2026). */
-.thanh-tai-khoan {
-    --khoi-bong: 0 1px 2px rgba(10, 14, 20, 0.1);
-    --khoi-nen: rgba(10, 14, 20, 0.045);
-    --khoi-nen-re: rgba(10, 14, 20, 0.09);
-    --khoi-vien: rgba(10, 14, 20, 0.18);
-    --khoi-vien-re: rgba(10, 14, 20, 0.34);
-    gap: 0.5rem;
-}
-
-/* Giao diện tối: nền khối phải SÁNG hơn thanh menu, tối hơn thì trông như lõm xuống. */
-[data-bs-theme="dark"] .thanh-tai-khoan {
-    --khoi-bong: 0 1px 2px rgba(0, 0, 0, 0.4);
-    --khoi-nen: rgba(255, 255, 255, 0.08);
-    --khoi-nen-re: rgba(255, 255, 255, 0.14);
-    --khoi-vien: rgba(255, 255, 255, 0.18);
-    --khoi-vien-re: rgba(255, 255, 255, 0.36);
-}
-
-.nut-tai-khoan {
-    align-items: center;
-    background: var(--khoi-nen);
-    border: 1px solid var(--khoi-vien);
-    border-radius: 0.5rem;
-    box-shadow: var(--khoi-bong);
-    color: var(--tblr-body-color);
-    display: flex;
-    gap: 0.625rem;
-    line-height: 1.3;
-    min-height: 2.75rem;
-    padding: 0.25rem 0.75rem 0.25rem 0.375rem;
-    transition: background-color 0.15s ease, border-color 0.15s ease;
-}
-
-.nut-tai-khoan:hover,
-.nut-tai-khoan:focus-visible,
-.nut-tai-khoan[aria-expanded="true"] {
-    background: var(--khoi-nen-re);
-    border-color: var(--khoi-vien-re);
-    color: var(--tblr-body-color);
-    text-decoration: none;
-}
-
-.nut-tai-khoan .avatar {
-    background: var(--tblr-primary);
-    color: var(--tblr-primary-fg);
-    font-weight: 600;
-}
-
-.nut-tai-khoan-ten {
-    font-weight: 600;
-}
-
-/* Màn dưới 992px (menu dọc thu thành thanh trên) chỉ còn chữ cái đầu: bỏ mũi tên và thu khối lại cho gọn. */
-@media (max-width: 61.99rem) {
-    .nut-tai-khoan {
-        padding: 0.25rem;
-    }
-
-    .nut-tai-khoan::after {
-        display: none;
-    }
-}
-
 /* Logo kèm tên ($thuongHieu trong dau_trang.php): dấu "vòng thời hạn" một màu theo màu chữ, chữ đậm và khít như
-   logo Better Stack, chữ "Cert" nhạt hơn (user chọn 09/11/2026). Dùng chung cho landing, đăng nhập, menu quản trị. */
+   logo Better Stack, chữ "Cert" nhạt hơn (user chọn 09/11/2026). Dùng chung cho landing, đăng nhập, quản trị. */
 .thuong-hieu {
     align-items: center;
     display: inline-flex;
@@ -333,98 +323,523 @@ input[type="datetime-local"].is-invalid {
     font-weight: 500;
 }
 
-/* Giao diện tối của cả web: nền xanh đen cho liền với phần navy của landing và cột menu, thay màu xám của Tabler.
-   Trước 08/11/2026 chỉ landing và trang đăng nhập có, nên vào quản trị là đổi sang xám như một sản phẩm khác. */
-[data-bs-theme="dark"] body {
-    /* Ô nhập lấy màu từ --tblr-btn-input-bg; Tabler đã tính biến này sẵn ở thẻ gốc từ --tblr-bg-forms,
-       nên đổi --tblr-bg-forms ở đây không ăn, phải ghi đè chính nó. */
-    --tblr-btn-input-bg: #0b1527;
-    --tblr-bg-surface: #0d1729;
-    --tblr-bg-surface-secondary: #0a1324;
-    --tblr-bg-surface-tertiary: #111d35;
-    --tblr-body-bg: #08101f;
-    --tblr-border-color: #1c2840;
+/* ---------- Menu quản trị hai tầng (dau_trang.php), theo app Better Stack (user duyệt mẫu 09/11/2026) ----------
+   Tầng 1 .qt-thanh: thanh khu, thu còn biểu tượng (60px), lớp qt-no-thanh trên html thì nở 216px hiện chữ.
+   Tầng 2 .qt-phu: bảng phụ của khu đang mở, lớp qt-thu-phu thì thu còn cột biểu tượng.
+   Điện thoại (dưới 992px): ẩn hai tầng, thay bằng thanh trên .qt-tren và ngăn kéo .qt-ngan trượt từ phải. */
+.qt {
+    display: flex;
+    min-height: 100vh;
+    min-height: 100svh;
 }
 
-/* ---------- Menu dọc của khu quản trị (dau_trang.php) ----------
-   Nền navy dùng chung với hero landing (quy tắc có .menu-doc ở phần Landing); ở đây chỉ chỉnh chữ, nhóm và mục đang mở. */
-.navbar.menu-doc {
-    --tblr-navbar-border-color: rgba(125, 211, 252, 0.12);
-    --tblr-navbar-color: rgba(226, 232, 240, 0.74);
-    --tblr-navbar-hover-color: #fff;
-    --tblr-navbar-active-color: #fff;
-    /* Nền mục đang mở: Tabler tô bằng biến này qua một quy tắc cụ thể hơn mọi bộ chọn ở đây,
-       nên đổi biến chứ không đặt background (đặt background thì giao diện sáng mất nền, đo 08/11/2026). */
-    --tblr-navbar-active-bg: rgba(34, 211, 238, 0.1);
+.qt-trang {
+    flex: 1;
+    min-width: 0;
 }
 
-/* Tabler dàn logo và tên ra hai đầu cột (space-between); thương hiệu cần logo đứng sát tên. */
-.navbar.menu-doc .ten-thuong-hieu {
+.qt-thanh,
+.qt-phu {
+    background: var(--qt-the);
+    border-right: 1px solid var(--qt-vien);
+    flex-shrink: 0;
+    height: 100vh;
+    height: 100svh;
+    padding: 0.75rem 0.625rem;
+    position: sticky;
+    top: 0;
+    transition: width 0.2s ease;
+    z-index: 1030;
+}
+
+/* Thanh khu nằm trên bảng phụ: menu tài khoản bật ra từ đáy thanh phải đè lên bảng phụ bên cạnh. */
+.qt-thanh {
+    display: flex;
+    flex-direction: column;
+    width: 3.75rem;
+    z-index: 1031;
+}
+
+.qt-no-thanh .qt-thanh {
+    width: 13.5rem;
+}
+
+.qt-phu {
+    overflow-y: auto;
+    width: 14.5rem;
+}
+
+.qt-thu-phu .qt-phu {
+    width: 3.75rem;
+}
+
+/* Ô menu dùng chung cho hai tầng: cao 40px, bo 10px. */
+.qt-o {
     align-items: center;
-    color: #fff;
-    display: inline-flex;
-    justify-content: flex-start;
-    font-size: 1.0625rem;
-}
-
-/* Tên nhóm: chữ nhỏ in hoa, nhạt, để mắt lướt theo nhóm trước rồi mới đọc từng mục. */
-.menu-doc .menu-nhom {
-    color: rgba(203, 213, 225, 0.5);
-    font-size: 0.6875rem;
-    font-weight: 600;
-    letter-spacing: 0.06em;
-    list-style: none;
-    padding: 1.125rem 1.25rem 0.375rem;
-    text-transform: uppercase;
-}
-
-.menu-doc .menu-nhom:first-child {
-    padding-top: 0.5rem;
-}
-
-.navbar.menu-doc .nav-link {
-    border-radius: 0.5rem;
-    margin: 0.0625rem 0.75rem;
-    padding: 0.5rem 0.625rem;
+    background: none;
+    border: 0;
+    border-radius: 10px;
+    color: var(--qt-chu-phu);
+    display: flex;
+    flex-shrink: 0;
+    font-size: 0.875rem;
+    font-weight: 500;
+    gap: 0.75rem;
+    height: 2.5rem;
+    margin-bottom: 0.375rem;
+    padding: 0 0.625rem;
     position: relative;
-    transition: background-color 0.15s ease, color 0.15s ease;
+    text-align: left;
+    text-decoration: none;
+    white-space: nowrap;
+    width: 100%;
 }
 
-.navbar.menu-doc .nav-link:hover {
-    background: rgba(255, 255, 255, 0.05);
+.qt-o .icon {
+    flex-shrink: 0;
+    height: 1.25rem;
+    margin: 0;
+    width: 1.25rem;
 }
 
-/* Mục đang mở: nền ánh cyan (biến ở trên), vạch dải cyan sang xanh dương bên trái, biểu tượng cyan.
-   Bỏ vạch có sẵn của Tabler. */
-.navbar.menu-doc .nav-item.active > .nav-link::after {
-    display: none;
+.qt-o:hover,
+.qt-o:focus-visible {
+    background: var(--qt-re);
+    color: var(--cc-chu-dam);
+    text-decoration: none;
 }
 
-.navbar.menu-doc .nav-item.active > .nav-link::before {
-    background: linear-gradient(#22d3ee, #3b82f6);
-    border-radius: 0 3px 3px 0;
-    bottom: 0.4375rem;
+.qt-o.mo {
+    background: var(--qt-chon);
+    color: var(--cc-chu-dam);
+}
+
+/* Khu đang mở: vạch tím bên trái, như app Better Stack. */
+.qt-thanh .qt-o.mo::before {
+    background: var(--cc-nhan);
+    border-radius: 0 2px 2px 0;
+    bottom: 0.625rem;
     content: "";
-    left: -0.75rem;
+    left: -0.625rem;
     position: absolute;
-    top: 0.4375rem;
+    top: 0.625rem;
     width: 3px;
 }
 
-.navbar.menu-doc .nav-item.active .nav-link-icon {
-    color: #67e8f9;
+.qt-chu {
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+html:not(.qt-no-thanh) .qt-thanh .qt-chu,
+.qt-thu-phu .qt-phu .qt-chu,
+.qt-thu-phu .qt-phu-ten {
+    display: none;
+}
+
+/* Logo ở đầu thanh: rê vào thì đổi thành nút nở/thu trong ô vuông. */
+.qt-logo {
+    color: var(--cc-chu-dam);
+    font-size: 1rem;
+    font-weight: 650;
+    letter-spacing: -0.02em;
+    margin-bottom: 0.875rem;
+    padding: 0 0.375rem;
+}
+
+.qt-logo .ten-phu {
+    color: var(--qt-chu-phu);
+}
+
+.qt-logo-dau,
+.qt-logo-nut {
+    flex-shrink: 0;
+    height: 1.75rem;
+    width: 1.75rem;
+}
+
+.qt-logo-nut {
+    align-items: center;
+    display: none;
+    justify-content: center;
+}
+
+.qt-logo:hover .qt-logo-dau,
+.qt-logo:focus-visible .qt-logo-dau {
+    display: none;
+}
+
+.qt-logo:hover .qt-logo-nut,
+.qt-logo:focus-visible .qt-logo-nut {
+    display: flex;
+}
+
+html:not(.qt-no-thanh) .qt-khi-no,
+.qt-no-thanh .qt-khi-thu,
+.qt-thu-phu .qt-khi-mo-phu,
+html:not(.qt-thu-phu) .qt-khi-thu-phu {
+    display: none;
+}
+
+/* Số cảnh báo mới: khi thanh thu thì nằm ở góc biểu tượng, khi nở thì nằm cuối dòng. Chữ tối trên đỏ hồng (5:1). */
+.qt-so-do {
+    background: var(--cc-do);
+    border: 2px solid var(--qt-the);
+    border-radius: 10px;
+    color: var(--qt-nen);
+    font-size: 0.625rem;
+    font-weight: 700;
+    line-height: 0.875rem;
+    min-width: 1.125rem;
+    padding: 0 0.25rem;
+    position: absolute;
+    right: 0;
+    text-align: center;
+    top: -0.125rem;
+}
+
+.qt-no-thanh .qt-thanh .qt-so-do,
+.qt-ngan .qt-so-do {
+    border: 0;
+    margin-left: auto;
+    position: static;
+}
+
+.qt-khoang {
+    flex: 1;
+}
+
+/* Tài khoản ở đáy thanh. */
+.qt-tk {
+    border-top: 1px solid var(--qt-vien);
+    padding-top: 0.625rem;
+}
+
+.qt-tk-nut {
+    height: 2.75rem;
+    margin: 0;
+    padding: 0 0.125rem;
+}
+
+.qt-dai-dien {
+    align-items: center;
+    background: var(--qt-dai-dien);
+    border-radius: 10px;
+    color: #b4bccf;
+    display: flex;
+    flex-shrink: 0;
+    height: 2.25rem;
+    justify-content: center;
+    width: 2.25rem;
+}
+
+.qt-dai-dien svg {
+    height: 1.25rem;
+    width: 1.25rem;
+}
+
+.qt-tk-nut b,
+.qt-ngan-tk b {
+    color: #dbdcde;
+    display: block;
+    font-size: 0.875rem;
+    font-weight: 600;
+    line-height: 1.25;
+}
+
+.qt-tk-nut small,
+.qt-ngan-tk small {
+    color: var(--qt-chu-phu);
+    display: block;
+    font-size: 0.75rem;
+    line-height: 1.25;
+}
+
+/* Menu tài khoản theo app Better Stack: chữ nhỏ hơn menu chính (tên 14px, phụ 12px, mục 13px; user 09/11/2026),
+   khối nổi bo 12px, kẻ ngăn từng khối, Đăng xuất dưới cùng. */
+.dropdown-menu.qt-tk-menu {
+    margin: 0 !important;
+    overflow: hidden;
+    padding: 0;
+    width: 14.25rem;
+}
+
+.qt-tk-dau {
+    padding: 0.75rem 0.875rem 0.6875rem;
+}
+
+.qt-tk-dau b {
+    color: #dbdcde;
+    display: block;
+    font-size: 0.875rem;
+    font-weight: 600;
+    line-height: 1.3;
+}
+
+.qt-tk-dau small {
+    color: var(--qt-chu-phu);
+    display: block;
+    font-size: 0.75rem;
+    line-height: 1.3;
+    margin-top: 0.125rem;
+}
+
+.qt-tk-menu .dropdown-divider {
+    margin: 0;
+}
+
+.qt-tk-menu .dropdown-item {
+    border-radius: 7px;
+    color: var(--qt-chu-phu);
+    font-size: 0.8125rem;
+    gap: 0.625rem;
+    margin: 0.3125rem;
+    padding: 0.4375rem 0.625rem;
+    width: calc(100% - 0.625rem);
+}
+
+.qt-tk-menu .dropdown-item:hover,
+.qt-tk-menu .dropdown-item:focus-visible {
+    background: var(--qt-chon);
+    color: var(--cc-chu-dam);
+}
+
+.qt-tk-menu .dropdown-item-icon {
+    height: 1rem;
     opacity: 1;
+    width: 1rem;
 }
 
-/* Thanh trên của phần nội dung (máy tính): chỉ có nút sáng/tối và tài khoản, nên mỏng và không viền đậm. */
-.navbar.thanh-dau {
-    min-height: 3.75rem;
+/* Bảng phụ: tiêu đề khu và nút thu ở đầu. */
+.qt-phu-dau {
+    align-items: center;
+    display: flex;
+    height: 2.5rem;
+    justify-content: space-between;
+    margin-bottom: 0.875rem;
 }
 
-/* Bản in: cột menu đã ẩn, bỏ luôn khoảng chừa cho nó, không thì bảng in bị đẩy sang phải. */
-@media print {
-    .navbar-vertical ~ .page {
-        padding-inline-start: 0 !important;
+.qt-phu-ten {
+    color: var(--cc-chu-dam);
+    font-size: 1.0625rem;
+    font-weight: 650;
+    letter-spacing: -0.01em;
+    margin: 0 0 0 0.5rem;
+    white-space: nowrap;
+}
+
+.qt-phu-nut {
+    margin: 0;
+    width: 2.5rem;
+}
+
+/* Thanh trên và ngăn kéo chỉ có trên điện thoại; hai tầng menu chỉ có trên máy tính. */
+.qt-tren {
+    align-items: center;
+    background: var(--qt-the);
+    border-bottom: 1px solid var(--qt-vien);
+    display: none;
+    height: 3.5rem;
+    justify-content: space-between;
+    padding: 0 max(1rem, env(safe-area-inset-right, 0px)) 0 max(1rem, env(safe-area-inset-left, 0px));
+    position: sticky;
+    top: 0;
+    z-index: 1020;
+}
+
+.qt-tren-logo,
+.qt-tren-logo:hover {
+    color: var(--cc-chu-dam);
+    text-decoration: none;
+}
+
+.qt-tren-logo .logo-dau {
+    height: 1.5rem;
+    width: 1.5rem;
+}
+
+.qt-tren-nut {
+    align-items: center;
+    background: none;
+    border: 0;
+    border-radius: 10px;
+    color: var(--qt-chu-phu);
+    display: flex;
+    height: 2.5rem;
+    justify-content: center;
+    margin-right: -0.5rem;
+    width: 2.5rem;
+}
+
+.qt-tren-nut:hover,
+.qt-tren-nut:focus-visible {
+    background: var(--qt-re);
+    color: var(--cc-chu-dam);
+}
+
+@media (max-width: 61.99rem) {
+    .qt-thanh,
+    .qt-phu {
+        display: none;
+    }
+
+    .qt-tren {
+        display: flex;
+    }
+}
+
+/* Ngăn kéo: tấm nổi tách mép 8px, bo 22px, trượt ngang từ phải và phủ lên nội dung (user 09/11/2026). Bootstrap đẩy
+   ngăn kéo ra ngoài đúng bằng bề rộng của nó; tấm cách mép nên phải đẩy thêm 1rem, không thì lộ một vạch ở mép. */
+.offcanvas.qt-ngan {
+    background: var(--qt-the);
+    border: 1px solid var(--qt-vien);
+    border-radius: 22px;
+    bottom: 0.5rem;
+    box-shadow: -12px 0 32px rgba(0, 0, 0, 0.45);
+    display: flex;
+    flex-direction: column;
+    height: auto;
+    padding: 0.75rem 0.625rem;
+    right: 0.5rem;
+    top: 0.5rem;
+    width: min(20rem, calc(100vw - 3rem));
+}
+
+.offcanvas-end.qt-ngan {
+    border-left: 1px solid var(--qt-vien);
+    transform: translateX(calc(100% + 1rem));
+}
+
+.qt-ngan.showing,
+.qt-ngan.show:not(.hiding) {
+    transform: none;
+}
+
+.qt-ngan-dau {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 0.25rem;
+}
+
+.qt-ngan-dong {
+    align-items: center;
+    background: none;
+    border: 0;
+    border-radius: 8px;
+    color: var(--qt-chu-phu);
+    display: flex;
+    height: 2rem;
+    justify-content: center;
+    width: 2rem;
+}
+
+.qt-ngan-than {
+    flex: 1;
+    overflow-y: auto;
+}
+
+/* Khu lớn trong ngăn kéo: nút xổ (khu nhiều trang) hoặc liên kết (Cảnh báo). Mũi tên xoay khi xổ. */
+.qt-ngan-khu {
+    align-items: center;
+    background: none;
+    border: 0;
+    border-radius: 12px;
+    color: var(--cc-chu-dam);
+    display: flex;
+    font-size: 0.875rem;
+    font-weight: 600;
+    gap: 0.6875rem;
+    padding: 0.625rem;
+    text-align: left;
+    text-decoration: none;
+    width: 100%;
+}
+
+.qt-ngan-khu:hover,
+.qt-ngan-khu:focus-visible {
+    background: var(--qt-re);
+    color: var(--cc-chu-dam);
+    text-decoration: none;
+}
+
+.qt-ngan-khu.mo {
+    background: var(--qt-chon);
+}
+
+.qt-ngan-khu > .icon {
+    color: var(--qt-chu-phu);
+    flex-shrink: 0;
+    height: 1.125rem;
+    margin: 0;
+    width: 1.125rem;
+}
+
+.qt-ngan-khu .qt-mui {
+    color: var(--qt-chu-phu);
+    height: 1rem;
+    margin-left: auto;
+    transition: transform 0.2s ease;
+    width: 1rem;
+}
+
+.qt-ngan-khu[aria-expanded="true"] .qt-mui {
+    transform: rotate(90deg);
+}
+
+.qt-ngan-con {
+    padding: 0.125rem 0 0.375rem;
+}
+
+.qt-ngan-con a,
+.qt-ngan-con .dropdown-item {
+    border-radius: 10px;
+    color: var(--qt-chu-phu);
+    display: flex;
+    font-size: 0.84375rem;
+    gap: 0.625rem;
+    margin-left: 1.8125rem;
+    padding: 0.5rem 0.625rem;
+    text-decoration: none;
+    width: calc(100% - 1.8125rem);
+}
+
+.qt-ngan-con a:hover,
+.qt-ngan-con .dropdown-item:hover {
+    background: var(--qt-re);
+    color: var(--cc-chu-dam);
+}
+
+.qt-ngan-con a.mo {
+    background: var(--qt-chon);
+    color: var(--cc-chu-dam);
+}
+
+.qt-ngan-tk {
+    border-top: 1px solid var(--qt-vien);
+    padding-top: 0.5rem;
+}
+
+.qt-ngan-tk .qt-dai-dien {
+    border-radius: 8px;
+    height: 1.875rem;
+    width: 1.875rem;
+}
+
+.qt-ngan-tk-con .dropdown-divider {
+    display: none;
+}
+
+.qt-ngan-tk-con .dropdown-item-icon {
+    height: 1rem;
+    margin: 0;
+    width: 1rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .qt-thanh,
+    .qt-phu,
+    .qt-ngan-khu .qt-mui {
+        transition: none;
     }
 }
 
@@ -434,30 +849,6 @@ input[type="datetime-local"].is-invalid {
     inherits: true;
     initial-value: #00af79;
     syntax: "<color>";
-}
-
-/* Bảng màu tối giản nền tối theo betterstack.com (user chốt 09/11/2026), lấy từ mã trang của họ: nền đen ngả xanh,
-   chữ xám xanh thay cho trắng tinh, một màu nhấn tím-chàm. Tỉ lệ tương phản đo trên --cc-nen ngày 09/11/2026.
-   Hiện chỉ vùng .ld-vung (landing) dùng; các bước sau của việc làm lại giao diện dùng cho cả web. */
-:root {
-    --cc-nen: #0b0c14;
-    --cc-nen-sau: #0f101a;
-    --cc-the: #171926;
-    --cc-vien: rgba(201, 211, 238, 0.1);
-    --cc-chu-dam: #f1f4fd; /* tiêu đề */
-    --cc-chu: #c9d3ee; /* 13:1 */
-    --cc-chu-phu: #939db8; /* 7,2:1 */
-    --cc-chu-mo: #727da1; /* 4,8:1; trên --cc-the chỉ còn 4,3:1 nên không dùng cho chữ nhỏ trên thẻ */
-    --cc-nhan: #7c87f7; /* 6,2:1; chữ trắng trên nền màu này chỉ 3,15:1, nên nút dùng --cc-nut */
-    --cc-nut: #5b63e8; /* chữ trắng 4,8:1 */
-    --cc-nut-re: #545ce0; /* rê chuột: đậm lên (5,3:1); sáng lên #6870f0 thì tụt còn 4,1:1 */
-    /* Màu trạng thái: biến --color-brand-* trong CSS của betterstack.com, khớp pixel trên ảnh sản phẩm của họ (đo
-       09/11/2026). Cùng độ sáng với màu nhấn (6-7:1), ngả tông lạnh; màu của Tabler sáng 8-10:1 nên chói (user chọn
-       phương án C: chỉ tô chi tiết nhỏ). */
-    --cc-xanh: #00af79; /* 6,9:1 */
-    --cc-vang: #d57b16; /* 6,2:1 */
-    --cc-cam: #e56a4e; /* 6,0:1 */
-    --cc-do: #e0687d; /* 6,0:1 */
 }
 
 /* Vùng mang bảng màu: đổi luôn biến của Tabler, để chữ phụ, viền, nền thẻ của Tabler bên trong theo cùng màu. */
@@ -496,29 +887,15 @@ body:has(> main.ld-vung) {
     z-index: 1030;
 }
 
-/* Nền tối navy của cột menu quản trị: một vệt sáng xanh dương ở góc trên, không lưới chấm. Landing và trang đăng nhập
-   đã sang bảng màu --cc-*; menu đổi ở bước làm lại khu quản trị.
-   Phải đặt lại color: chữ thừa hưởng màu đã tính ở body, tức màu tối của giao diện sáng. */
-.menu-doc {
-    background:
-        radial-gradient(60rem 36rem at 0% 0%, rgba(59, 130, 246, 0.16), transparent 70%),
-        #060d1c;
-    color: var(--tblr-body-color);
-}
-
-/* Chữ tô sáng trong tiêu đề: dải cyan sang xanh dương (trang đăng nhập); landing dùng dải xám xanh sang tím. */
+/* Chữ tô sáng trong tiêu đề landing ("hết hạn bất ngờ", "chứng chỉ của bạn?"): dải xám xanh sang tím. */
 .ld-chu-sang {
     -webkit-background-clip: text;
     background-clip: text;
-    background-image: linear-gradient(90deg, #67e8f9, #60a5fa);
+    background-image: linear-gradient(90deg, var(--cc-chu), var(--cc-nhan));
     color: transparent;
 }
 
-.ld-vung .ld-chu-sang {
-    background-image: linear-gradient(90deg, var(--cc-chu), var(--cc-nhan));
-}
-
-/* Khối bọc thẻ chứng chỉ (mục Vòng đời ở landing, nửa trái trang đăng nhập): màu trạng thái --ld-mau đổi theo
+/* Khối bọc thẻ chứng chỉ (mục Vòng đời ở landing): màu trạng thái --ld-mau đổi theo
    data-ld-muc do phim thẻ trong app.js đặt, thẻ và quầng sáng bên trong cùng đổi theo. */
 [data-ld-muc] {
     --ld-mau: var(--cc-xanh);
@@ -613,64 +990,30 @@ body:has(> main.ld-vung) {
     justify-content: center;
 }
 
-/* Nút chính, thay màu xanh mặc định của Tabler: xanh đen trên nền sáng, dải cyan sang xanh dương trên nền tối
-   (trang đăng nhập), tím-chàm chữ trắng ở landing. Ghi đè bằng biến của .btn để cả lúc rê chuột, lúc bấm cũng
-   đúng màu. */
+/* Nút chính của landing và trang đăng nhập, thay màu mặc định của Tabler: tím-chàm chữ trắng (4,8:1), viền sáng mảnh
+   ở mép trên như nút của Better Stack; rê chuột thì đậm lên và nhấc nhẹ. Ghi đè bằng biến của .btn để cả lúc rê chuột,
+   lúc bấm cũng đúng màu. */
 .ld-nut-chinh {
-    --ld-nut-bong: rgba(11, 23, 48, 0.28);
-    --tblr-btn-active-bg: #050b17;
+    --ld-nut-bong: rgba(91, 99, 232, 0.45);
+    --tblr-btn-active-bg: var(--cc-nut-re);
     --tblr-btn-active-border-color: transparent;
     --tblr-btn-active-color: #fff;
-    --tblr-btn-bg: #0b1730;
+    --tblr-btn-bg: var(--cc-nut);
     --tblr-btn-border-color: transparent;
     --tblr-btn-box-shadow: none;
     --tblr-btn-color: #fff;
-    --tblr-btn-hover-bg: #16264a;
+    --tblr-btn-hover-bg: var(--cc-nut-re);
     --tblr-btn-hover-border-color: transparent;
     --tblr-btn-hover-color: #fff;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2);
     font-weight: 600;
-    transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.3s ease, color 0.3s ease, filter 0.2s ease;
-}
-
-[data-bs-theme="dark"] .ld-nut-chinh {
-    --ld-nut-bong: rgba(34, 211, 238, 0.35);
-    --tblr-btn-active-bg: #22d3ee;
-    --tblr-btn-active-color: #04111f;
-    --tblr-btn-bg: #22d3ee;
-    --tblr-btn-color: #04111f;
-    --tblr-btn-hover-bg: #22d3ee;
-    --tblr-btn-hover-color: #04111f;
-    background-image: linear-gradient(135deg, #22d3ee, #3b82f6);
+    transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.3s ease, color 0.3s ease;
 }
 
 .ld-nut-chinh:hover,
 .ld-nut-chinh:focus-visible {
-    box-shadow: 0 0.5rem 1.75rem var(--ld-nut-bong);
-    transform: translateY(-2px);
-}
-
-[data-bs-theme="dark"] .ld-nut-chinh:hover,
-[data-bs-theme="dark"] .ld-nut-chinh:focus-visible {
-    filter: brightness(1.1);
-}
-
-/* Đặt sau hai quy tắc tối ở trên để thắng chúng (cùng độ cụ thể). Viền sáng mảnh ở mép trên như nút của Better Stack. */
-.ld-vung .ld-nut-chinh {
-    --ld-nut-bong: rgba(91, 99, 232, 0.45);
-    --tblr-btn-active-bg: var(--cc-nut-re);
-    --tblr-btn-active-color: #fff;
-    --tblr-btn-bg: var(--cc-nut);
-    --tblr-btn-color: #fff;
-    --tblr-btn-hover-bg: var(--cc-nut-re);
-    --tblr-btn-hover-color: #fff;
-    background-image: none;
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2);
-}
-
-.ld-vung .ld-nut-chinh:hover,
-.ld-vung .ld-nut-chinh:focus-visible {
     box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2), 0 0.5rem 1.75rem var(--ld-nut-bong);
-    filter: none;
+    transform: translateY(-2px);
 }
 
 /* Nút phụ: nền thẻ trong suốt, viền mảnh. */

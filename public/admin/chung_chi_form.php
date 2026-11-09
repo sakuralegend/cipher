@@ -209,7 +209,7 @@ $hienFormLuu = $cheDo === 'thu_cong' || $daDoc !== null || $loi !== [];
 
 $hanhDong = 'admin/chung_chi_form.php' . ($id !== null ? '?id=' . $id : '');
 $tieuDe = $id === null ? 'Thêm chứng chỉ' : 'Sửa chứng chỉ';
-$trangHienTai = 'chung_chi';
+$trangHienTai = $id === null ? 'chung_chi_them' : 'chung_chi'; // Thêm mới sáng mục "Thêm chứng chỉ", sửa thì sáng "Danh sách".
 require __DIR__ . '/../../views/dau_trang.php';
 require __DIR__ . '/../../views/tieu_de_trang.php';
 ?>

@@ -1527,7 +1527,7 @@ function test_landing_cong_khai_khong_nhac_den_vpn(PDO $pdo): void
 }
 
 // Luật: Landing không dùng màu xanh chủ đạo mặc định của Tabler (btn-primary, --tblr-primary).
-// Vì sao: User 07/11/2026: nút đăng nhập "chưa ăn khớp với trang, mà vẫn là nút của tabler"; landing có bộ màu riêng (QD-21).
+// Vì sao: User 07/11/2026: nút đăng nhập "chưa ăn khớp với trang, mà vẫn là nút của tabler"; landing có bộ màu riêng (bảng --cc-*).
 // Đỏ nghĩa là: Có thành phần mới lấy màu mặc định của khung giao diện, trang lại trông như mẫu có sẵn.
 // Đừng: Đổi tên lớp để né test; dùng .ld-nut-chinh hoặc cặp màu --ld-net. Màu trạng thái xanh lá, vàng, đỏ vẫn dùng được.
 // Nhóm: Giao diện, triển khai (Giao diện)
@@ -1559,7 +1559,7 @@ function test_dau_trang_dung_yen_khi_chuyen_trang_nho_nhung_font_va_giu_cho_than
 }
 
 // Luật: Chuyển cảnh giữa hai trang chỉ bật ở landing và trang đăng nhập; trang quản trị chuyển trang tức thì.
-// Vì sao: User 07/11/2026 muốn hiệu ứng khi bấm Đăng nhập; trang quản trị dùng hằng ngày nên ưu tiên nhanh, dễ nhìn (QD-21).
+// Vì sao: User 07/11/2026 muốn hiệu ứng khi bấm Đăng nhập; trang quản trị dùng hằng ngày nên ưu tiên chuyển trang tức thì.
 // Đỏ nghĩa là: @view-transition lọt vào app.css (áp cho mọi trang), hoặc thêm/bớt trang bật $coChuyenCanh.
 // Đừng: Chuyển khối @view-transition vào app.css cho "gọn"; mỗi lần bấm menu quản trị sẽ chạy hiệu ứng.
 // Nhóm: Giao diện, triển khai (Giao diện)
@@ -1628,14 +1628,68 @@ function test_mau_trang_thai_theo_mot_bo_bien_va_chi_to_chi_tiet_nho(PDO $pdo): 
     foreach (['--cc-xanh: #00af79', '--cc-vang: #d57b16', '--cc-cam: #e56a4e', '--cc-do: #e0687d'] as $bien) {
         kiem(str_contains($css, $bien), "app.css thiếu biến màu trạng thái $bien");
     }
-    // Hiện chỉ soát phần landing và đăng nhập (cuối app.css, từ chú thích "Landing:"); nhãn trạng thái khu quản trị
-    // đổi sang bộ biến này ở bước làm lại giao diện quản trị.
-    $cssLanding = substr($css, (int) strpos($css, '/* Landing:'));
-    kiem(!preg_match('/#(2fb344|f5b301|ff8a3d|ff5c5c)\b/i', $cssLanding), 'CSS landing còn màu trạng thái gốc của Tabler');
+    // Cả web (landing, đăng nhập, nhãn trạng thái và biểu đồ quản trị) dùng chung bộ biến này.
+    kiem(!preg_match('/#(2fb344|f5b301|ff8a3d|ff5c5c|ff9c9c|f59f00|8cc0f5)\b/i', $css), 'app.css còn màu trạng thái gốc của Tabler');
+    $js = file_get_contents(__DIR__ . '/../public/assets/app.js');
+    kiem(!preg_match('/#(d03b3b|fab219|0ca30c|898781)\b/i', $js), 'app.js (biểu đồ) còn màu trạng thái gốc của Tabler');
     foreach (['.ld-so', '.ld-anh-sang'] as $lop) {
         kiem(preg_match('/^' . preg_quote($lop, '/') . ' \{([^}]*)\}/m', $css, $khoi) === 1, "Không thấy khối $lop trong app.css");
         kiem(!str_contains($khoi[1], '--ld-mau'), "$lop không được đổi màu theo trạng thái");
     }
+}
+
+// Luật: Web chỉ có giao diện tối: thẻ <html> luôn data-bs-theme="dark", không nạp tabler-theme.min.js, không còn nút hay mục đổi giao diện.
+// Vì sao: User 09/11/2026 làm lại giao diện theo Better Stack: "nếu betterstack chỉ có tối thì làm mỗi tối thôi" (QD-25 thay QD-21).
+// Đỏ nghĩa là: Nút đổi sáng/tối quay lại (data-doi-giao-dien), hoặc trang mở ra theo lựa chọn cũ còn lưu trong trình duyệt (tabler-theme).
+// Đừng: Thêm lại giao diện sáng "cho ai thích"; mọi màu chỉ đo và chỉnh cho nền tối, bản in có khối riêng.
+// Nhóm: Giao diện, triển khai (Giao diện)
+function test_web_chi_co_giao_dien_toi(PDO $pdo): void
+{
+    $dauTrang = file_get_contents(__DIR__ . '/../views/dau_trang.php');
+    kiem(str_contains($dauTrang, '<html lang="vi" data-bs-theme="dark">'), 'Thẻ html phải luôn data-bs-theme="dark"');
+    kiem(!str_contains($dauTrang, 'tabler-theme'), 'Không nạp tabler-theme.min.js (nó đọc lựa chọn sáng/tối cũ)');
+    $thuMuc = realpath(__DIR__ . '/..');
+    foreach (['views', 'public'] as $con) {
+        foreach (new RecursiveIteratorIterator(new RecursiveDirectoryIterator("$thuMuc/$con")) as $tep) {
+            if (in_array($tep->getExtension(), ['php', 'js'], true) && !str_contains($tep->getPathname(), 'tabler')) {
+                kiem(!str_contains(file_get_contents($tep->getPathname()), 'doi-giao-dien'), $tep->getFilename() . ' còn nút đổi giao diện');
+            }
+        }
+    }
+}
+
+// Luật: Bản in luôn nền trắng chữ tối, dù màn hình là giao diện tối.
+// Vì sao: Trình duyệt bỏ màu nền khi in; giữ chữ sáng của giao diện tối thì báo cáo in ra là chữ trắng trên giấy trắng (bao_cao_in.php dùng chung đầu trang).
+// Đỏ nghĩa là: app.css mất khối @media print đặt lại nền trắng và chữ tối cho các biến màu của Tabler.
+// Đừng: Ép data-bs-theme="light" riêng cho trang in; người dùng cũng in từ trang khác bằng Ctrl+P.
+// Nhóm: Giao diện, triển khai (Giao diện)
+function test_ban_in_luon_nen_trang_chu_toi(PDO $pdo): void
+{
+    $css = file_get_contents(__DIR__ . '/../public/assets/app.css');
+    kiem(preg_match('/@media print \{\s*:root,\s*\[data-bs-theme="dark"\],\s*\[data-bs-theme="dark"\] body \{([^}]*)\}/', $css, $khoi) === 1, 'Thiếu khối @media print đặt lại màu cho :root, [data-bs-theme="dark"] và body');
+    foreach (['--tblr-body-bg: #fff', '--tblr-body-color: #1f2328', '--tblr-bg-surface: #fff', 'color-scheme: light'] as $dong) {
+        kiem(str_contains($khoi[1], $dong), "Khối in thiếu $dong");
+    }
+}
+
+// Luật: Menu quản trị hai tầng theo app Better Stack: thanh khu Tổng quan, Cảnh báo, Chứng chỉ, Hạ tầng (+ Hệ thống cho Admin), bảng phụ chỉ cho khu nhiều trang, tài khoản ở đáy thanh; điện thoại là ngăn kéo trượt từ phải.
+// Vì sao: User 09/11/2026 duyệt mẫu: ghép 5 khu, mỗi tầng thu gọn riêng (nhớ trên máy), đại diện vuông bo góc hình nhân, ngăn kéo bên phải mở ra chỉ thấy khu lớn.
+// Đỏ nghĩa là: Thứ tự khu đổi, thiếu lối Thêm chứng chỉ, Nhập hàng loạt, ngăn kéo không còn offcanvas-end, đại diện quay lại chữ cái đầu, hoặc app.js không nhớ trạng thái thu gọn.
+// Đừng: Đưa lại menu xổ xuống của Tabler (navbar-collapse) cho điện thoại; user muốn trượt ngang từ phía nút ba gạch.
+// Nhóm: Giao diện, triển khai (Giao diện)
+function test_menu_quan_tri_hai_tang_nam_khu(PDO $pdo): void
+{
+    $dauTrang = codeKhongChuThich(__DIR__ . '/../views/dau_trang.php');
+    kiem(preg_match_all("/^\s*'(tong_quan|canh_bao|chung_chi|ha_tang)' => \['/m", $dauTrang, $m) === 4
+        && $m[1] === ['tong_quan', 'canh_bao', 'chung_chi', 'ha_tang'], 'Thanh khu phải theo thứ tự Tổng quan, Cảnh báo, Chứng chỉ, Hạ tầng');
+    foreach (['admin/chung_chi_form.php', 'admin/chung_chi_nhap.php', 'admin/thong_ke.php'] as $dich) {
+        kiem(str_contains($dauTrang, "'$dich'"), "Bảng phụ thiếu lối tới $dich");
+    }
+    kiem(str_contains($dauTrang, 'offcanvas offcanvas-end'), 'Menu điện thoại phải là ngăn kéo trượt từ phải (offcanvas-end)');
+    kiem(!str_contains($dauTrang, 'navbar-collapse'), 'Không còn menu xổ xuống của Tabler');
+    kiem(!str_contains($dauTrang, "mb_substr(\$nguoi['full_name']"), 'Ảnh đại diện không dùng chữ cái đầu, chưa có ảnh thì là hình nhân');
+    $js = file_get_contents(__DIR__ . '/../public/assets/app.js');
+    kiem(str_contains($js, "'qt-no-thanh'") && str_contains($js, "'qt-thu-phu'"), 'app.js phải nhớ trạng thái thu gọn của hai tầng');
 }
 
 // Luật: Nền trang trí là gradient; chấm chỉ được rải như sao trên nền vũ trụ (vị trí ngẫu nhiên cố định, cỡ và độ sáng khác nhau), không lưới chấm lặp đều.
@@ -1714,7 +1768,7 @@ function test_css_js_cua_he_thong_co_so_phien_ban_theo_file(PDO $pdo): void
 }
 
 // Luật: Chỉ chấm "Còn hiệu lực" trên thẻ số Dashboard có vòng sáng lan ra (cham-song); máy giảm chuyển động thì đứng yên.
-// Vì sao: User 07/11/2026 muốn chấm "đang hoạt động" có hiệu ứng; nhiều chấm cùng động thì rối và kéo mắt khỏi chứng chỉ cần xử lý (QD-21).
+// Vì sao: User 07/11/2026 muốn chấm "đang hoạt động" có hiệu ứng; nhiều chấm cùng động thì rối và kéo mắt khỏi chứng chỉ cần xử lý.
 // Đỏ nghĩa là: cham-song lan sang trang khác hoặc gắn cho trạng thái khác, hoặc mất phần tắt hiệu ứng khi giảm chuyển động.
 // Đừng: Gắn cham-song vào nhan_trang_thai.php cho "đồng bộ"; danh sách 50 dòng cùng nhấp nháy.
 // Nhóm: Giao diện, triển khai (Giao diện)

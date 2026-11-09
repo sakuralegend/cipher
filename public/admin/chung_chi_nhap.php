@@ -83,7 +83,7 @@ $idTheoMa = function (string $ma) use ($pdo): int {
 };
 
 $tieuDe = 'Thêm chứng chỉ';
-$trangHienTai = 'chung_chi';
+$trangHienTai = 'chung_chi_nhap';
 require __DIR__ . '/../../views/dau_trang.php';
 require __DIR__ . '/../../views/tieu_de_trang.php';
 ?>

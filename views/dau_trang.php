@@ -1,9 +1,10 @@
 <?php
 // Đầu trang dùng chung. Trang gọi file này phải có $tieuDe.
-// $nguoi:          có thì hiện menu quản trị.
-// $trangHienTai:   khoá của mục menu đang mở, để tô sáng ('dashboard', 'may_chu', 'nguoi_dung'...).
-// $coThanhRieng:   trang tự đặt nút giao diện (landing, đăng nhập), nên không hiện nút giao diện nổi.
+// $nguoi:          có thì hiện khu quản trị (menu hai tầng).
+// $trangHienTai:   khoá của trang đang mở, để tô sáng khu và mục ('dashboard', 'may_chu', 'chung_chi_them'...).
+// $coThanhRieng:   trang tự dựng thanh trên của mình (landing, đăng nhập).
 // $tieuDeTab:      chữ trên tab trình duyệt; bỏ trống thì là "$tieuDe | Cipher Cert".
+// Web chỉ có giao diện tối (QD-25, user 09/11/2026); bản in vẫn nền trắng nhờ khối @media print trong app.css.
 $nguoi ??= null;
 $trangHienTai ??= '';
 $coThanhRieng ??= false;
@@ -22,21 +23,30 @@ if ($nguoi !== null) {
 }
 
 // Biểu tượng (bộ Tabler Icons, MIT): nét đường của từng hình, vẽ inline để không tải thêm file.
-// Khoá trùng khoá trang trong $nhomMenu bên dưới.
+// Khoá trùng khoá khu và khoá trang trong $khuMenu bên dưới.
 const BIEU_TUONG_MENU = [
+    'tong_quan' => '<rect x="4" y="4" width="6" height="6" rx="1"/><rect x="14" y="4" width="6" height="6" rx="1"/><rect x="4" y="14" width="6" height="6" rx="1"/><rect x="14" y="14" width="6" height="6" rx="1"/>',
     'dashboard' => '<rect x="4" y="4" width="6" height="8" rx="1"/><rect x="4" y="16" width="6" height="4" rx="1"/><rect x="14" y="12" width="6" height="8" rx="1"/><rect x="14" y="4" width="6" height="4" rx="1"/>',
     'canh_bao' => '<path d="M10 5a2 2 0 1 1 4 0a7 7 0 0 1 4 6v3a4 4 0 0 0 2 3H4a4 4 0 0 0 2-3v-3a7 7 0 0 1 4-6"/><path d="M9 17v1a3 3 0 0 0 6 0v-1"/>',
-    'chung_chi' => '<circle cx="15" cy="15" r="3"/><path d="M13 17.5V22l2-1.5 2 1.5v-4.5"/><path d="M10 19H5a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v10a2 2 0 0 1-1 1.73"/><path d="M6 9h12M6 12h3M6 15h2"/>',
+    'khu_chung_chi' => '<circle cx="15" cy="15" r="3"/><path d="M13 17.5V22l2-1.5 2 1.5v-4.5"/><path d="M10 19H5a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v10a2 2 0 0 1-1 1.73"/><path d="M6 9h12M6 12h3M6 15h2"/>',
+    'chung_chi' => '<path d="M9 6h11M9 12h11M9 18h11M5 6v.01M5 12v.01M5 18v.01"/>',
+    'chung_chi_them' => '<path d="M12 5v14M5 12h14"/>',
+    'chung_chi_nhap' => '<path d="M4 17v2a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-2"/><path d="M7 11l5 5 5-5M12 4v12"/>',
     'thong_ke' => '<rect x="3" y="12" width="6" height="8" rx="1"/><rect x="9" y="8" width="6" height="12" rx="1"/><rect x="15" y="4" width="6" height="16" rx="1"/><path d="M4 20h14"/>',
+    'ha_tang' => '<rect x="3" y="4" width="18" height="7" rx="2"/><rect x="3" y="13" width="18" height="7" rx="2"/><path d="M7 8v.01M7 17v.01"/>',
     'may_chu' => '<rect x="3" y="4" width="18" height="7" rx="2"/><rect x="3" y="13" width="18" height="7" rx="2"/><path d="M7 8v.01M7 17v.01"/>',
     'ten_mien' => '<circle cx="12" cy="12" r="9"/><path d="M3.6 9h16.8M3.6 15h16.8M11.5 3a17 17 0 0 0 0 18M12.5 3a17 17 0 0 1 0 18"/>',
     'to_chuc_cap' => '<path d="M12 3l8 4.5v4.5c0 4.5-3.2 8-8 9-4.8-1-8-4.5-8-9V7.5z"/><path d="M9 12l2 2 4-4"/>',
+    'he_thong' => '<path d="M4 6h8M16 6h4M4 12h2M10 12h10M4 18h10M18 18h2"/><circle cx="14" cy="6" r="2"/><circle cx="8" cy="12" r="2"/><circle cx="16" cy="18" r="2"/>',
     'nguoi_dung' => '<circle cx="9" cy="7" r="4"/><path d="M3 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2"/><path d="M16 3.13a4 4 0 0 1 0 7.75M21 21v-2a4 4 0 0 0-3-3.85"/>',
     'nhat_ky' => '<path d="M12 8v4l2 2"/><path d="M3.05 11a9 9 0 1 1 .5 4m-.5 5v-5h5"/>',
     'tai_khoan' => '<circle cx="12" cy="8" r="4"/><path d="M5 21a7 7 0 0 1 14 0"/>',
-    'giao_dien_toi' => '<path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z"/>',
-    'giao_dien_sang' => '<circle cx="12" cy="12" r="4"/><path d="M3 12h1m8 -9v1m8 8h1m-9 8v1m-6.4 -15.4l.7 .7m12.1 -.7l-.7 .7m0 11.4l.7 .7m-12.1 -.7l-.7 .7"/>',
     'dang_xuat' => '<path d="M14 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-2"/><path d="M9 12h12M18 9l3 3-3 3"/>',
+    'mo_cot' => '<rect x="4" y="4" width="16" height="16" rx="2"/><path d="M15 4v16M9 10l2 2-2 2"/>',
+    'thu_cot' => '<rect x="4" y="4" width="16" height="16" rx="2"/><path d="M9 4v16M15 10l-2 2 2 2"/>',
+    'ba_gach' => '<path d="M4 7h16M4 12h16M4 17h16"/>',
+    'dong' => '<path d="M6 6l12 12M18 6L6 18"/>',
+    'mui_ten' => '<path d="M9 6l6 6-6 6"/>',
 ];
 
 function bieuTuongMenu(string $ten, string $lop = 'dropdown-item-icon'): string
@@ -45,27 +55,30 @@ function bieuTuongMenu(string $ten, string $lop = 'dropdown-item-icon'): string
         . BIEU_TUONG_MENU[$ten] . '</svg>';
 }
 
-// Menu dọc chia nhóm theo việc (review 08/11/2026). Mỗi mục: [khoá trang, địa chỉ, nhãn].
-$nhomMenu = [
-    'Tổng quan' => [['dashboard', 'admin/index.php', 'Dashboard'], ['canh_bao', 'admin/canh_bao.php', 'Cảnh báo']],
-    'Chứng chỉ' => [['chung_chi', 'admin/chung_chi.php', 'Danh sách chứng chỉ'], ['thong_ke', 'admin/thong_ke.php', 'Thống kê và báo cáo']],
-    'Hạ tầng' => [['ten_mien', 'admin/ten_mien.php', 'Tên miền'], ['may_chu', 'admin/may_chu.php', 'Máy chủ'], ['to_chuc_cap', 'admin/to_chuc_cap.php', 'Tổ chức cấp']],
+// Menu hai tầng theo app Better Stack (user duyệt mẫu 09/11/2026). Mỗi khu: [nhãn, các trang]; mỗi trang:
+// [khoá trang, địa chỉ, nhãn]. Bấm khu là vào trang đầu của khu; khu chỉ có một trang (Cảnh báo) không mở bảng phụ.
+$khuMenu = [
+    'tong_quan' => ['Tổng quan', [['dashboard', 'admin/index.php', 'Dashboard'], ['thong_ke', 'admin/thong_ke.php', 'Thống kê và báo cáo']]],
+    'canh_bao' => ['Cảnh báo', [['canh_bao', 'admin/canh_bao.php', 'Cảnh báo']]],
+    'chung_chi' => ['Chứng chỉ', [['chung_chi', 'admin/chung_chi.php', 'Danh sách chứng chỉ'], ['chung_chi_them', 'admin/chung_chi_form.php', 'Thêm chứng chỉ'], ['chung_chi_nhap', 'admin/chung_chi_nhap.php', 'Nhập hàng loạt']]],
+    'ha_tang' => ['Hạ tầng', [['ten_mien', 'admin/ten_mien.php', 'Tên miền'], ['may_chu', 'admin/may_chu.php', 'Máy chủ'], ['to_chuc_cap', 'admin/to_chuc_cap.php', 'Tổ chức cấp']]],
 ];
 // Chỉ ẩn mục; quyền thật do từng trang kiểm tra bằng yeuCauAdmin().
 if ($nguoi !== null && laAdmin($nguoi)) {
-    $nhomMenu['Hệ thống'] = [['nguoi_dung', 'admin/nguoi_dung.php', 'Người dùng'], ['nhat_ky', 'admin/nhat_ky.php', 'Nhật ký']];
+    $khuMenu['he_thong'] = ['Hệ thống', [['nguoi_dung', 'admin/nguoi_dung.php', 'Người dùng'], ['nhat_ky', 'admin/nhat_ky.php', 'Nhật ký']]];
 }
 
-$nutGiaoDien = <<<'HTML'
-<button type="button" class="nav-link px-2 bg-transparent border-0" data-doi-giao-dien
-        title="Đổi giao diện sáng/tối" aria-label="Đổi giao diện sáng/tối">
-    <svg class="icon hide-theme-dark" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z"/></svg>
-    <svg class="icon hide-theme-light" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M3 12h1m8 -9v1m8 8h1m-9 8v1m-6.4 -15.4l.7 .7m12.1 -.7l-.7 .7m0 11.4l.7 .7m-12.1 -.7l-.7 .7"/></svg>
-</button>
-HTML;
+// Khu chứa trang đang mở (trang ngoài menu như Tài khoản thì không khu nào sáng, không có bảng phụ).
+$khuHienTai = null;
+foreach ($khuMenu as $maKhu => [, $cacTrang]) {
+    if (in_array($trangHienTai, array_column($cacTrang, 0), true)) {
+        $khuHienTai = $maKhu;
+    }
+}
+$soCanhBaoHtml = $soCanhBaoMenu > 0
+    ? '<span class="qt-so-do">' . $soCanhBaoMenu . '<span class="visually-hidden"> cảnh báo mới</span></span>'
+    : '';
 
-// Logo: ổ khoá đóng, như ổ khoá HTTPS trên thanh địa chỉ, trong ô bo góc dải cyan sang xanh dương (user chốt 08/11/2026).
-// Dùng ở landing, menu quản trị, trang đăng nhập; cùng hình với biểu tượng tab ngay dưới.
 // Logo "vòng thời hạn" (user chọn 09/11/2026 trong 4 phương án): vòng gần kín vừa là chữ C, vừa là vòng đếm ngược;
 // chấm ở chỗ hở là ngày hết hạn đang tới. Một màu như logo của Better Stack, không ô nền: tô bằng currentColor nên
 // trắng trên nền tối, tối trên nền sáng (cột form trang đăng nhập).
@@ -110,42 +123,27 @@ $bieuTuongTab = 'data:image/svg+xml,' . rawurlencode('<svg xmlns="http://www.w3.
     . '<rect width="32" height="32" rx="7" fill="#0b0c14"/>'
     . '<g transform="translate(4 4) scale(0.75)" color="#f1f4fd">' . $hinhLogo . '</g></svg>');
 
-// Khối tài khoản: máy tính đặt ở thanh trên, màn hẹp đặt cạnh nút mở menu. Dựng một lần, in hai chỗ.
-// Đổi sáng/tối nằm trong menu tài khoản cho thanh trên gọn (user yêu cầu 08/11/2026); app.js bắt mọi
-// phần tử có data-doi-giao-dien nên dòng menu dùng chung cách xử lý với nút ở landing.
-$khoiTaiKhoan = '';
+// Tài khoản ở đáy thanh khu: ảnh đại diện vuông bo góc; hệ thống chưa có ảnh đại diện nên luôn là hình nhân (user
+// 09/11/2026: không dùng chữ cái đầu). Menu tài khoản theo app Better Stack: tên, vai trò · tên đăng nhập, các mục,
+// Đăng xuất dưới cùng. Dựng một lần, in hai chỗ (thanh khu trên máy tính, ngăn kéo trên điện thoại).
+$daiDien = '<span class="qt-dai-dien" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">'
+    . '<circle cx="12" cy="8.5" r="4"/><path d="M4.5 20.5a7.5 7.5 0 0 1 15 0z"/></svg></span>';
+$mucTaiKhoan = '';
 if ($nguoi !== null) {
     ob_start();
     ?>
-    <div class="nav-item dropdown">
-        <a href="#" class="nut-tai-khoan dropdown-toggle" data-bs-toggle="dropdown" aria-label="Mở menu tài khoản">
-            <span class="avatar avatar-sm"><?= e(mb_substr($nguoi['full_name'], 0, 1)) ?></span>
-            <?php // Màn hẹp chỉ hiện chữ cái đầu, để thanh trên gọn một hàng. ?>
-            <span class="d-none d-lg-block">
-                <span class="d-block nut-tai-khoan-ten"><?= e($nguoi['full_name']) ?></span>
-                <span class="d-block small text-secondary"><?= e($nguoi['role_name']) ?></span>
-            </span>
-        </a>
-        <div class="dropdown-menu dropdown-menu-end">
-            <a class="dropdown-item" href="<?= e(url('admin/tai_khoan.php')) ?>"><?= bieuTuongMenu('tai_khoan') ?>Tài khoản của tôi</a>
-            <?php // Chữ và hình nói giao diện SẼ chuyển sang; hide-theme-* của Tabler ẩn dòng không đúng giao diện hiện tại. ?>
-            <button type="button" class="dropdown-item" data-doi-giao-dien>
-                <span class="hide-theme-dark"><?= bieuTuongMenu('giao_dien_toi') ?>Giao diện tối</span>
-                <span class="hide-theme-light"><?= bieuTuongMenu('giao_dien_sang') ?>Giao diện sáng</span>
-            </button>
-            <div class="dropdown-divider"></div>
-            <form method="post" action="<?= e(url('logout.php')) ?>">
-                <input type="hidden" name="csrf" value="<?= e(maCsrf()) ?>">
-                <button type="submit" class="dropdown-item"><?= bieuTuongMenu('dang_xuat') ?>Đăng xuất</button>
-            </form>
-        </div>
-    </div>
+    <a class="dropdown-item" href="<?= e(url('admin/tai_khoan.php')) ?>"><?= bieuTuongMenu('tai_khoan') ?>Tài khoản và mật khẩu</a>
+    <div class="dropdown-divider"></div>
+    <form method="post" action="<?= e(url('logout.php')) ?>">
+        <input type="hidden" name="csrf" value="<?= e(maCsrf()) ?>">
+        <button type="submit" class="dropdown-item"><?= bieuTuongMenu('dang_xuat') ?>Đăng xuất</button>
+    </form>
     <?php
-    $khoiTaiKhoan = ob_get_clean();
+    $mucTaiKhoan = ob_get_clean();
 }
 ?>
 <!doctype html>
-<html lang="vi" data-bs-theme="light">
+<html lang="vi" data-bs-theme="dark">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -154,60 +152,113 @@ if ($nguoi !== null) {
     <link rel="stylesheet" href="<?= e(url('assets/tabler/tabler.min.css')) ?>">
     <link rel="stylesheet" href="<?= e(url('assets/inter/inter.css')) ?>">
     <link rel="stylesheet" href="<?= e(urlTep('assets/app.css')) ?>">
-    <!-- Đặt trong head và không defer: đổi màu trước khi vẽ trang, để không loé màu sáng. -->
-    <script src="<?= e(url('assets/tabler/tabler-theme.min.js')) ?>"></script>
+    <?php if ($nguoi !== null): ?>
+        <!-- Trạng thái thu gọn của hai tầng menu, đặt trước khi vẽ để menu không nhảy lúc mở trang (app.js lưu khi bấm). -->
+        <script>
+            try {
+                if (localStorage.getItem('qt-no-thanh') === '1') document.documentElement.classList.add('qt-no-thanh');
+                if (localStorage.getItem('qt-thu-phu') === '1') document.documentElement.classList.add('qt-thu-phu');
+            } catch (loi) {}
+        </script>
+    <?php endif; ?>
     <?php if ($coChuyenCanh): ?>
-        <!-- Chỉ chuyển cảnh khi cả trang cũ và trang mới cùng bật, nên trang quản trị vẫn chuyển tức thì (QD-21).
+        <!-- Chỉ chuyển cảnh khi cả trang cũ và trang mới cùng bật, nên trang quản trị vẫn chuyển tức thì.
              Trình duyệt chưa hỗ trợ hoặc máy bật giảm chuyển động thì chuyển trang như thường. -->
         <style>@media (prefers-reduced-motion: no-preference) { @view-transition { navigation: auto; } }</style>
     <?php endif; ?>
 </head>
 <body>
-<?php if ($nguoi === null && !$coThanhRieng): ?>
-    <div class="position-absolute top-0 end-0 p-3"><?= $nutGiaoDien ?></div>
-<?php elseif ($nguoi !== null): ?>
-    <?php // Menu dọc của Tabler: máy tính là cột cố định bên trái, màn dưới 992px thu thành thanh trên có nút mở menu.
-          // Luôn nền navy như hero của landing (data-bs-theme="dark"), để vào quản trị vẫn thấy cùng một sản phẩm. ?>
-    <aside class="navbar navbar-vertical navbar-expand-lg menu-doc d-print-none" data-bs-theme="dark">
-        <div class="container-fluid">
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#menu-chinh"
-                    aria-controls="menu-chinh" aria-expanded="false" aria-label="Mở menu">
-                <span class="navbar-toggler-icon"></span>
+<?php if ($nguoi !== null): ?>
+<div class="qt">
+    <?php // Tầng 1, máy tính: thanh khu. Thu còn biểu tượng; rê vào logo hiện nút nở/thu (app.js: data-qt-doi). ?>
+    <nav class="qt-thanh d-print-none" aria-label="Menu chính">
+        <button type="button" class="qt-o qt-logo" data-qt-doi="thanh" aria-label="Nở hoặc thu menu" title="Nở hoặc thu menu">
+            <svg class="qt-logo-dau" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" aria-hidden="true"><?= $hinhLogo ?></svg>
+            <span class="qt-logo-nut"><?= bieuTuongMenu('mo_cot', 'qt-khi-thu') ?><?= bieuTuongMenu('thu_cot', 'qt-khi-no') ?></span>
+            <span class="qt-chu"><?= e($phanTen[0]) ?><?= isset($phanTen[1]) ? ' <span class="ten-phu">' . e($phanTen[1]) . '</span>' : '' ?></span>
+        </button>
+        <?php foreach ($khuMenu as $maKhu => [$nhanKhu, $cacTrang]): ?>
+            <a class="qt-o<?= $maKhu === $khuHienTai ? ' mo' : '' ?>" href="<?= e(url($cacTrang[0][1])) ?>" title="<?= e($nhanKhu) ?>"<?= $maKhu === $khuHienTai ? ' aria-current="true"' : '' ?>>
+                <?= bieuTuongMenu($maKhu === 'chung_chi' ? 'khu_chung_chi' : $maKhu, '') ?>
+                <span class="qt-chu"><?= e($nhanKhu) ?></span>
+                <?= $maKhu === 'canh_bao' ? $soCanhBaoHtml : '' ?>
+            </a>
+        <?php endforeach; ?>
+        <div class="qt-khoang"></div>
+        <div class="qt-tk dropdown">
+            <button type="button" class="qt-o qt-tk-nut" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Menu tài khoản"
+                    data-bs-popper-config='{"placement":"right-end","modifiers":[{"name":"offset","options":{"offset":[0,12]}}]}'>
+                <?= $daiDien ?>
+                <span class="qt-chu"><b><?= e($nguoi['full_name']) ?></b><small><?= e($nguoi['role_name']) ?></small></span>
             </button>
-            <?php // Tên hệ thống dẫn về landing; về Dashboard đã có mục Dashboard ngay bên dưới. ?>
-            <a class="navbar-brand ten-thuong-hieu" href="<?= e(url('index.php')) ?>"><?= $thuongHieu ?></a>
-            <div class="navbar-nav flex-row align-items-center thanh-tai-khoan d-lg-none"><?= $khoiTaiKhoan ?></div>
-            <div class="collapse navbar-collapse" id="menu-chinh">
-                <ul class="navbar-nav">
-                    <?php foreach ($nhomMenu as $tenNhom => $cacMuc): ?>
-                        <li class="menu-nhom"><?= e($tenNhom) ?></li>
-                        <?php foreach ($cacMuc as [$khoa, $dich, $nhan]): ?>
-                            <li class="nav-item<?= $trangHienTai === $khoa ? ' active' : '' ?>">
-                                <a class="nav-link" href="<?= e(url($dich)) ?>"<?= $trangHienTai === $khoa ? ' aria-current="page"' : '' ?>>
-                                    <span class="nav-link-icon"><?= bieuTuongMenu($khoa, '') ?></span>
-                                    <span class="nav-link-title"><?= e($nhan) ?></span>
-                                    <?php if ($khoa === 'canh_bao' && $soCanhBaoMenu > 0): ?>
-                                        <span class="badge so-canh-bao ms-auto"><?= $soCanhBaoMenu ?><span class="visually-hidden"> cảnh báo mới</span></span>
-                                    <?php endif; ?>
-                                </a>
-                            </li>
-                        <?php endforeach; ?>
-                    <?php endforeach; ?>
-                </ul>
+            <div class="dropdown-menu qt-tk-menu">
+                <div class="qt-tk-dau"><b><?= e($nguoi['full_name']) ?></b><small><?= e($nguoi['role_name']) ?> · <?= e($nguoi['username']) ?></small></div>
+                <div class="dropdown-divider"></div>
+                <?= $mucTaiKhoan ?>
             </div>
         </div>
-    </aside>
-    <div class="page">
-        <header class="navbar navbar-expand-md d-none d-lg-flex d-print-none thanh-dau">
-            <div class="container-xl">
-                <div class="navbar-nav flex-row align-items-center thanh-tai-khoan ms-auto"><?= $khoiTaiKhoan ?></div>
+    </nav>
+
+    <?php // Tầng 2, máy tính: bảng phụ của khu đang mở; thu lại còn một cột biểu tượng. Khu một trang không có bảng phụ. ?>
+    <?php if ($khuHienTai !== null && count($khuMenu[$khuHienTai][1]) > 1): ?>
+        <nav class="qt-phu d-print-none" aria-label="<?= e($khuMenu[$khuHienTai][0]) ?>">
+            <div class="qt-phu-dau">
+                <h2 class="qt-phu-ten"><?= e($khuMenu[$khuHienTai][0]) ?></h2>
+                <button type="button" class="qt-o qt-phu-nut" data-qt-doi="phu" aria-label="Thu hoặc mở bảng phụ" title="Thu hoặc mở bảng phụ">
+                    <?= bieuTuongMenu('thu_cot', 'qt-khi-mo-phu') ?><?= bieuTuongMenu('mo_cot', 'qt-khi-thu-phu') ?>
+                </button>
             </div>
+            <?php foreach ($khuMenu[$khuHienTai][1] as [$khoa, $dich, $nhan]): ?>
+                <a class="qt-o<?= $khoa === $trangHienTai ? ' mo' : '' ?>" href="<?= e(url($dich)) ?>" title="<?= e($nhan) ?>"<?= $khoa === $trangHienTai ? ' aria-current="page"' : '' ?>>
+                    <?= bieuTuongMenu($khoa, '') ?><span class="qt-chu"><?= e($nhan) ?></span>
+                </a>
+            <?php endforeach; ?>
+        </nav>
+    <?php endif; ?>
+
+    <div class="page-wrapper qt-trang">
+        <?php // Điện thoại: thanh trên có logo và nút ba gạch; menu là ngăn kéo trượt từ phải (offcanvas của Bootstrap trong Tabler). ?>
+        <header class="qt-tren d-print-none">
+            <a class="qt-tren-logo" href="<?= e(url('index.php')) ?>"><?= $thuongHieu ?></a>
+            <button type="button" class="qt-tren-nut" data-bs-toggle="offcanvas" data-bs-target="#qt-ngan" aria-controls="qt-ngan" aria-label="Mở menu">
+                <?= bieuTuongMenu('ba_gach', '') ?>
+            </button>
         </header>
-        <div class="page-wrapper">
-            <?php $thongBao = layThongBao(); ?>
-            <?php if ($thongBao !== null): ?>
-                <div class="container-xl pt-3">
-                    <div class="alert alert-<?= e($thongBao['loai']) ?> mb-0" role="alert"><?= e($thongBao['noi_dung']) ?></div>
-                </div>
-            <?php endif; ?>
+        <?php // Mở ra chỉ thấy khu lớn; bấm khu nhiều trang thì khu đó mới xổ trang con (user 09/11/2026). ?>
+        <div class="offcanvas offcanvas-end qt-ngan d-print-none" tabindex="-1" id="qt-ngan" aria-label="Menu">
+            <div class="qt-ngan-dau">
+                <button type="button" class="qt-ngan-dong" data-bs-dismiss="offcanvas" aria-label="Đóng menu"><?= bieuTuongMenu('dong', '') ?></button>
+            </div>
+            <div class="qt-ngan-than">
+                <?php foreach ($khuMenu as $maKhu => [$nhanKhu, $cacTrang]): ?>
+                    <?php $bieuTuongKhu = bieuTuongMenu($maKhu === 'chung_chi' ? 'khu_chung_chi' : $maKhu, ''); ?>
+                    <?php if (count($cacTrang) === 1): ?>
+                        <a class="qt-ngan-khu<?= $maKhu === $khuHienTai ? ' mo' : '' ?>" href="<?= e(url($cacTrang[0][1])) ?>"><?= $bieuTuongKhu ?><?= e($nhanKhu) ?><?= $maKhu === 'canh_bao' ? $soCanhBaoHtml : '' ?></a>
+                    <?php else: ?>
+                        <button type="button" class="qt-ngan-khu" data-bs-toggle="collapse" data-bs-target="#qt-ngan-<?= $maKhu ?>" aria-expanded="false" aria-controls="qt-ngan-<?= $maKhu ?>">
+                            <?= $bieuTuongKhu ?><?= e($nhanKhu) ?><?= bieuTuongMenu('mui_ten', 'qt-mui') ?>
+                        </button>
+                        <div class="collapse" id="qt-ngan-<?= $maKhu ?>">
+                            <div class="qt-ngan-con">
+                                <?php foreach ($cacTrang as [$khoa, $dich, $nhan]): ?>
+                                    <a class="<?= $khoa === $trangHienTai ? 'mo' : '' ?>" href="<?= e(url($dich)) ?>"<?= $khoa === $trangHienTai ? ' aria-current="page"' : '' ?>><?= e($nhan) ?></a>
+                                <?php endforeach; ?>
+                            </div>
+                        </div>
+                    <?php endif; ?>
+                <?php endforeach; ?>
+            </div>
+            <div class="qt-ngan-tk">
+                <button type="button" class="qt-ngan-khu" data-bs-toggle="collapse" data-bs-target="#qt-ngan-tai-khoan" aria-expanded="false" aria-controls="qt-ngan-tai-khoan">
+                    <?= $daiDien ?><span class="qt-chu"><b><?= e($nguoi['full_name']) ?></b><small><?= e($nguoi['role_name']) ?> · <?= e($nguoi['username']) ?></small></span><?= bieuTuongMenu('mui_ten', 'qt-mui') ?>
+                </button>
+                <div class="collapse" id="qt-ngan-tai-khoan"><div class="qt-ngan-con qt-ngan-tk-con"><?= $mucTaiKhoan ?></div></div>
+            </div>
+        </div>
+        <?php $thongBao = layThongBao(); ?>
+        <?php if ($thongBao !== null): ?>
+            <div class="container-xl pt-3">
+                <div class="alert alert-<?= e($thongBao['loai']) ?> mb-0" role="alert"><?= e($thongBao['noi_dung']) ?></div>
+            </div>
+        <?php endif; ?>
 <?php endif; ?>
