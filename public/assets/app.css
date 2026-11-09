@@ -1216,21 +1216,36 @@ body:has(> main.ld-vung) {
 }
 
 /* Trang đăng nhập theo trang đăng nhập của Better Stack (user gửi ảnh 09/11/2026): một cột giữa, nền tối với vệt sáng
-   tím mờ quanh form, ba vệt sáng chéo rất mảnh và sao rải tự nhiên ($nenSao trong dau_trang.php). Tên class dn-. */
+   tím mờ quanh form, vệt sáng chéo rất mảnh và sao rải tự nhiên ($nenSao trong dau_trang.php). Tên class dn-.
+   Cao 100svh (chiều cao khi thanh địa chỉ đang hiện): 100vh của Safari tính lúc thanh đã thu, nên trên iPhone trang dài
+   hơn phần nhìn thấy và form bị đẩy xuống (user 09/11/2026). 100vh đứng trước cho trình duyệt chưa biết svh. */
 .dn-trang {
     align-items: center;
     background:
-        radial-gradient(34rem 26rem at 50% 45%, rgba(124, 135, 247, 0.09), transparent 70%),
-        linear-gradient(68deg, transparent 22%, rgba(201, 211, 238, 0.035) 22.1%, transparent 22.5%),
-        linear-gradient(68deg, transparent 58%, rgba(201, 211, 238, 0.03) 58.1%, transparent 58.45%),
-        linear-gradient(68deg, transparent 79%, rgba(201, 211, 238, 0.025) 79.1%, transparent 79.4%),
+        radial-gradient(34rem 26rem at 50% 42%, rgba(124, 135, 247, 0.09), transparent 70%),
         var(--cc-nen);
     display: flex;
     flex-direction: column;
     min-height: 100vh;
+    min-height: 100svh;
     overflow: clip;
     padding: 1.25rem max(16px, env(safe-area-inset-right, 0px)) 1.5rem max(16px, env(safe-area-inset-left, 0px));
     position: relative;
+}
+
+/* Vệt sáng chéo: hai vệt kẹp hai bên form, một vệt mờ hơn ở xa; mặt nạ elip cho chúng rõ quanh form rồi tan dần ra
+   mép như mẫu Better Stack (user 09/11/2026: "phần sọc phải mờ dần khi ra ngoài"). */
+.dn-trang::before {
+    -webkit-mask-image: radial-gradient(58% 62% at 50% 45%, #000 15%, transparent 100%);
+    background:
+        linear-gradient(68deg, transparent 37%, rgba(201, 211, 238, 0.06) 37.1%, transparent 37.5%),
+        linear-gradient(68deg, transparent 63%, rgba(201, 211, 238, 0.055) 63.1%, transparent 63.45%),
+        linear-gradient(68deg, transparent 80%, rgba(201, 211, 238, 0.04) 80.1%, transparent 80.4%);
+    content: "";
+    inset: 0;
+    mask-image: radial-gradient(58% 62% at 50% 45%, #000 15%, transparent 100%);
+    pointer-events: none;
+    position: absolute;
 }
 
 .nen-sao {
@@ -1266,10 +1281,13 @@ body:has(> main.ld-vung) {
     text-decoration: none;
 }
 
+/* Form nhích lên trên tâm: phần đệm dưới lớn hơn trên 12% chiều cao màn hình, khoảng trống tự chia đều hai đầu
+   nên form lên khoảng 6%, tâm form ở quãng 44-46% như trang mẫu. Nằm đúng giữa thì mắt thấy bị tụt. */
 .dn-form {
     margin-block: auto;
     max-width: 24rem;
-    padding-block: 2.5rem;
+    padding-bottom: calc(2.5rem + 12vh);
+    padding-top: 2.5rem;
     text-align: center;
     width: 100%;
 }
@@ -1381,6 +1399,23 @@ body:has(> main.ld-vung) {
     margin: 0;
     max-width: 24rem;
     text-align: center;
+}
+
+/* Điện thoại: đệm ít hơn, để cả trang vừa phần màn hình nhìn thấy khi thanh địa chỉ đang hiện (đo khung 390x664,
+   09/11/2026: đệm như máy tính thì chân trang tràn quá mép dưới). */
+@media (max-width: 35.99rem) {
+    .dn-form {
+        padding-bottom: calc(1.5rem + 6vh);
+        padding-top: 1.5rem;
+    }
+
+    .dn-logo {
+        margin-bottom: 1.25rem;
+    }
+
+    .dn-phu {
+        margin-bottom: 1.75rem;
+    }
 }
 
 /* Chuyển cảnh landing ↔ đăng nhập: trang cũ mờ đi, trang mới hiện lên. */

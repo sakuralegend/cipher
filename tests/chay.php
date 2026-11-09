@@ -1605,6 +1605,18 @@ function test_trang_dang_nhap_mot_cot_giua_khong_video(PDO $pdo): void
     kiem(str_contains($trang, '$nenSao'), 'login.php phải có nền sao ($nenSao)');
 }
 
+// Luật: Trang đăng nhập cao đúng phần màn hình nhìn thấy (100svh) và form nhích lên trên tâm, không nằm đúng giữa.
+// Vì sao: User 09/11/2026: "toàn trang bố cục đang bị đẩy thấp xuống dưới, khoảng trống bên trên còn nhiều, trên iPhone cũng bị".
+// Đỏ nghĩa là: .dn-trang chỉ còn 100vh (Safari tính theo lúc thanh địa chỉ đã thu, form bị đẩy xuống) hoặc mất phần đệm dưới của .dn-form.
+// Đừng: Căn giữa tuyệt đối cho "chuẩn"; mắt người thấy khối nằm đúng giữa là bị tụt.
+// Nhóm: Giao diện, triển khai (Giao diện)
+function test_trang_dang_nhap_cao_theo_man_hinh_nhin_thay_va_form_nhich_len(PDO $pdo): void
+{
+    $css = file_get_contents(__DIR__ . '/../public/assets/app.css');
+    kiem(preg_match('/^\.dn-trang \{([^}]*)\}/m', $css, $trang) === 1 && str_contains($trang[1], 'min-height: 100svh'), '.dn-trang phải cao 100svh');
+    kiem(preg_match('/^\.dn-form \{([^}]*)\}/m', $css, $form) === 1 && str_contains($form[1], 'padding-bottom: calc('), '.dn-form phải có phần đệm dưới lớn hơn để nhích lên');
+}
+
 // Luật: Màu trạng thái lấy từ một bộ biến (--cc-xanh, --cc-vang, --cc-cam, --cc-do theo Better Stack); thẻ chứng chỉ chỉ tô màu trạng thái ở chi tiết nhỏ, số lớn và quầng sáng không đổi màu theo trạng thái.
 // Vì sao: User 09/11/2026: video thẻ "bị chói, màu nóng, bị lệch tông với toàn trang"; đo ra vàng, cam của Tabler sáng 8-10:1 so với 6:1 của cả trang, tô cả số 88px lẫn quầng sáng 700px. User chọn phương án C trong trang so sánh.
 // Đỏ nghĩa là: Màu trạng thái gốc của Tabler (#2fb344, #f5b301, #ff8a3d, #ff5c5c) quay lại app.css, hoặc số lớn (.ld-so), quầng sáng (.ld-anh-sang) lại lấy màu --ld-mau.
