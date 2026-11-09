@@ -325,12 +325,12 @@ cùng nắm luồng chung ở mục 5.1 và 5.5.
 
 | | Thành viên 1 | Thành viên 2 | Thành viên 3 |
 |---|---|---|---|
-| **Họ tên, mã SV** | *(điền)* | *(điền)* | *(điền)* |
+| **Họ tên, mã SV** | Nguyễn Đức Trung · *(mã SV)* | Phan Tuấn Anh · *(mã SV)* | Nguyễn Chí Kiên · *(mã SV)* |
 | **Phần phụ trách** | Nền tảng và bảo mật | Chứng chỉ | Danh mục, cảnh báo, báo cáo |
-| **Chức năng** | Na Đăng nhập · Nb Người dùng · Ng CSDL, khoá, quan hệ · Ni Bảo mật · Nj Dữ liệu mẫu · Mở rộng 1 Nhật ký | D1 Danh sách chứng chỉ · D4 Ngày cấp, hết hạn · D5 Trạng thái · D7 Gia hạn · Nd Tìm kiếm, lọc · Nf Kiểm tra JS + PHP · Mở rộng 2 Đọc chứng chỉ thật | D2 Tên miền, máy chủ · D3 Tổ chức cấp · D6 Cảnh báo · D8 Thống kê · D9 Xuất báo cáo · Nh Dashboard · Giao diện |
+| **Chức năng** | Na Đăng nhập · Nb Người dùng · Ng CSDL, khoá, quan hệ · Ni Bảo mật · Nj Dữ liệu mẫu · Mở rộng 1 Nhật ký · Mở rộng 3 Chấm hạng an toàn | D1 Danh sách chứng chỉ · D4 Ngày cấp, hết hạn · D5 Trạng thái · D7 Gia hạn · Nd Tìm kiếm, lọc · Nf Kiểm tra JS + PHP · Mở rộng 2 Đọc chứng chỉ thật | D2 Tên miền, máy chủ · D3 Tổ chức cấp · D6 Cảnh báo · D8 Thống kê · D9 Xuất báo cáo · Nh Dashboard · Giao diện |
 | **Use case** | UC01, UC02, UC12, UC13 | UC04, UC05, UC05a, UC06, UC07, UC11 | UC03, UC08, UC09, UC10 |
-| **File chính** | `config/db.php`, `src/auth.php`, `src/nguoi_dung.php`, `src/nhat_ky.php`, `database/`, `login.php`, `logout.php`, trang Người dùng, Nhật ký, Tài khoản | `src/chung_chi.php` (phần chứng chỉ, lọc, sắp xếp, gia hạn, đọc chứng chỉ), `chung_chi*.php`, `views/bo_loc.php`, `public/assets/app.js` (kiểm tra form) | `src/danh_muc.php`, `src/chung_chi.php` (phần cảnh báo, thống kê, CSV), `index.php` (Dashboard), `canh_bao.php`, `thong_ke.php`, `bao_cao_*.php`, trang danh mục, trang giới thiệu, `views/`, `app.css` |
-| **Test phụ trách** ([KIEM_THU.md](docs/KIEM_THU.md)) | 33 | 25 | 31 |
+| **File chính** | `config/db.php`, `src/auth.php`, `src/nguoi_dung.php`, `src/nhat_ky.php`, `database/`, `login.php`, `logout.php`, trang Người dùng, Nhật ký, Tài khoản, `chamDiem()` trong `src/chung_chi.php` | `src/chung_chi.php` (phần chứng chỉ, lọc, sắp xếp, gia hạn, đọc chứng chỉ), `chung_chi*.php`, `views/bo_loc.php`, `public/assets/app.js` (kiểm tra form) | `src/danh_muc.php`, `src/chung_chi.php` (phần cảnh báo, thống kê, CSV), `index.php` (Dashboard), `canh_bao.php`, `thong_ke.php`, `bao_cao_*.php`, trang danh mục, trang giới thiệu, `views/`, `app.css` |
+| **Test phụ trách** ([KIEM_THU.md](docs/KIEM_THU.md)) | 37 | 33 | 32 |
 | **Tài liệu** | ERD, hướng dẫn cài đặt (README mục 2) | Đặc tả use case phần chứng chỉ, sơ đồ trình tự Thêm và Gia hạn | SPEC phần thống kê, cảnh báo, giao diện; báo cáo kiểm thử |
 
 ## 7. Thư viện và nguồn
