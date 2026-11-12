@@ -1,5 +1,5 @@
 <?php
-// Danh sách tổ chức cấp chứng chỉ (CA). Nút xoá gửi POST về chính trang này.
+// Danh sách tổ chức cấp chứng chỉ (CA). Ai dùng: Admin và Nhân viên; chỉ Admin thấy và dùng được nút Xoá (user chốt 12/11/2026). Nút xoá gửi POST về chính trang này.
 require __DIR__ . '/../../src/khoi_dong.php';
 require __DIR__ . '/../../src/danh_muc.php';
 
@@ -8,7 +8,7 @@ $nguoi = yeuCauDangNhap($pdo);
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     yeuCauCsrf();
-    $loi = xoaToChuc($pdo, (int) chuoiPost('id'));
+    $loi = xoaToChuc($pdo, (int) chuoiPost('id'), $nguoi);
     datThongBao($loi === null ? 'success' : 'danger', $loi ?? 'Đã xoá tổ chức cấp.');
     chuyenHuong('admin/to_chuc_cap.php');
 }

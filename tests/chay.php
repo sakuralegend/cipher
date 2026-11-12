@@ -133,13 +133,13 @@ function test_sau_gia_han_van_canh_bao_lai_duoc_cung_moc(PDO $pdo): void
 function test_trang_thai_va_so_ngay_tinh_tu_valid_to(PDO $pdo): void
 {
     $mong = [
-        'CERT-001' => ['valid', 200],
+        'CERT-001' => ['valid', 180],
         'CERT-002' => ['expiring', 30],
         'CERT-003' => ['expiring', 15],
         'CERT-004' => ['expiring', 7],
         'CERT-005' => ['expired', -10],
         'CERT-006' => ['revoked', 100],
-        'CERT-007' => ['not_yet_valid', 370],
+        'CERT-007' => ['not_yet_valid', 190],
     ];
     foreach ($mong as $ma => [$status, $soNgay]) {
         $thucTe = trangThai($pdo, $ma);
@@ -353,7 +353,7 @@ function test_het_15_phut_thi_dang_nhap_lai_duoc(PDO $pdo): void
 // Nhóm: Đăng nhập, phiên, phân quyền (Na, Ni)
 function test_nguoi_dung_bi_khoa_giua_phien_thi_bi_day_ra(PDO $pdo): void
 {
-    $_SESSION = ['user_id' => 2];
+    $_SESSION = phienCua($pdo, 2);
     kiem(nguoiDungHienTai($pdo) !== null, 'Đang đăng nhập phải đọc được người dùng');
     $pdo->exec('UPDATE users SET is_locked = 1 WHERE id = 2');
     kiem(nguoiDungHienTai($pdo) === null, 'Bị khoá phải trả về null');
@@ -366,9 +366,9 @@ function test_nguoi_dung_bi_khoa_giua_phien_thi_bi_day_ra(PDO $pdo): void
 // Nhóm: Đăng nhập, phiên, phân quyền (Na, Ni)
 function test_nhan_vien_khong_co_quyen_admin(PDO $pdo): void
 {
-    $_SESSION = ['user_id' => 2];
+    $_SESSION = phienCua($pdo, 2);
     kiem(!laAdmin(nguoiDungHienTai($pdo)), 'Nhân viên không được là Admin');
-    $_SESSION = ['user_id' => 1];
+    $_SESSION = phienCua($pdo, 1);
     kiem(laAdmin(nguoiDungHienTai($pdo)), 'Admin phải có quyền Admin');
 }
 
@@ -667,11 +667,11 @@ function test_ten_mien_phai_gan_voi_may_chu_co_that(PDO $pdo): void
 // Nhóm: Danh mục: tên miền, máy chủ, tổ chức cấp (D2, D3, Nc)
 function test_xoa_danh_muc_con_du_lieu_con_bao_ly_do_ro_rang(PDO $pdo): void
 {
-    kiem(str_contains((string) xoaMayChu($pdo, 4), 'còn tên miền'), 'Máy chủ còn tên miền');
+    kiem(str_contains((string) xoaMayChu($pdo, 4, adminMau()), 'còn tên miền'), 'Máy chủ còn tên miền');
     kiem(timMayChu($pdo, 4) !== null, 'Máy chủ phải còn');
-    kiem(str_contains((string) xoaTenMien($pdo, 1), 'còn chứng chỉ'), 'Tên miền còn chứng chỉ');
+    kiem(str_contains((string) xoaTenMien($pdo, 1, adminMau()), 'còn chứng chỉ'), 'Tên miền còn chứng chỉ');
     kiem(timTenMien($pdo, 1) !== null, 'Tên miền phải còn');
-    kiem(str_contains((string) xoaToChuc($pdo, 1), 'còn chứng chỉ'), 'Tổ chức còn chứng chỉ');
+    kiem(str_contains((string) xoaToChuc($pdo, 1, adminMau()), 'còn chứng chỉ'), 'Tổ chức còn chứng chỉ');
     kiem(timToChuc($pdo, 1) !== null, 'Tổ chức phải còn');
 }
 
@@ -682,9 +682,9 @@ function test_xoa_danh_muc_con_du_lieu_con_bao_ly_do_ro_rang(PDO $pdo): void
 // Nhóm: Danh mục: tên miền, máy chủ, tổ chức cấp (D2, D3, Nc)
 function test_xoa_ban_ghi_khong_ton_tai_bao_loi(PDO $pdo): void
 {
-    kiem(xoaMayChu($pdo, 9999) !== null, 'Máy chủ không tồn tại');
-    kiem(xoaTenMien($pdo, 0) !== null, 'Tên miền không tồn tại');
-    kiem(xoaToChuc($pdo, 9999) !== null, 'Tổ chức không tồn tại');
+    kiem(xoaMayChu($pdo, 9999, adminMau()) !== null, 'Máy chủ không tồn tại');
+    kiem(xoaTenMien($pdo, 0, adminMau()) !== null, 'Tên miền không tồn tại');
+    kiem(xoaToChuc($pdo, 9999, adminMau()) !== null, 'Tổ chức không tồn tại');
     kiem(xoaNguoiDung($pdo, 9999, 1) !== null, 'Người dùng không tồn tại');
 }
 
@@ -710,14 +710,14 @@ function test_o_form_sai_ma_hoa_hoac_la_mang_duoc_coi_la_trong(PDO $pdo): void
 // Nhóm: Danh mục: tên miền, máy chủ, tổ chức cấp (D2, D3, Nc)
 function test_danh_muc_khong_con_du_lieu_con_thi_xoa_duoc(PDO $pdo): void
 {
-    kiem(xoaTenMien($pdo, 5) === null, 'Tên miền không có chứng chỉ phải xoá được');
+    kiem(xoaTenMien($pdo, 5, adminMau()) === null, 'Tên miền không có chứng chỉ phải xoá được');
     kiem(timTenMien($pdo, 5) === null, 'Đã xoá thì không còn');
-    kiem(xoaMayChu($pdo, 4) === null, 'Máy chủ hết tên miền phải xoá được');
+    kiem(xoaMayChu($pdo, 4, adminMau()) === null, 'Máy chủ hết tên miền phải xoá được');
     kiem(timMayChu($pdo, 4) === null, 'Đã xoá thì không còn');
 
     luuToChuc($pdo, null, ['name' => 'Tổ chức thử', 'country' => 'X', 'is_trusted' => 1]);
     $id = (int) $pdo->query("SELECT id FROM certificate_authorities WHERE name = 'Tổ chức thử'")->fetchColumn();
-    kiem(xoaToChuc($pdo, $id) === null, 'Tổ chức không có chứng chỉ phải xoá được');
+    kiem(xoaToChuc($pdo, $id, adminMau()) === null, 'Tổ chức không có chứng chỉ phải xoá được');
     kiem(timToChuc($pdo, $id) === null, 'Đã xoá thì không còn');
 }
 
@@ -833,12 +833,12 @@ function test_ngay_het_han_phai_sau_ngay_bat_dau(PDO $pdo): void
 // Nhóm: Chứng chỉ: thêm, sửa, thu hồi, xoá (D1, D4, D5, Nf)
 function test_nhan_vien_khong_xoa_duoc_chung_chi_admin_thi_duoc(PDO $pdo): void
 {
-    $_SESSION = ['user_id' => 2];
+    $_SESSION = phienCua($pdo, 2);
     $nhanVien = nguoiDungHienTai($pdo);
     kiem(xoaChungChi($pdo, 1, $nhanVien) !== null, 'Nhân viên phải bị từ chối');
     kiem(timChungChi($pdo, 1) !== null, 'Chứng chỉ phải còn');
 
-    $_SESSION = ['user_id' => 1];
+    $_SESSION = phienCua($pdo, 1);
     $admin = nguoiDungHienTai($pdo);
     kiem(xoaChungChi($pdo, 1, $admin) === null, 'Admin phải xoá được');
     kiem(timChungChi($pdo, 1) === null, 'Đã xoá thì không còn');
@@ -1891,14 +1891,14 @@ function test_moi_thao_tac_deu_ghi_nhat_ky(PDO $pdo): void
     kiem(luuTenMien($pdo, null, ['domain_name' => 'moi.congty.example', 'server_id' => (string) $idMc]) === [], 'Thêm tên miền phải thành công');
     $idTm = idTheoCot($pdo, 'domains', 'domain_name', 'moi.congty.example');
     $mong('Thêm tên miền', 'them', 'ten_mien', $idTm, 1);
-    kiem(xoaTenMien($pdo, $idTm) === null, 'Xoá tên miền phải thành công');
+    kiem(xoaTenMien($pdo, $idTm, adminMau()) === null, 'Xoá tên miền phải thành công');
     $mong('Xoá tên miền', 'xoa', 'ten_mien', $idTm, 1);
-    kiem(xoaMayChu($pdo, $idMc) === null, 'Xoá máy chủ phải thành công');
+    kiem(xoaMayChu($pdo, $idMc, adminMau()) === null, 'Xoá máy chủ phải thành công');
     $mong('Xoá máy chủ', 'xoa', 'may_chu', $idMc, 1);
     kiem(luuToChuc($pdo, null, ['name' => 'CA Mới', 'country' => 'Việt Nam', 'is_trusted' => '1']) === [], 'Thêm tổ chức cấp phải thành công');
     $idTc = idTheoCot($pdo, 'certificate_authorities', 'name', 'CA Mới');
     $mong('Thêm tổ chức cấp', 'them', 'to_chuc_cap', $idTc, 1);
-    kiem(xoaToChuc($pdo, $idTc) === null, 'Xoá tổ chức cấp phải thành công');
+    kiem(xoaToChuc($pdo, $idTc, adminMau()) === null, 'Xoá tổ chức cấp phải thành công');
     $mong('Xoá tổ chức cấp', 'xoa', 'to_chuc_cap', $idTc, 1);
 
     kiem(themNguoiDung($pdo, duLieuNguoiMoi()) === [], 'Thêm người dùng phải thành công');
@@ -2336,6 +2336,146 @@ function test_nhap_hang_loat_chi_luu_du_lieu_doc_trong_phien(PDO $pdo): void
     sort($o);
     kiem($o === ['chon', 'cong', 'dia_chi', 'hanh_dong'], 'Trang chỉ được nhận các ô hanh_dong, dia_chi, cong, chon; đang nhận: ' . implode(', ', $o));
     kiem(str_contains($trang, '$daDoc = $_SESSION[\'nhap_hang_loat\'];'), 'Bước Lưu phải lấy kết quả đọc từ phiên');
+}
+
+// Luật: Bảng xem trước của nhập hàng loạt đánh dấu dòng cùng chứng chỉ với một dòng phía trên, kể cả khi các địa chỉ được đọc lần lượt.
+// Vì sao: Từ 12/11/2026 trình duyệt gửi từng địa chỉ một để có thanh tiến trình, nên phép so trùng phải chạy trên cả lượt lúc xem trước.
+// Đỏ nghĩa là: danhDauTrungTrongLuot() đã đổi; google.com và youtube.com (cùng chứng chỉ) sẽ cùng được tick, dòng sau báo trùng lúc lưu.
+// Đừng: so trùng trong yêu cầu đọc một địa chỉ; yêu cầu đó không thấy các dòng khác.
+// Nhóm: Đọc chứng chỉ thật (mở rộng 2) (Mở rộng 2)
+function test_xem_truoc_nhap_hang_loat_danh_dau_trung_khi_doc_tung_dia_chi(PDO $pdo): void
+{
+    $dong = fn(string $nhap, ?string $fp): array => $fp === null
+        ? ['nhap' => $nhap, 'loi' => 'Không đọc được', 'trung' => null]
+        : ['nhap' => $nhap, 'gia_tri' => ['fingerprint_sha256' => $fp], 'trung' => null];
+    $ketQua = danhDauTrungTrongLuot([$dong('a.vn', 'f1'), $dong('b.vn', null), $dong('c.vn', 'f1'), $dong('d.vn', 'f2')]);
+    kiem(array_map(fn(array $d): ?string => $d['trung_dong'], $ketQua) === [null, null, 'a.vn', null],
+        'Chỉ c.vn được đánh dấu trùng với a.vn: ' . json_encode(array_column($ketQua, 'trung_dong')));
+}
+
+// Luật: Trang Cảnh báo và chuông chỉ tính một cảnh báo cho mỗi chứng chỉ: mốc gấp nhất trong chu kỳ hiện tại.
+// Vì sao: Kiểm thử 12/11/2026: chứng chỉ còn 4 ngày hiện hai dòng "7 ngày" và "15 ngày", chuông đếm 17 khi chỉ 14 chứng chỉ cần xử lý.
+// Đỏ nghĩa là: CANH_BAO_DANG_XET không còn lọc mốc gấp nhất; một việc hiện thành nhiều cảnh báo.
+// Đừng: xoá dòng của mốc cũ khi có mốc mới; UNIQUE (chứng chỉ, hạn, mốc) cần chúng để không tạo lại.
+// Nhóm: Cảnh báo (D6)
+function test_moi_chung_chi_chi_hien_mot_canh_bao_la_moc_gap_nhat(PDO $pdo): void
+{
+    // CERT-004 đang ở mốc 7; thêm hai mốc đã chạm ở những ngày trước của cùng chu kỳ.
+    $pdo->exec("INSERT INTO alerts (certificate_id, valid_to, threshold_days, status)
+                SELECT id, valid_to, 30, 'seen' FROM certificates WHERE cert_code = 'CERT-004'
+                UNION ALL SELECT id, valid_to, 15, 'new' FROM certificates WHERE cert_code = 'CERT-004'");
+    $dong = array_values(array_filter(danhSachCanhBao($pdo), fn(array $d): bool => $d['cert_code'] === 'CERT-004'));
+    kiem(count($dong) === 1 && (int) $dong[0]['threshold_days'] === 7, 'CERT-004 chỉ được hiện một dòng, mốc 7, đang có ' . count($dong));
+    kiem(demCanhBaoMoi($pdo) === 3, 'Chuông đếm theo chứng chỉ: 3 chứng chỉ mẫu, đang đếm ' . demCanhBaoMoi($pdo));
+    danhDauDaXem($pdo, (int) $dong[0]['id']);
+    kiem(demCanhBaoMoi($pdo) === 2, 'Đã xem mốc gấp nhất là xong chứng chỉ đó; mốc 15 cũ không được tính lại');
+}
+
+// Luật: Chứng chỉ hết hạn trong ngày hôm nay ghi "Hết hạn hôm nay", không ghi "Quá hạn 0 ngày" hay "Còn 0 ngày".
+// Vì sao: Kiểm thử 12/11/2026 thấy "Quá hạn 0 ngày" ở Danh sách và Cảnh báo: đúng phép tính nhưng đọc như lỗi.
+// Đỏ nghĩa là: moTaSoNgay() đã đổi, ngày cuối của chứng chỉ hiện câu khó hiểu.
+// Đừng: đổi cách tính days_left trong view; chỉ đổi câu hiển thị.
+// Nhóm: Chứng chỉ: thêm, sửa, thu hồi, xoá (D1, D4, D5, Nf)
+function test_chung_chi_het_han_trong_hom_nay_ghi_het_han_hom_nay(PDO $pdo): void
+{
+    // Đầu ngày và cuối ngày hôm nay: một cái vừa quá hạn, một cái còn vài giờ, cùng days_left = 0.
+    $pdo->exec("UPDATE certificates SET valid_to = CONCAT(CURDATE(), ' 00:00:00') WHERE cert_code = 'CERT-002'");
+    $pdo->exec("UPDATE certificates SET valid_to = CONCAT(CURDATE(), ' 23:59:59') WHERE cert_code = 'CERT-003'");
+    kiem(moTaSoNgay(timChungChi($pdo, 2)) === 'Hết hạn hôm nay', 'Đã quá hạn trong hôm nay: ' . moTaSoNgay(timChungChi($pdo, 2)));
+    kiem(moTaSoNgay(timChungChi($pdo, 3)) === 'Hết hạn hôm nay', 'Còn vài giờ: ' . moTaSoNgay(timChungChi($pdo, 3)));
+    kiem(moTaSoNgay(timChungChi($pdo, 5)) === 'Quá hạn 10 ngày' && moTaSoNgay(timChungChi($pdo, 4)) === 'Còn 7 ngày', 'Ngày khác giữ câu cũ');
+}
+
+// Luật: Mật khẩu mới phải đủ 8 ký tự và có cả chữ lẫn số.
+// Vì sao: Kiểm thử 12/11/2026: "abcdefgh" được nhận; web chạy thật trên internet (QD-05). User chốt mức "8 ký tự, có chữ và số".
+// Đỏ nghĩa là: kiemTraMatKhauMoi() đã nới, tài khoản mới có thể đặt mật khẩu dò ra trong vài giây.
+// Đừng: chỉ kiểm bằng pattern ở trình duyệt; gửi thẳng form là qua.
+// Nhóm: Người dùng (Nb)
+function test_mat_khau_moi_phai_co_ca_chu_va_so(PDO $pdo): void
+{
+    foreach (['abcdefgh', '12345678', 'abc12', '!!!!@@@@'] as $yeu) {
+        kiem(kiemTraMatKhauMoi($yeu, $yeu) !== null, "$yeu phải bị từ chối");
+    }
+    foreach (['abcd1234', 'Mật khẩu 2026'] as $du) {
+        kiem(kiemTraMatKhauMoi($du, $du) === null, "$du phải được nhận");
+    }
+}
+
+// Người dùng Admin như nguoiDungHienTai() trả về, cho các hàm xoá kiểm quyền ngay trong hàm.
+function adminMau(): array
+{
+    return ['id' => 1, 'username' => 'admin', 'full_name' => 'Quản trị hệ thống', 'role_name' => VAI_TRO_ADMIN];
+}
+
+// Phiên như sau khi đăng nhập thật: mã người dùng kèm dấu mật khẩu (xem ghiNhanDangNhap).
+function phienCua(PDO $pdo, int $id): array
+{
+    $maBam = (string) $pdo->query("SELECT password_hash FROM users WHERE id = $id")->fetchColumn();
+    return ['user_id' => $id, 'dau_mk' => dauMatKhau($maBam)];
+}
+
+// Luật: Đổi mật khẩu thì các phiên khác của người đó bị đăng xuất; phiên đang đổi giữ nguyên.
+// Vì sao: Người ta đổi mật khẩu thường vì nghi bị lộ; kiểm thử 12/11/2026 thấy phiên cũ vẫn dùng tiếp được.
+// Đỏ nghĩa là: nguoiDungHienTai() không còn so dấu mật khẩu trong phiên, kẻ đã chiếm được phiên vẫn ở lại.
+// Đừng: lưu nguyên mã băm mật khẩu vào phiên; chỉ lưu dấu của nó.
+// Nhóm: Đăng nhập, phiên, phân quyền (Na, Ni)
+function test_doi_mat_khau_dang_xuat_phien_khac_giu_phien_dang_doi(PDO $pdo): void
+{
+    $phienKhac = phienCua($pdo, 2);
+    $_SESSION = phienCua($pdo, 2);
+    kiem(doiMatKhau($pdo, 2, 'Cipher@2026', 'Moi12345', 'Moi12345') === [], 'Phải đổi được');
+    kiem(nguoiDungHienTai($pdo) !== null, 'Phiên đang đổi phải giữ nguyên');
+    $_SESSION = $phienKhac;
+    kiem(nguoiDungHienTai($pdo) === null, 'Phiên khác phải bị đăng xuất');
+    $_SESSION = ['user_id' => 2];
+    kiem(nguoiDungHienTai($pdo) === null, 'Phiên không có dấu mật khẩu (tạo trước bản này) phải đăng nhập lại');
+    $_SESSION = [];
+}
+
+// Luật: Chỉ Admin xoá được máy chủ, tên miền, tổ chức cấp; Nhân viên gửi lệnh thẳng cũng bị từ chối.
+// Vì sao: User chốt 12/11/2026: cùng luật với xoá chứng chỉ; trước đó Nhân viên xoá được danh mục không còn dữ liệu con.
+// Đỏ nghĩa là: xoaMayChu(), xoaTenMien(), xoaToChuc() đã bỏ kiểm tra quyền.
+// Đừng: chỉ ẩn nút Xoá trên trang; ai cũng gửi thẳng được form.
+// Nhóm: Danh mục: tên miền, máy chủ, tổ chức cấp (D2, D3, Nc)
+function test_chi_admin_xoa_duoc_may_chu_ten_mien_to_chuc_cap(PDO $pdo): void
+{
+    $_SESSION = phienCua($pdo, 2);
+    $nhanVien = nguoiDungHienTai($pdo);
+    $_SESSION = phienCua($pdo, 1);
+    $admin = nguoiDungHienTai($pdo);
+    $_SESSION = [];
+    $pdo->exec("INSERT INTO certificate_authorities (name, country) VALUES ('Tổ chức chưa dùng', 'Việt Nam')");
+    $idTc = (int) $pdo->lastInsertId();
+
+    // Tên miền 5 không có chứng chỉ; máy chủ 4 chỉ có tên miền 5.
+    kiem(str_contains((string) xoaTenMien($pdo, 5, $nhanVien), 'Chỉ Admin'), 'Nhân viên không được xoá tên miền');
+    kiem(str_contains((string) xoaToChuc($pdo, $idTc, $nhanVien), 'Chỉ Admin'), 'Nhân viên không được xoá tổ chức cấp');
+    kiem(xoaTenMien($pdo, 5, $admin) === null, 'Admin phải xoá được tên miền');
+    kiem(str_contains((string) xoaMayChu($pdo, 4, $nhanVien), 'Chỉ Admin'), 'Nhân viên không được xoá máy chủ');
+    kiem(xoaMayChu($pdo, 4, $admin) === null && xoaToChuc($pdo, $idTc, $admin) === null, 'Admin phải xoá được máy chủ, tổ chức cấp');
+}
+
+// Luật: Trong 50 chứng chỉ mẫu, chỉ những chứng chỉ cố ý làm ví dụ mới ra hạng C hoặc F.
+// Vì sao: Kiểm thử 12/11/2026: 20/50 ra hạng C vì dữ liệu mẫu cấp 365–730 ngày (luật từ 15/03/2026 tối đa 200) và gắn nhầm tên miền,
+//         biểu đồ hạng an toàn trông như hệ thống đầy lỗi. Ngày tính theo NOW(): sau 15/03/2027 (lộ trình 100 ngày) phải rà lại dữ liệu.
+// Đỏ nghĩa là: một dòng trong seed.sql hoặc seed_demo.sql có thời hạn, tên miền, thuật toán khác ý định ghi ở chú thích.
+// Đừng: sửa chamDiem() để dữ liệu mẫu đẹp; sửa dữ liệu.
+// Nhóm: CSDL, ràng buộc, dữ liệu mẫu (Ng, Nj)
+function test_du_lieu_mau_chi_chung_chi_co_y_moi_ra_hang_c_hoac_f(PDO $pdo): void
+{
+    chayFileSql($pdo, 'seed_demo.sql');
+    $xau = [];
+    foreach (tatCaChungChi($pdo) as $cc) {
+        $hang = chamDiem($cc)['hang'];
+        if ($hang === 'C' || $hang === 'F') {
+            $xau[$cc['cert_code']] = $hang;
+        }
+    }
+    ksort($xau);
+    // F: chữ ký SHA-1 (005, 023, 028). C: CA nội bộ, CA GOST thử nghiệm (không tin cậy), và CERT-006 gắn nhầm tên miền.
+    $mong = ['CERT-005' => 'F', 'CERT-006' => 'C', 'CERT-015' => 'C', 'CERT-020' => 'C', 'CERT-023' => 'F', 'CERT-028' => 'F',
+        'CERT-029' => 'C', 'CERT-041' => 'C', 'CERT-048' => 'C', 'CERT-049' => 'C'];
+    kiem($xau === $mong, 'Hạng C, F khác ý định: ' . json_encode($xau));
 }
 
 // Luật: Ô gõ Tên miền, Tổ chức cấp chỉ nhận tên có trong danh mục (không phân biệt hoa thường); tên lạ không lưu được.

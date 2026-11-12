@@ -53,7 +53,15 @@ function dangNhap(PDO $pdo, string $ten, string $matKhau): array
     // Phiên chưa có người dùng ở bước này, nên truyền thẳng người làm.
     ghiNhatKy($pdo, 'dang_nhap', 'nguoi_dung', $id, $ten, $id);
 
-    return ['id' => $id];
+    return ['id' => $id, 'dau_mk' => dauMatKhau($nguoi['password_hash'])];
+}
+
+// Dấu của mật khẩu đang dùng, cất trong phiên lúc đăng nhập. Đổi mật khẩu thì mã băm đổi, dấu trong các phiên cũ không
+// còn khớp và nguoiDungHienTai() đẩy chúng ra (kiểm thử 12/11/2026: phiên cũ vẫn dùng được sau khi đổi mật khẩu).
+// Chỉ cất dấu SHA-256 của mã băm, không cất chính mã băm vào file phiên.
+function dauMatKhau(string $maBam): string
+{
+    return hash('sha256', $maBam);
 }
 
 function ghiNhanSaiMatKhau(PDO $pdo, int $id): void
@@ -82,11 +90,12 @@ function batDauPhien(): void
     session_start();
 }
 
-function ghiNhanDangNhap(int $id): void
+function ghiNhanDangNhap(int $id, string $dauMk): void
 {
     // Đổi mã phiên, để mã bị lộ từ trước khi đăng nhập không dùng tiếp được.
     session_regenerate_id(true);
     $_SESSION['user_id'] = $id;
+    $_SESSION['dau_mk'] = $dauMk;
     unset($_SESSION['csrf']);
 }
 
@@ -109,17 +118,23 @@ function dangXuat(PDO $pdo): void
     session_destroy();
 }
 
-// Đọc lại từ CSDL ở mỗi yêu cầu, để người bị khoá giữa phiên bị đẩy ra ngay.
+// Đọc lại từ CSDL ở mỗi yêu cầu, để người bị khoá giữa phiên, hay đã đổi mật khẩu ở nơi khác, bị đẩy ra ngay.
+// Phiên tạo trước khi có dấu mật khẩu (trước 12/11/2026) không có dau_mk nên phải đăng nhập lại một lần.
 function nguoiDungHienTai(PDO $pdo): ?array
 {
-    if (empty($_SESSION['user_id'])) {
+    if (empty($_SESSION['user_id']) || !is_string($_SESSION['dau_mk'] ?? null)) {
         return null;
     }
-    $cau = $pdo->prepare('SELECT u.id, u.username, u.full_name, r.name AS role_name
+    $cau = $pdo->prepare('SELECT u.id, u.username, u.full_name, u.password_hash, r.name AS role_name
                           FROM users u JOIN roles r ON r.id = u.role_id
                           WHERE u.id = ? AND u.is_locked = 0');
     $cau->execute([$_SESSION['user_id']]);
-    return $cau->fetch() ?: null;
+    $nguoi = $cau->fetch();
+    if (!$nguoi || !hash_equals(dauMatKhau($nguoi['password_hash']), $_SESSION['dau_mk'])) {
+        return null;
+    }
+    unset($nguoi['password_hash']); // Mảng người dùng đi khắp các trang; mã băm không cần ra khỏi hàm này.
+    return $nguoi;
 }
 
 function laAdmin(array $nguoi): bool

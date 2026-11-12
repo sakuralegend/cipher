@@ -121,7 +121,7 @@ require __DIR__ . '/../../views/tieu_de_trang.php';
                 </div>
                 <?php // Mở rộng 3: hạng = mức nặng nhất trong các phát hiện, mỗi phát hiện kèm nguồn (chamDiem trong src/chung_chi.php). ?>
                 <?php $danhGia = chamDiem($cc); $nhanMuc = ['F' => ['Nguy hiểm', 'red'], 'C' => ['Cần xử lý', 'yellow'], 'B' => ['Lưu ý', 'blue'], 'i' => ['Ghi chú', 'secondary']]; ?>
-                <div class="card mt-3">
+                <div class="card mt-3" id="danh-gia-an-toan">
                     <div class="card-header">
                         <h2 class="card-title">Đánh giá an toàn</h2>
                         <div class="card-actions">
@@ -129,9 +129,9 @@ require __DIR__ . '/../../views/tieu_de_trang.php';
                         </div>
                     </div>
                     <div class="card-body">
-                        <?php if ($danhGia['phat_hien'] === []): ?>
-                            <p class="text-secondary mb-0">Khoá, chữ ký, tổ chức cấp, tên miền và thời hạn đều đạt.</p>
-                        <?php else: ?>
+                        <p class="mb-3"><?= e(HANG_AN_TOAN[$danhGia['hang']]['mo_ta']) ?></p>
+                        <?php // Không có phát hiện thì câu mô tả hạng A ở trên đã đủ, không lặp lại. ?>
+                        <?php if ($danhGia['phat_hien'] !== []): ?>
                             <ul class="list-unstyled ds-nhap mb-0">
                                 <?php foreach ($danhGia['phat_hien'] as $p): ?>
                                     <li>
@@ -143,6 +143,16 @@ require __DIR__ . '/../../views/tieu_de_trang.php';
                             </ul>
                         <?php endif; ?>
                         <div class="text-secondary small mt-2">Không xét hết hạn hay thu hồi: đã có ở trạng thái.</div>
+                        <?php // Thang đầy đủ, để biết hạng đang xem đứng ở đâu (nợ "chú thích hạng", giao 09/11/2026). ?>
+                        <details class="mt-2 small">
+                            <summary class="text-secondary">Các hạng nghĩa là gì</summary>
+                            <ul class="list-unstyled mt-2 mb-0">
+                                <?php foreach (HANG_AN_TOAN as $hang => $thongTin): ?>
+                                    <li class="mb-1"><span class="badge bg-<?= $thongTin['mau'] ?>-lt"><?= e($thongTin['nhan']) ?></span>
+                                        <span class="text-secondary"><?= e($thongTin['mo_ta']) ?></span></li>
+                                <?php endforeach; ?>
+                            </ul>
+                        </details>
                     </div>
                 </div>
             </div>

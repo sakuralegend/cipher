@@ -1,5 +1,5 @@
 <?php
-// Danh sách máy chủ. Nút xoá gửi POST về chính trang này.
+// Danh sách máy chủ. Ai dùng: Admin và Nhân viên; chỉ Admin thấy và dùng được nút Xoá (user chốt 12/11/2026). Nút xoá gửi POST về chính trang này.
 require __DIR__ . '/../../src/khoi_dong.php';
 require __DIR__ . '/../../src/danh_muc.php';
 
@@ -8,7 +8,7 @@ $nguoi = yeuCauDangNhap($pdo);
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     yeuCauCsrf();
-    $loi = xoaMayChu($pdo, (int) chuoiPost('id'));
+    $loi = xoaMayChu($pdo, (int) chuoiPost('id'), $nguoi);
     datThongBao($loi === null ? 'success' : 'danger', $loi ?? 'Đã xoá máy chủ.');
     chuyenHuong('admin/may_chu.php');
 }

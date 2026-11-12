@@ -37,12 +37,14 @@ INSERT INTO certificate_authorities (id, name, country, is_trusted) VALUES
     (2, 'DigiCert', 'Hoa Kỳ', 1),
     (3, 'CA nội bộ', 'Việt Nam', 0);
 
+-- Thời hạn mỗi chứng chỉ của CA công khai tối đa 200 ngày, đúng luật từ 15/03/2026 (xem đầu seed_demo.sql). CERT-005 (SHA-1,
+-- 1024 bit, CA nội bộ) và CERT-006 (tên lo.congty.example gắn dưới portal: "tên miền không liên quan") cố ý ra hạng xấu.
 INSERT INTO certificates
     (id, cert_code, fingerprint_sha256, serial, subject_cn, san, ca_id, domain_id,
      valid_from, valid_to, key_algorithm, key_size, signature_algorithm, is_revoked, created_by)
 VALUES
     (1, 'CERT-001', SHA2('CERT-001', 256), '03A1F0010001', 'congty.example', 'www.congty.example', 2, 1,
-     DATE_SUB(NOW(), INTERVAL 165 DAY), DATE_ADD(NOW(), INTERVAL 200 DAY), 'RSA', 2048, 'sha256WithRSAEncryption', 0, 1),
+     DATE_SUB(NOW(), INTERVAL 15 DAY), DATE_ADD(NOW(), INTERVAL 180 DAY), 'RSA', 2048, 'sha256WithRSAEncryption', 0, 1),
     (2, 'CERT-002', SHA2('CERT-002', 256), '03A1F0010002', 'portal.congty.example', NULL, 1, 2,
      DATE_SUB(NOW(), INTERVAL 60 DAY), DATE_ADD(NOW(), INTERVAL 30 DAY), 'ECDSA', 256, 'ecdsa-with-SHA256', 0, 1),
     (3, 'CERT-003', SHA2('CERT-003', 256), '03A1F0010003', 'mail.congty.example', 'smtp.congty.example', 1, 3,
@@ -53,10 +55,10 @@ VALUES
      DATE_SUB(NOW(), INTERVAL 375 DAY), DATE_SUB(NOW(), INTERVAL 10 DAY), 'RSA', 1024, 'sha1WithRSAEncryption', 0, 1),
     (6, 'CERT-006', SHA2('CERT-006', 256), '03A1F0010006', 'lo.congty.example', NULL, 2, 2,
      DATE_SUB(NOW(), INTERVAL 265 DAY), DATE_ADD(NOW(), INTERVAL 100 DAY), 'RSA', 2048, 'sha256WithRSAEncryption', 1, 1),
-    (7, 'CERT-007', SHA2('CERT-007', 256), '03A1F0010007', 'moi.congty.example', NULL, 2, 2,
-     DATE_ADD(NOW(), INTERVAL 5 DAY), DATE_ADD(NOW(), INTERVAL 370 DAY), 'ECDSA', 384, 'ecdsa-with-SHA384', 0, 1),
+    (7, 'CERT-007', SHA2('CERT-007', 256), '03A1F0010007', 'portal.congty.example', NULL, 2, 2,
+     DATE_ADD(NOW(), INTERVAL 5 DAY), DATE_ADD(NOW(), INTERVAL 190 DAY), 'ECDSA', 384, 'ecdsa-with-SHA384', 0, 1),
     (8, 'CERT-008', SHA2('CERT-008', 256), '03A1F0010008', 'shop.congty.example', NULL, 2, 1,
-     DATE_SUB(NOW(), INTERVAL 65 DAY), DATE_ADD(NOW(), INTERVAL 300 DAY), 'RSA', 4096, 'sha256WithRSAEncryption', 0, 1);
+     DATE_SUB(NOW(), INTERVAL 30 DAY), DATE_ADD(NOW(), INTERVAL 160 DAY), 'RSA', 4096, 'sha256WithRSAEncryption', 0, 1);
 
 -- Chứng chỉ THẬT của chính web này, đọc bằng openssl ngày 06/11/2026, giờ đã đổi từ UTC sang +07:00.
 -- Ngày cố định chứ không theo NOW(), vì đây là dữ liệu thật. Caddy tự cấp lại khoảng 30 ngày trước
@@ -71,8 +73,8 @@ VALUES
 
 -- CERT-008 đã gia hạn một lần: dòng chứng chỉ giữ thông tin mới, bản cũ nằm ở đây.
 INSERT INTO renewals (certificate_id, old_valid_to, new_valid_to, old_fingerprint, old_serial, renewed_by, renewed_at, note) VALUES
-    (8, DATE_SUB(NOW(), INTERVAL 60 DAY), DATE_ADD(NOW(), INTERVAL 300 DAY), SHA2('CERT-008-cu', 256), '03A1F0000008', 2,
-     DATE_SUB(NOW(), INTERVAL 65 DAY), 'Gia hạn hằng năm');
+    (8, DATE_SUB(NOW(), INTERVAL 25 DAY), DATE_ADD(NOW(), INTERVAL 160 DAY), SHA2('CERT-008-cu', 256), '03A1F0000008', 2,
+     DATE_SUB(NOW(), INTERVAL 30 DAY), 'Gia hạn định kỳ');
 
 -- Cảnh báo lấy đúng valid_to hiện tại của chứng chỉ, như cách hệ thống sẽ tạo thật.
 INSERT INTO alerts (certificate_id, valid_to, threshold_days)

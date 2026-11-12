@@ -78,8 +78,14 @@ require __DIR__ . '/../../views/tieu_de_trang.php';
                                     ?>
                                 </td>
                                 <td>
-                                    <?php $hangDong = chamDiem($dong)['hang']; ?>
-                                    <span class="badge bg-<?= HANG_AN_TOAN[$hangDong]['mau'] ?>-lt" title="<?= e(HANG_AN_TOAN[$hangDong]['nhan']) ?>"><?= $hangDong ?></span>
+                                    <?php
+                                    // Rê chuột thấy hạng và lỗi nặng nhất; bấm (cách duy nhất trên điện thoại) mở thẻ Đánh giá an toàn.
+                                    $danhGiaDong = chamDiem($dong);
+                                    $hangDong = $danhGiaDong['hang'];
+                                    $goiYHang = HANG_AN_TOAN[$hangDong]['nhan'] . ': ' . ($danhGiaDong['phat_hien'][0]['noi_dung'] ?? HANG_AN_TOAN[$hangDong]['mo_ta']);
+                                    ?>
+                                    <a class="badge bg-<?= HANG_AN_TOAN[$hangDong]['mau'] ?>-lt" title="<?= e($goiYHang) ?>" aria-label="<?= e($goiYHang) ?>"
+                                       href="<?= e(url('admin/chung_chi_xem.php?id=' . (int) $dong['id'])) ?>#danh-gia-an-toan"><?= $hangDong ?></a>
                                 </td>
                                 <td>
                                     <div class="btn-list flex-nowrap">
@@ -101,8 +107,14 @@ require __DIR__ . '/../../views/tieu_de_trang.php';
                     </tbody>
                 </table>
             </div>
-            <div class="card-footer d-flex align-items-center">
+            <div class="card-footer d-flex flex-wrap align-items-center gap-2">
                 <p class="m-0 text-secondary"><?= !$coLoc ? 'Tổng' : 'Tìm thấy' ?> <?= $tongDong ?> chứng chỉ</p>
+                <?php // Chú giải cột An toàn: nghĩa đầy đủ từng hạng nằm ở thẻ Đánh giá an toàn của trang chi tiết. ?>
+                <p class="m-0 small text-secondary chu-giai-hang">An toàn:
+                    <?php foreach (HANG_AN_TOAN as $hang => $thongTin): ?>
+                        <span class="text-nowrap"><span class="badge bg-<?= $thongTin['mau'] ?>-lt"><?= $hang ?></span> <?= e(substr($thongTin['nhan'], strlen($hang) + 4)) ?></span>
+                    <?php endforeach; ?>
+                    · bấm chữ cái để xem lý do</p>
                 <?php if ($tongTrang > 1): ?>
                     <ul class="pagination m-0 ms-auto">
                         <?php for ($so = 1; $so <= $tongTrang; $so++): ?>

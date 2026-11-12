@@ -26,11 +26,17 @@ function timNguoiDung(PDO $pdo, int $id): ?array
     return $cau->fetch() ?: null;
 }
 
+// Luật mật khẩu mới (user chốt 12/11/2026: "8 ký tự, có chữ và số"; trước đó "abcdefgh" vẫn qua). MAU_MAT_KHAU là cùng luật
+// cho thuộc tính pattern của ô nhập, để trình duyệt báo ngay; PHP vẫn là lớp quyết định.
+const LUAT_MAT_KHAU = 'Mật khẩu phải có ít nhất 8 ký tự, gồm cả chữ và số.';
+const MAU_MAT_KHAU = '(?=.*\p{L})(?=.*\d).{8,}';
+
 // Tách riêng vì cả form Admin lẫn trang tài khoản cá nhân đều đặt mật khẩu.
 function kiemTraMatKhauMoi(string $matKhau, string $nhapLai): ?string
 {
-    if (mb_strlen($matKhau) < 8) {
-        return 'Mật khẩu phải có ít nhất 8 ký tự.';
+    // \p{L}: chữ cái mọi thứ tiếng, kể cả có dấu; \d: chữ số.
+    if (mb_strlen($matKhau) < 8 || preg_match('/\p{L}/u', $matKhau) !== 1 || preg_match('/\d/', $matKhau) !== 1) {
+        return LUAT_MAT_KHAU;
     }
     if (strlen($matKhau) > 72) {
         // bcrypt chỉ dùng 72 byte đầu; phần dư sẽ bị bỏ qua mà không báo lỗi.
@@ -140,10 +146,15 @@ function loiTrungTenDangNhap(PDOException $e): array
     return loiNeuTrung($e, 'username', 'Tên đăng nhập này đã tồn tại.');
 }
 
+// Mật khẩu đổi thì mọi phiên đang mở của người này bị đẩy ra (dauMatKhau trong src/auth.php), trừ phiên đang đổi
+// cho chính mình: phiên đó nhận dấu mới để không phải đăng nhập lại.
 function capNhatMatKhau(PDO $pdo, int $id, string $matKhau): void
 {
-    $pdo->prepare('UPDATE users SET password_hash = ? WHERE id = ?')
-        ->execute([password_hash($matKhau, PASSWORD_DEFAULT), $id]);
+    $maBam = password_hash($matKhau, PASSWORD_DEFAULT);
+    $pdo->prepare('UPDATE users SET password_hash = ? WHERE id = ?')->execute([$maBam, $id]);
+    if ((int) ($_SESSION['user_id'] ?? 0) === $id) {
+        $_SESSION['dau_mk'] = dauMatKhau($maBam);
+    }
 }
 
 function khoaNguoiDung(PDO $pdo, int $id, int $idNguoiThucHien): ?string

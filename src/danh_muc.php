@@ -3,6 +3,10 @@
 // Cùng cách làm với src/nguoi_dung.php: hàm lưu trả về mảng lỗi ['tên ô' => 'câu lỗi'],
 // mảng rỗng là thành công; hàm xoá trả về câu lỗi, hoặc null nếu thành công.
 
+// Xoá máy chủ, tên miền, tổ chức cấp chỉ Admin được (user chốt 12/11/2026), cùng luật với xoá chứng chỉ. Kiểm ngay trong
+// từng hàm xoá chứ không chỉ ẩn nút, vì ai cũng gửi thẳng được form. Nhân viên vẫn thêm, sửa được.
+const LOI_CHI_ADMIN_XOA = 'Chỉ Admin được xoá danh mục. Bạn vẫn có thể sửa.';
+
 const MOI_TRUONG = [
     'production' => 'Đang chạy thật',
     'staging' => 'Thử nghiệm',
@@ -79,8 +83,11 @@ function luuMayChu(PDO $pdo, ?int $id, array $d): array
     return [];
 }
 
-function xoaMayChu(PDO $pdo, int $id): ?string
+function xoaMayChu(PDO $pdo, int $id, array $nguoi): ?string
 {
+    if (!laAdmin($nguoi)) {
+        return LOI_CHI_ADMIN_XOA;
+    }
     return xoaVaGhiNhatKy($pdo, 'may_chu', $id, 'Máy chủ này còn tên miền, hãy chuyển hoặc xoá tên miền trước.');
 }
 
@@ -140,8 +147,11 @@ function luuTenMien(PDO $pdo, ?int $id, array $d): array
     return [];
 }
 
-function xoaTenMien(PDO $pdo, int $id): ?string
+function xoaTenMien(PDO $pdo, int $id, array $nguoi): ?string
 {
+    if (!laAdmin($nguoi)) {
+        return LOI_CHI_ADMIN_XOA;
+    }
     return xoaVaGhiNhatKy($pdo, 'ten_mien', $id, 'Tên miền này còn chứng chỉ, hãy chuyển hoặc xoá chứng chỉ trước.');
 }
 
@@ -208,7 +218,10 @@ function luuToChuc(PDO $pdo, ?int $id, array $d): array
     return [];
 }
 
-function xoaToChuc(PDO $pdo, int $id): ?string
+function xoaToChuc(PDO $pdo, int $id, array $nguoi): ?string
 {
+    if (!laAdmin($nguoi)) {
+        return LOI_CHI_ADMIN_XOA;
+    }
     return xoaVaGhiNhatKy($pdo, 'to_chuc_cap', $id, 'Tổ chức này còn chứng chỉ, hãy chuyển hoặc xoá chứng chỉ trước.');
 }

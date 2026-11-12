@@ -261,6 +261,8 @@ require __DIR__ . '/../../views/tieu_de_trang.php';
                                 <span class="fw-semibold"><?= tenMienNgatDong($giaTri['subject_cn']) ?></span>
                                 <?php if ($daDoc['so_ngay'] < 0): ?>
                                     <span class="badge bg-red-lt">Đã hết hạn <?= abs($daDoc['so_ngay']) ?> ngày</span>
+                                <?php elseif ($daDoc['so_ngay'] === 0): ?>
+                                    <span class="badge bg-red-lt">Hết hạn hôm nay</span>
                                 <?php elseif ($daDoc['chua_hieu_luc']): ?>
                                     <span class="badge bg-blue-lt">Chưa hiệu lực</span>
                                 <?php else: ?>

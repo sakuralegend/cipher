@@ -84,8 +84,8 @@ require __DIR__ . '/../../views/dau_trang.php';
                         <div class="mb-3">
                             <label class="form-label required" for="password">Mật khẩu mới</label>
                             <input class="form-control <?= isset($loi['password']) ? 'is-invalid' : '' ?>" id="password" name="password"
-                                   type="password" required minlength="8" autocomplete="new-password">
-                            <div class="invalid-feedback"><?= e($loi['password'] ?? 'Mật khẩu phải có ít nhất 8 ký tự.') ?></div>
+                                   type="password" required minlength="8" pattern="<?= e(MAU_MAT_KHAU) ?>" autocomplete="new-password">
+                            <div class="invalid-feedback"><?= e($loi['password'] ?? LUAT_MAT_KHAU) ?></div>
                         </div>
                         <div>
                             <label class="form-label required" for="password2">Nhập lại mật khẩu mới</label>

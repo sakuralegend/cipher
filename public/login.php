@@ -19,7 +19,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $ketQua = dangNhap($pdo, $ten, chuoiPost('password'));
 
     if (isset($ketQua['id'])) {
-        ghiNhanDangNhap($ketQua['id']);
+        ghiNhanDangNhap($ketQua['id'], $ketQua['dau_mk']);
         chuyenHuong('admin/index.php');
     }
     $loi = $ketQua['loi'];

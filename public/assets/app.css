@@ -221,6 +221,28 @@
         min-width: 16rem;
         white-space: normal;
     }
+    /* Dòng "Chưa có…" trải hết bề rộng bảng: căn giữa thì chữ nằm giữa cả bảng, phần lớn ra ngoài màn hình
+       (Lịch sử gia hạn, chụp 390px 12/11/2026). Căn trái thì luôn đọc được. */
+    .table-responsive td[colspan] {
+        text-align: left !important;
+    }
+}
+
+/* Bảng rộng hơn khung: mép phía còn cột bị che mờ dần, để biết kéo ngang được (kiểm thử 12/11/2026: cột Còn lại và nút
+   Gia hạn của Dashboard nằm ngoài màn hình 390px mà không có dấu hiệu gì). app.js gắn con-trai, con-phai theo vị trí cuộn.
+   Dùng mask chứ không phủ lớp màu, nên đúng trên mọi nền thẻ. */
+@media screen {
+    .table-responsive.con-phai {
+        mask-image: linear-gradient(to right, #000 calc(100% - 3rem), transparent);
+    }
+
+    .table-responsive.con-trai {
+        mask-image: linear-gradient(to left, #000 calc(100% - 3rem), transparent);
+    }
+
+    .table-responsive.con-trai.con-phai {
+        mask-image: linear-gradient(to right, transparent, #000 3rem, #000 calc(100% - 3rem), transparent);
+    }
 }
 
 /* Dòng bảng cao vừa phải: thấp hơn mặc định của Tabler (khoảng 57px) để thấy được nhiều chứng chỉ hơn,

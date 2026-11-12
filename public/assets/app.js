@@ -100,6 +100,103 @@ document.querySelectorAll('form[data-dang-cho]').forEach(function (form) {
     });
 });
 
+// Nhập hàng loạt có thanh tiến trình: <form data-nhap-tung-dia-chi> chứa khối .nhap-tien-do (chung_chi_nhap.php).
+// Thay vì một yêu cầu đọc cả lượt (trang đứng im tới một phút), gửi bat_dau kèm danh sách, rồi doc_mot từng lần: máy chủ
+// tự đọc địa chỉ kế tiếp trong phiên và trả về đã đọc bao nhiêu. Đọc xong gửi form thật với hanh_dong=xem để hiện bảng
+// xem trước. Lỗi bất kỳ (mạng, phiên hết hạn) thì gửi form như thường với hanh_dong=doc: đường cũ vẫn đọc được cả lượt.
+// Chạy sau khối data-dang-cho ở trên, nên nút đã được khoá và đổi chữ khi tới đây.
+document.querySelectorAll('form[data-nhap-tung-dia-chi]').forEach(function (form) {
+    var khung = form.querySelector('.nhap-tien-do');
+    var thanh = khung.querySelector('.progress-bar');
+    var chu = khung.querySelector('[aria-live]');
+    var dangChay = false;
+
+    function gui(hanhDong) {
+        var duLieu = new FormData(form);
+        duLieu.set('hanh_dong', hanhDong);
+        return fetch(form.action, {method: 'POST', body: duLieu, credentials: 'same-origin'}).then(function (traLoi) {
+            if (!traLoi.ok) {
+                throw new Error('HTTP ' + traLoi.status);
+            }
+            return traLoi.json();
+        });
+    }
+
+    // Gửi form thật (trang vẽ lại). form.submit() không gọi lại sự kiện submit nên không lặp.
+    function guiForm(hanhDong) {
+        form.querySelectorAll('input[type="hidden"][name="hanh_dong"]').forEach(function (o) {
+            o.remove();
+        });
+        var an = document.createElement('input');
+        an.type = 'hidden';
+        an.name = 'hanh_dong';
+        an.value = hanhDong;
+        form.appendChild(an);
+        form.submit();
+    }
+
+    function capNhat(daDoc, tong, vuaDoc) {
+        var phanTram = tong > 0 ? Math.round(daDoc * 100 / tong) : 0;
+        thanh.style.width = phanTram + '%';
+        thanh.setAttribute('aria-valuenow', String(phanTram));
+        chu.textContent = 'Đã đọc ' + daDoc + '/' + tong + (vuaDoc ? ': ' + vuaDoc : '');
+    }
+
+    form.addEventListener('submit', function (suKien) {
+        if (dangChay || suKien.defaultPrevented || !window.fetch) {
+            return;
+        }
+        suKien.preventDefault();
+        dangChay = true;
+        gui('bat_dau').then(function (batDau) {
+            // Danh sách sai (trống, quá 50 địa chỉ): để PHP báo lỗi dưới ô như thường.
+            if (batDau.loi) {
+                guiForm('doc');
+                return null;
+            }
+            khung.hidden = false;
+            capNhat(0, batDau.tong, null);
+            function docTiep() {
+                return gui('doc_mot').then(function (ketQua) {
+                    capNhat(ketQua.da_doc, ketQua.tong, ketQua.vua_doc);
+                    if (ketQua.da_doc < ketQua.tong && ketQua.vua_doc !== null) {
+                        return docTiep();
+                    }
+                    chu.textContent = 'Đã đọc xong ' + ketQua.da_doc + '/' + ketQua.tong + ', đang dựng bảng xem trước…';
+                    guiForm('xem');
+                    return null;
+                });
+            }
+            return docTiep();
+        }).catch(function () {
+            guiForm('doc');
+        });
+    });
+});
+
+// Bảng kéo ngang: gắn lớp con-trai, con-phai lên .table-responsive khi ô đầu, ô cuối của hàng tiêu đề bị che; app.css làm
+// mờ mép đó. Theo dõi bằng IntersectionObserver (khung bảng làm gốc) chứ không nghe sự kiện cuộn: landing cấm hiệu ứng
+// theo cuộn (test_landing_khong_co_hieu_ung_theo_cuon_phim_the_tu_chay), và cách này cũng tự đúng khi xoay màn hình.
+if (window.IntersectionObserver) {
+    document.querySelectorAll('.table-responsive').forEach(function (khung) {
+        var oTieuDe = khung.querySelectorAll('thead tr:first-child > *');
+        if (oTieuDe.length < 2) {
+            return;
+        }
+        var dau = oTieuDe[0];
+        var cuoi = oTieuDe[oTieuDe.length - 1];
+        var theoDoi = new IntersectionObserver(function (cacMuc) {
+            cacMuc.forEach(function (muc) {
+                // Ô lọt khung gần trọn (0,98) mới coi là thấy: lệch nửa điểm ảnh do làm tròn không bật mờ mép.
+                var biChe = muc.intersectionRatio < 0.98;
+                khung.classList.toggle(muc.target === cuoi ? 'con-phai' : 'con-trai', biChe);
+            });
+        }, {root: khung, threshold: [0.98]});
+        theoDoi.observe(dau);
+        theoDoi.observe(cuoi);
+    });
+}
+
 // Nút in: <button data-in>.
 document.querySelectorAll('[data-in]').forEach(function (nut) {
     nut.addEventListener('click', function () {

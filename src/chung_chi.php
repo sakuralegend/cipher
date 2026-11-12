@@ -483,9 +483,13 @@ function taoCanhBao(PDO $pdo): void
 
 // Chỉ cảnh báo của chu kỳ hiện tại (hạn của cảnh báo trùng hạn của chứng chỉ). Giữ chứng chỉ đã hết
 // hạn vì đó là trường hợp gấp nhất; bỏ chứng chỉ đã thu hồi vì không còn việc gì để xử lý.
+// Mỗi chứng chỉ chỉ một dòng: mốc gấp nhất (số ngày nhỏ nhất) đã chạm. Các mốc trước vẫn nằm trong bảng để UNIQUE
+// chặn tạo lại, nhưng không hiện: chứng chỉ còn 4 ngày từng hiện cả "7 ngày" lẫn "15 ngày" (kiểm thử 12/11/2026).
 const CANH_BAO_DANG_XET = "alerts a
                            JOIN v_certificates c ON c.id = a.certificate_id AND c.valid_to = a.valid_to
-                           WHERE c.status IN ('expiring', 'expired')";
+                           WHERE c.status IN ('expiring', 'expired')
+                             AND a.threshold_days = (SELECT MIN(a2.threshold_days) FROM alerts a2
+                                                     WHERE a2.certificate_id = a.certificate_id AND a2.valid_to = a.valid_to)";
 
 // Cảnh báo chưa xem lên đầu, trong đó chứng chỉ gần hết hạn nhất đứng trước.
 function danhSachCanhBao(PDO $pdo): array
@@ -617,12 +621,16 @@ function tenMienNgatDong(string $ten): string
 }
 
 // Câu hiển thị số ngày. Chứng chỉ đã thu hồi không còn ý nghĩa đếm ngày.
+// days_left = 0 là hạn rơi vào hôm nay, dù đã qua giờ hết hạn hay chưa: "Quá hạn 0 ngày" đọc như lỗi.
 function moTaSoNgay(array $chungChi): string
 {
     if ($chungChi['status'] === 'revoked') {
         return 'Không áp dụng';
     }
     $soNgay = (int) $chungChi['days_left'];
+    if ($soNgay === 0 && in_array($chungChi['status'], ['expired', 'expiring'], true)) {
+        return 'Hết hạn hôm nay';
+    }
     if ($chungChi['status'] === 'expired') {
         return 'Quá hạn ' . max(abs($soNgay), 0) . ' ngày';
     }
@@ -634,11 +642,13 @@ function moTaSoNgay(array $chungChi): string
 // điểm 0–100 vì cộng trừ điểm không biện minh được ("vì sao lỗi này trừ 10?"). Mỗi tiêu chí lấy từ quy định có thật và
 // ghi nguồn cạnh phát hiện, để người xem tự kiểm. Tính lúc xem từ các cột đã có, không lưu: không bao giờ cũ, không đổi
 // schema. Cố ý KHÔNG xét hết hạn, sắp hết hạn, thu hồi: đã có trạng thái riêng, xét nữa là tính một lỗi hai lần.
+// 'mo_ta': nghĩa của hạng, hiện ở chú giải dưới Danh sách và ở thẻ Đánh giá an toàn (kiểm thử 12/11/2026: người xem chỉ
+// thấy chữ cái, không biết vì sao). Không có hạng D: thang lấy theo SSL Labs, nhảy từ C sang F.
 const HANG_AN_TOAN = [
-    'A' => ['nhan' => 'A · Tốt', 'mau' => 'green'],
-    'B' => ['nhan' => 'B · Lưu ý', 'mau' => 'blue'],
-    'C' => ['nhan' => 'C · Cần xử lý', 'mau' => 'yellow'],
-    'F' => ['nhan' => 'F · Nguy hiểm', 'mau' => 'red'],
+    'A' => ['nhan' => 'A · Tốt', 'mau' => 'green', 'mo_ta' => 'Đạt mọi tiêu chí: khoá, chữ ký, tổ chức cấp, tên miền, thời hạn.'],
+    'B' => ['nhan' => 'B · Lưu ý', 'mau' => 'blue', 'mo_ta' => 'Còn dùng tốt, có điểm nên tính trước (ví dụ khoá RSA 2048 chỉ đủ tới hết 2030).'],
+    'C' => ['nhan' => 'C · Cần xử lý', 'mau' => 'yellow', 'mo_ta' => 'Trình duyệt sẽ cảnh báo hoặc chứng chỉ trái luật chung: nên thay sớm.'],
+    'F' => ['nhan' => 'F · Nguy hiểm', 'mau' => 'red', 'mo_ta' => 'Có thể bị làm giả hoặc phá được: phải thay ngay.'],
 ];
 // Thứ tự nặng nhẹ khi lấy mức nặng nhất; 'i' là ghi chú, không hạ hạng.
 const MUC_NANG = ['F' => 4, 'C' => 3, 'B' => 2, 'i' => 1];
@@ -1245,6 +1255,23 @@ function tachDanhSachDiaChi(string $nhap): array
 
 // Thanh tab của trang Thêm chứng chỉ, dùng chung cho form một site và trang Nhập hàng loạt.
 // Tab là link thường: đổi tab là tải trang khác, không cần JavaScript.
+// Bảng xem trước của nhập hàng loạt: dòng cùng fingerprint với một dòng phía trên (google.com và youtube.com dùng chung
+// chứng chỉ) có trung_dong = địa chỉ của dòng đó, để không ai lưu hai lần. Chạy trên cả lượt sau khi đọc xong, vì trình
+// duyệt có thể gửi từng địa chỉ một (thanh tiến trình); dòng đọc lỗi có trung_dong = null.
+function danhDauTrungTrongLuot(array $cacDong): array
+{
+    $daGap = []; // fingerprint => địa chỉ đầu tiên có nó.
+    foreach ($cacDong as $i => $dong) {
+        $cacDong[$i]['trung_dong'] = null;
+        if (!isset($dong['loi'])) {
+            $fp = $dong['gia_tri']['fingerprint_sha256'];
+            $cacDong[$i]['trung_dong'] = $daGap[$fp] ?? null;
+            $daGap[$fp] ??= $dong['nhap'];
+        }
+    }
+    return $cacDong;
+}
+
 function tabThemChungChi(string $dangMo): string
 {
     $cacTab = [

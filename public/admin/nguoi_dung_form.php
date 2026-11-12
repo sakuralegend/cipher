@@ -99,8 +99,8 @@ require __DIR__ . '/../../views/dau_trang.php';
                                 <?= $id === null ? 'Mật khẩu' : 'Đặt lại mật khẩu' ?>
                             </label>
                             <input class="form-control <?= isset($loi['password']) ? 'is-invalid' : '' ?>" id="password" name="password"
-                                   type="password" minlength="8" autocomplete="new-password" <?= $id === null ? 'required' : '' ?>>
-                            <div class="invalid-feedback"><?= e($loi['password'] ?? 'Mật khẩu phải có ít nhất 8 ký tự.') ?></div>
+                                   type="password" minlength="8" pattern="<?= e(MAU_MAT_KHAU) ?>" autocomplete="new-password" <?= $id === null ? 'required' : '' ?>>
+                            <div class="invalid-feedback"><?= e($loi['password'] ?? LUAT_MAT_KHAU) ?></div>
                             <?php if ($id !== null): ?>
                                 <small class="form-hint">Để trống nếu giữ nguyên mật khẩu hiện tại.</small>
                             <?php endif; ?>

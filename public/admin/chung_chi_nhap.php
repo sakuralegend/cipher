@@ -3,6 +3,7 @@
 // ô tick; bấm Lưu thì thêm các dòng đã tick, tự tạo tên miền, máy chủ, tổ chức cấp còn thiếu y như form một site.
 // Kết quả đọc nằm trong phiên (khoá nhap_hang_loat) giữa hai bước: bước Lưu chỉ nhận SỐ THỨ TỰ dòng từ trình duyệt,
 // không nhận dữ liệu chứng chỉ, nên không ai gửi được chứng chỉ hay IP giả qua trang này.
+// Có JavaScript thì thanh tiến trình chạy theo số địa chỉ đã đọc (đọc từng địa chỉ một, xem khối "Hai cách đọc" bên dưới).
 require __DIR__ . '/../../src/khoi_dong.php';
 require __DIR__ . '/../../src/danh_muc.php';
 require __DIR__ . '/../../src/chung_chi.php';
@@ -19,14 +20,38 @@ $ketQuaLuu = null; // Bảng kết quả sau bước Lưu.
 // Dòng lưu được: đọc được, chưa có trong hệ thống, không trùng dòng khác trong cùng lượt.
 $luuDuoc = fn(array $dong): bool => !isset($dong['loi']) && $dong['trung'] === null && $dong['trung_dong'] === null;
 
+// Đọc một địa chỉ thành một dòng của bảng xem trước. Dòng trùng nhau trong lượt đánh dấu sau, bằng danhDauTrungTrongLuot().
+$docMot = fn(string $diaChi, int $cong): array => docChungChiChoForm($pdo, $diaChi, $cong) + ['nhap' => $diaChi, 'trung' => null];
+
+// Trả lời cho app.js (thanh tiến trình) rồi dừng trang.
+$traJson = function (array $duLieu): never {
+    header('Content-Type: application/json; charset=utf-8');
+    echo json_encode($duLieu, JSON_UNESCAPED_UNICODE);
+    exit;
+};
+
+// Hai cách đọc, cùng kết quả:
+// - Có JavaScript (thanh tiến trình, kiểm thử 12/11/2026: đọc cả lượt thì trang đứng im cả phút): app.js gửi hanh_dong=bat_dau
+//   kèm danh sách, rồi doc_mot nhiều lần, mỗi lần máy chủ tự lấy địa chỉ kế tiếp trong phiên (trình duyệt không gửi địa chỉ
+//   lẻ nào), cuối cùng gửi xem để hiện bảng xem trước.
+// - Không có JavaScript: hanh_dong=doc đọc cả lượt trong một yêu cầu như trước.
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-    unset($_SESSION['nhap_hang_loat']);
+    unset($_SESSION['nhap_hang_loat'], $_SESSION['nhap_dang_doc']);
 } else {
     yeuCauCsrf();
-    if (chuoiPost('hanh_dong') === 'doc') {
+    $hanhDong = chuoiPost('hanh_dong');
+    if ($hanhDong === 'doc' || $hanhDong === 'bat_dau') {
+        unset($_SESSION['nhap_hang_loat'], $_SESSION['nhap_dang_doc']);
         $nhap = chuoiPost('dia_chi');
         $congChon = (int) chuoiPost('cong');
         $ds = tachDanhSachDiaChi($nhap);
+        if ($hanhDong === 'bat_dau') {
+            if (isset($ds['loi'])) {
+                $traJson(['loi' => $ds['loi']]);
+            }
+            $_SESSION['nhap_dang_doc'] = ['nhap' => $nhap, 'cong' => $congChon, 'dia_chi' => $ds['dia_chi'], 'da_doc' => []];
+            $traJson(['tong' => count($ds['dia_chi'])]);
+        }
         if (isset($ds['loi'])) {
             $loiNhap = $ds['loi'];
         } else {
@@ -35,21 +60,30 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             // PHP khoá phiên tới hết trang: đọc cả phút thì mọi tab khác của người này treo theo. Nhả khoá trong lúc
             // đọc ($_SESSION vẫn đọc được, nhật ký vẫn biết ai đọc), đọc xong mở lại để ghi kết quả.
             session_write_close();
-            $cacDong = [];
-            $daGap = []; // fingerprint => địa chỉ đầu tiên có nó (google.com và youtube.com cùng một chứng chỉ).
-            foreach ($ds['dia_chi'] as $diaChi) {
-                $dong = docChungChiChoForm($pdo, $diaChi, $congChon) + ['nhap' => $diaChi, 'trung' => null, 'trung_dong' => null];
-                if (!isset($dong['loi'])) {
-                    $fp = $dong['gia_tri']['fingerprint_sha256'];
-                    $dong['trung_dong'] = $daGap[$fp] ?? null;
-                    $daGap[$fp] ??= $diaChi;
-                }
-                $cacDong[] = $dong;
-            }
+            $cacDong = danhDauTrungTrongLuot(array_map(fn(string $diaChi): array => $docMot($diaChi, $congChon), $ds['dia_chi']));
             session_start();
             $_SESSION['nhap_hang_loat'] = $cacDong;
         }
-    } elseif (chuoiPost('hanh_dong') === 'luu' && isset($_SESSION['nhap_hang_loat'])) {
+    } elseif ($hanhDong === 'doc_mot' && isset($_SESSION['nhap_dang_doc'])) {
+        $dang = $_SESSION['nhap_dang_doc'];
+        $viTri = count($dang['da_doc']);
+        $diaChi = $dang['dia_chi'][$viTri] ?? null;
+        if ($diaChi !== null) {
+            // Nhả khoá phiên trong lúc chờ máy chủ kia (tối đa vài giây), như đường đọc cả lượt.
+            session_write_close();
+            $dong = $docMot($diaChi, $dang['cong']);
+            session_start();
+            $_SESSION['nhap_dang_doc']['da_doc'][] = $dong;
+        }
+        $traJson(['da_doc' => count($_SESSION['nhap_dang_doc']['da_doc']), 'tong' => count($dang['dia_chi']), 'vua_doc' => $diaChi]);
+    } elseif ($hanhDong === 'xem' && isset($_SESSION['nhap_dang_doc'])) {
+        $dang = $_SESSION['nhap_dang_doc'];
+        unset($_SESSION['nhap_dang_doc']);
+        $nhap = $dang['nhap'];
+        $congChon = $dang['cong'];
+        $cacDong = danhDauTrungTrongLuot($dang['da_doc']);
+        $_SESSION['nhap_hang_loat'] = $cacDong;
+    } elseif ($hanhDong === 'luu' && isset($_SESSION['nhap_hang_loat'])) {
         $daDoc = $_SESSION['nhap_hang_loat'];
         unset($_SESSION['nhap_hang_loat']);
         $chon = array_unique(array_map('intval', is_array($_POST['chon'] ?? null) ? $_POST['chon'] : []));
@@ -119,8 +153,9 @@ require __DIR__ . '/../../views/tieu_de_trang.php';
                     <a class="btn btn-primary" href="<?= e(url('admin/chung_chi.php')) ?>">Xem danh sách chứng chỉ</a>
                 </div>
             <?php else: ?>
+                <?php // data-nhap-tung-dia-chi: app.js đọc từng địa chỉ và chạy thanh .nhap-tien-do; lỗi giữa chừng thì gửi form như thường. ?>
                 <form class="card-body<?= $cacDong !== null ? ' border-bottom' : '' ?>" method="post"
-                      action="<?= e(url('admin/chung_chi_nhap.php')) ?>" data-dang-cho="Đang đọc…">
+                      action="<?= e(url('admin/chung_chi_nhap.php')) ?>" data-dang-cho="Đang đọc…" data-nhap-tung-dia-chi>
                     <input type="hidden" name="csrf" value="<?= e(maCsrf()) ?>">
                     <label class="form-label" for="dia_chi">Danh sách địa chỉ</label>
                     <textarea class="form-control ma-so<?= $loiNhap !== null ? ' is-invalid' : '' ?>" id="dia_chi" name="dia_chi"
@@ -145,6 +180,12 @@ require __DIR__ . '/../../views/tieu_de_trang.php';
                         dấu cách hoặc dấu phẩy. Cổng chọn ở trên dùng cho địa chỉ không ghi cổng. Mỗi địa chỉ chờ tối đa
                         <?= GIAY_CHO_DOC_CHUNG_CHI ?> giây; <?= SO_DIA_CHI_TOI_DA ?> địa chỉ thường mất dưới một phút. Đọc xong
                         chưa lưu gì: xem lại rồi mới bấm Lưu.</small>
+                    <div class="nhap-tien-do mt-3" hidden>
+                        <div class="progress progress-sm">
+                            <div class="progress-bar" role="progressbar" aria-label="Tiến độ đọc" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"></div>
+                        </div>
+                        <div class="small text-secondary mt-1" aria-live="polite"></div>
+                    </div>
                 </form>
 
                 <?php if ($cacDong !== null): ?>
@@ -172,6 +213,8 @@ require __DIR__ . '/../../views/tieu_de_trang.php';
                                                 <?php $gt = $dong['gia_tri']; $n = $soNgay($gt['valid_to']); ?>
                                                 <?php if ($n < 0): ?>
                                                     <span class="badge bg-red-lt">Hết hạn <?= abs($n) ?> ngày</span>
+                                                <?php elseif ($n === 0): ?>
+                                                    <span class="badge bg-red-lt">Hết hạn hôm nay</span>
                                                 <?php else: ?>
                                                     <span class="badge <?= $n <= 30 ? 'bg-yellow-lt' : 'bg-green-lt' ?>">Còn <?= $n ?> ngày</span>
                                                 <?php endif; ?>
