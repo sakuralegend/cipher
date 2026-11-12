@@ -2364,6 +2364,32 @@ function test_nhap_hang_loat_chi_luu_du_lieu_doc_trong_phien(PDO $pdo): void
     kiem(str_contains($trang, '$daDoc = $_SESSION[\'nhap_hang_loat\'];'), 'Bước Lưu phải lấy kết quả đọc từ phiên');
 }
 
+// Luật: CSP trong deploy/caddy-cipher.conf chỉ cho chạy script là file của chính web và đúng một đoạn script nhúng (views/dau_trang.php), nhận theo mã băm.
+// Vì sao: 12/11/2026 bật CSP và HSTS (user cho phép) để chặn script lạ nếu một lỗi XSS lọt qua e(). Script nhúng chỉ chạy khi mã băm của nó có trong CSP.
+// Đỏ nghĩa là: đoạn script nhúng đã sửa (kể cả một dấu cách) mà CSP chưa cập nhật mã băm, hoặc có thêm script nhúng, thuộc tính onclick=: trên VPS trình duyệt sẽ chặn chúng.
+// Đừng: thêm 'unsafe-inline' vào script-src cho đỡ cập nhật mã băm; làm vậy CSP hết tác dụng chống XSS. Đổi mã băm xong chạy lại bước caddy của deploy/dung_vps.sh.
+// Nhóm: Giao diện, triển khai (Giao diện)
+function test_csp_chi_cho_script_cua_web_va_dung_ma_bam_script_nhung(PDO $pdo): void
+{
+    preg_match_all('~<script>(.*?)</script>~s', file_get_contents(__DIR__ . '/../views/dau_trang.php'), $nhung);
+    kiem(count($nhung[1]) === 1, 'dau_trang.php phải có đúng một đoạn script nhúng');
+    $maBam = "'sha256-" . base64_encode(hash('sha256', $nhung[1][0], true)) . "'";
+
+    preg_match('~Content-Security-Policy "([^"]+)"~', file_get_contents(__DIR__ . '/../deploy/caddy-cipher.conf'), $csp);
+    kiem(isset($csp[1]), 'Khối Caddy phải có Content-Security-Policy');
+    preg_match('~script-src ([^;]+)~', $csp[1], $script);
+    kiem(trim($script[1] ?? '') === "'self' $maBam", "script-src phải là 'self' $maBam, đang là: " . ($script[1] ?? 'không có'));
+
+    $tep = [...glob(__DIR__ . '/../public/*.php'), ...glob(__DIR__ . '/../public/admin/*.php'), ...glob(__DIR__ . '/../views/*.php')];
+    foreach ($tep as $duong) {
+        $noiDung = file_get_contents($duong);
+        if (!str_ends_with($duong, 'dau_trang.php')) {
+            kiem(!str_contains($noiDung, '<script>'), basename($duong) . ' có script nhúng: CSP sẽ chặn');
+        }
+        kiem(preg_match('~\son[a-z]+="~', $noiDung) !== 1, basename($duong) . ' có thuộc tính onclick=... : CSP sẽ chặn');
+    }
+}
+
 // Luật: Bảng xem trước của nhập hàng loạt đánh dấu dòng cùng chứng chỉ với một dòng phía trên, kể cả khi các địa chỉ được đọc lần lượt.
 // Vì sao: Từ 12/11/2026 trình duyệt gửi từng địa chỉ một để có thanh tiến trình, nên phép so trùng phải chạy trên cả lượt lúc xem trước.
 // Đỏ nghĩa là: danhDauTrungTrongLuot() đã đổi; google.com và youtube.com (cùng chứng chỉ) sẽ cùng được tick, dòng sau báo trùng lúc lưu.

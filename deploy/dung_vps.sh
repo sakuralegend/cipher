@@ -40,6 +40,10 @@ kiem() {
     echo "--- Qua 443 phải ra web thật (Xray chuyển sang Caddy); hỏng là VPN cũng không nhận kết nối mới:"
     [ "$(curl -s -m 15 -o /dev/null -w '%{http_code}' --resolve cert.cipher.id.vn:443:127.0.0.1 https://cert.cipher.id.vn/)" = 200 ] \
         && echo "OK web qua 443" || chet "Web qua 443 KHÔNG trả 200"
+    echo "--- Header HSTS, CSP của web (12/11/2026); thiếu thì chạy lại bước caddy:"
+    [ "$(curl -sI -m 15 --resolve cert.cipher.id.vn:443:127.0.0.1 https://cert.cipher.id.vn/ \
+        | grep -ciE '^(strict-transport-security|content-security-policy):')" = 2 ] \
+        && echo "OK có HSTS, CSP" || echo "THIẾU HSTS hoặc CSP"
     echo "--- Xray gửi PROXY protocol (xver 1) thì Caddy phải nhận ở 8443, lệch là web qua 443 hỏng:"
     if grep -q '"xver": *[12]' "$XRAY_CONFIG" && ! grep -q 'proxy_protocol' "$CADDYFILE"; then
         chet "Xray gửi PROXY protocol nhưng Caddyfile thiếu khối nhận. Chạy bước caddy để thêm lại."
@@ -251,6 +255,40 @@ THEM_PROXY
             chet "Khối nhận PROXY protocol làm Caddyfile sai cú pháp, đã khôi phục bản cũ."
         fi
         echo "Đã thêm khối nhận PROXY protocol. Sao lưu: $sao_luu_pp"
+    fi
+
+    # HSTS, CSP (12/11/2026): khối cert chỉ nối một lần, nên hai dòng header này được chép đè từ caddy-cipher.conf vào
+    # khối đang chạy mỗi lần chạy bước này (đổi mã băm CSP thì chạy lại bước caddy). Chỉ sửa trong khối cert.cipher.id.vn.
+    local sao_luu_hd
+    sao_luu_hd="$CADDYFILE.truoc-header-$(date +%Y%m%d-%H%M%S)"
+    cp -p "$CADDYFILE" "$sao_luu_hd"
+    python3 - "$CADDYFILE" "$khoi" <<'DONG_BO_HEADER'
+import sys
+duong, goc = sys.argv[1], sys.argv[2]
+TEN = ("Strict-Transport-Security", "Content-Security-Policy")
+s = open(duong, encoding="utf-8").read()
+moi = [l for l in open(goc, encoding="utf-8").read().splitlines() if l.strip().startswith(TEN)]
+if len(moi) != 2:
+    sys.exit("caddy-cipher.conf phải có đúng một dòng HSTS và một dòng CSP.")
+dau = s.find("cert.cipher.id.vn {")
+cuoi = s.find("\n}", dau)  # Khối kết thúc ở dấu } đầu tiên nằm sát lề sau tên miền.
+if dau < 0 or cuoi < 0:
+    sys.exit("Không thấy khối cert.cipher.id.vn trong Caddyfile.")
+dong = [l for l in s[dau:cuoi].split("\n") if not l.strip().startswith(TEN)]
+neo = [i for i, l in enumerate(dong) if l.strip() == "X-Content-Type-Options nosniff"]
+if len(neo) != 1:
+    sys.exit("Khối cert không có đúng một dòng X-Content-Type-Options nosniff để chèn sau.")
+dong[neo[0] + 1:neo[0] + 1] = moi
+open(duong, "w", encoding="utf-8").write(s[:dau] + "\n".join(dong) + s[cuoi:])
+DONG_BO_HEADER
+    if cmp -s "$sao_luu_hd" "$CADDYFILE"; then
+        rm -f "$sao_luu_hd"
+        echo "Header HSTS, CSP đã đúng."
+    elif caddy validate --adapter caddyfile --config "$CADDYFILE"; then
+        echo "Đã chép header HSTS, CSP vào khối cert. Sao lưu: $sao_luu_hd"
+    else
+        cp -p "$sao_luu_hd" "$CADDYFILE"
+        chet "Header làm Caddyfile sai cú pháp, đã khôi phục bản cũ."
     fi
 
     # reload, không restart: giữ nguyên kết nối đang có của slushai.
