@@ -29,7 +29,7 @@ CREATE TABLE roles (
 
 CREATE TABLE users (
     id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-    username VARCHAR(50) NOT NULL UNIQUE,
+    username VARCHAR(50) NOT NULL, -- Không trùng giữa tài khoản còn dùng: xem username_dang_dung.
     password_hash VARCHAR(255) NOT NULL,
     full_name VARCHAR(100) NOT NULL,
     role_id INT UNSIGNED NOT NULL,
@@ -37,6 +37,12 @@ CREATE TABLE users (
     -- Chặn dò mật khẩu theo tài khoản, không theo IP: web sau proxy có thể chỉ thấy một IP.
     failed_logins TINYINT UNSIGNED NOT NULL DEFAULT 0,
     locked_until DATETIME NULL,
+    -- Xoá người dùng chỉ đánh dấu (QD-26): nhật ký, chứng chỉ, lịch sử gia hạn vẫn trỏ tới dòng này nên dòng phải còn.
+    deleted_at DATETIME NULL, -- Lúc Admin xoá tài khoản; NULL là còn dùng.
+    -- Cột tự tính: bằng username khi tài khoản còn dùng, NULL khi đã xoá. UNIQUE cho phép nhiều NULL, nên tên của tài
+    -- khoản đã xoá dùng lại được (user chọn 12/11/2026), còn hai tài khoản đang dùng thì không trùng tên được.
+    username_dang_dung VARCHAR(50) AS (IF(deleted_at IS NULL, username, NULL)) PERSISTENT, -- Tên đăng nhập của tài khoản còn dùng.
+    CONSTRAINT uq_users_username_dang_dung UNIQUE (username_dang_dung),
     CONSTRAINT fk_users_role FOREIGN KEY (role_id) REFERENCES roles (id) ON DELETE RESTRICT
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 

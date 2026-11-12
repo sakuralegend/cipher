@@ -141,7 +141,8 @@ function layNhatKy(PDO $pdo, array $loc, int $trang): array
 
     // Hai số LIMIT, OFFSET là số nguyên do code tính ra, không lấy từ người dùng.
     $boQua = (max(1, $trang) - 1) * NHAT_KY_MOI_TRANG;
-    $cau = $pdo->prepare("SELECT a.*, u.username, u.full_name
+    // nguoi_da_xoa: người làm đã bị xoá tài khoản (QD-26); dòng nhật ký vẫn còn, trang ghi thêm "đã xoá".
+    $cau = $pdo->prepare("SELECT a.*, u.username, u.full_name, u.deleted_at IS NOT NULL AS nguoi_da_xoa
                           FROM audit_logs a LEFT JOIN users u ON u.id = a.user_id
                           $where ORDER BY a.id DESC LIMIT " . NHAT_KY_MOI_TRANG . " OFFSET $boQua");
     $cau->execute($thamSo);
@@ -158,7 +159,9 @@ function layNhatKy(PDO $pdo, array $loc, int $trang): array
     foreach ($cacId as $loai => $ids) {
         $ids = array_values(array_unique($ids));
         $dauHoi = implode(',', array_fill(0, count($ids), '?'));
-        $cau = $pdo->prepare('SELECT id FROM ' . LOAI_DOI_TUONG[$loai]['bang'] . " WHERE id IN ($dauHoi)");
+        // Người dùng đã xoá vẫn còn dòng trong users nhưng không mở được trang sửa: coi như không còn, không đặt link.
+        $cau = $pdo->prepare('SELECT id FROM ' . LOAI_DOI_TUONG[$loai]['bang'] . " WHERE id IN ($dauHoi)"
+            . ($loai === 'nguoi_dung' ? ' AND deleted_at IS NULL' : ''));
         $cau->execute($ids);
         foreach ($cau->fetchAll(PDO::FETCH_COLUMN) as $id) {
             $conTonTai[$loai][(int) $id] = true;

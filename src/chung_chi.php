@@ -352,7 +352,7 @@ function danhSachChungChi(PDO $pdo, int $trang, array $loc = [], array $sapXep =
 
 function timChungChi(PDO $pdo, int $id): ?array
 {
-    $cau = $pdo->prepare('SELECT c.*, a.name AS ca_name, a.is_trusted AS ca_tin_cay, d.domain_name, u.full_name AS created_by_name
+    $cau = $pdo->prepare('SELECT c.*, a.name AS ca_name, a.is_trusted AS ca_tin_cay, d.domain_name, ' . tenNguoiSql('u') . ' AS created_by_name
                           FROM v_certificates c
                           JOIN certificate_authorities a ON a.id = c.ca_id
                           JOIN domains d ON d.id = c.domain_id
@@ -364,7 +364,7 @@ function timChungChi(PDO $pdo, int $id): ?array
 
 function lichSuGiaHan(PDO $pdo, int $idChungChi): array
 {
-    $cau = $pdo->prepare('SELECT r.*, u.full_name AS renewed_by_name
+    $cau = $pdo->prepare('SELECT r.*, ' . tenNguoiSql('u') . ' AS renewed_by_name
                           FROM renewals r JOIN users u ON u.id = r.renewed_by
                           WHERE r.certificate_id = ?
                           ORDER BY r.renewed_at DESC, r.id DESC');

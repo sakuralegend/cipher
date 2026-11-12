@@ -15,8 +15,9 @@ const MA_BAM_GIA = '$2y$10$EHEJOeJC57qPKDb.wGU5b.SVbUx2J0vJdfshHa16aQ7c45PeH.XPu
 // Chỉ kiểm tra và ghi số lần sai, chưa đụng phiên. Trả về ['id' => ...] hoặc ['loi' => ...].
 function dangNhap(PDO $pdo, string $ten, string $matKhau): array
 {
+    // Chỉ tài khoản còn dùng: tên của tài khoản đã xoá có thể đã được cấp lại cho người khác (QD-26).
     $cau = $pdo->prepare('SELECT id, password_hash, is_locked, locked_until > NOW() AS dang_tam_chan
-                          FROM users WHERE username = ?');
+                          FROM users WHERE username = ? AND deleted_at IS NULL');
     $cau->execute([$ten]);
     $nguoi = $cau->fetch();
 
@@ -127,7 +128,7 @@ function nguoiDungHienTai(PDO $pdo): ?array
     }
     $cau = $pdo->prepare('SELECT u.id, u.username, u.full_name, u.password_hash, r.name AS role_name
                           FROM users u JOIN roles r ON r.id = u.role_id
-                          WHERE u.id = ? AND u.is_locked = 0');
+                          WHERE u.id = ? AND u.is_locked = 0 AND u.deleted_at IS NULL');
     $cau->execute([$_SESSION['user_id']]);
     $nguoi = $cau->fetch();
     if (!$nguoi || !hash_equals(dauMatKhau($nguoi['password_hash']), $_SESSION['dau_mk'])) {
@@ -135,6 +136,13 @@ function nguoiDungHienTai(PDO $pdo): ?array
     }
     unset($nguoi['password_hash']); // Mảng người dùng đi khắp các trang; mã băm không cần ra khỏi hàm này.
     return $nguoi;
+}
+
+// Biểu thức SQL cho tên người đã làm một việc (người tạo chứng chỉ, người gia hạn), kèm "(đã xoá)" nếu tài khoản đã bị xoá
+// (QD-26). $bi là bí danh bảng users trong câu truy vấn, luôn viết cứng trong code.
+function tenNguoiSql(string $bi): string
+{
+    return "CONCAT($bi.full_name, IF($bi.deleted_at IS NULL, '', ' (đã xoá)'))";
 }
 
 function laAdmin(array $nguoi): bool

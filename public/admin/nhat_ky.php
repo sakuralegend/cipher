@@ -12,8 +12,9 @@ $ketQua = layNhatKy($pdo, $loc, $trang);
 $soTrang = max(1, (int) ceil($ketQua['tong'] / NHAT_KY_MOI_TRANG));
 
 $cacNguoi = ['khong_ro' => 'Không rõ (đăng nhập sai)'];
-foreach (danhSachNguoiDung($pdo) as $nd) {
-    $cacNguoi[$nd['id']] = $nd['full_name'] . ' (' . $nd['username'] . ')';
+// Kể cả tài khoản đã xoá: việc họ từng làm vẫn phải lọc được (QD-26).
+foreach (danhSachNguoiDung($pdo, true) as $nd) {
+    $cacNguoi[$nd['id']] = $nd['full_name'] . ' (' . $nd['username'] . ')' . ($nd['deleted_at'] !== null ? ', đã xoá' : '');
 }
 $cacHanhDong = array_map(fn(array $hd): string => $hd['nhan'], HANH_DONG);
 
@@ -86,7 +87,7 @@ require __DIR__ . '/../../views/tieu_de_trang.php';
                                         <span class="text-secondary">Không rõ</span>
                                     <?php else: ?>
                                         <?= e($dong['full_name']) ?>
-                                        <div class="small text-secondary ma-so"><?= e($dong['username']) ?></div>
+                                        <div class="small text-secondary"><span class="ma-so"><?= e($dong['username']) ?></span><?= $dong['nguoi_da_xoa'] ? ' · đã xoá' : '' ?></div>
                                     <?php endif; ?>
                                 </td>
                                 <td><span class="badge bg-<?= e($hd['mau']) ?>-lt"><?= e($hd['nhan']) ?></span></td>

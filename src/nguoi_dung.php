@@ -10,18 +10,22 @@ function danhSachVaiTro(PDO $pdo): array
     return $pdo->query('SELECT id, name FROM roles ORDER BY id')->fetchAll();
 }
 
-function danhSachNguoiDung(PDO $pdo): array
+// Mặc định chỉ tài khoản còn dùng (trang Người dùng). $kemDaXoa = true cho bộ lọc Nhật ký: việc người đã xoá từng làm
+// vẫn phải lọc được (QD-26).
+function danhSachNguoiDung(PDO $pdo, bool $kemDaXoa = false): array
 {
     // dang_tam_chan để giao diện phân biệt "bị Admin khoá" với "tạm chặn do sai mật khẩu".
-    return $pdo->query('SELECT u.id, u.username, u.full_name, u.role_id, u.is_locked, r.name AS role_name,
+    return $pdo->query('SELECT u.id, u.username, u.full_name, u.role_id, u.is_locked, u.deleted_at, r.name AS role_name,
                                COALESCE(u.locked_until > NOW(), 0) AS dang_tam_chan
-                        FROM users u JOIN roles r ON r.id = u.role_id
+                        FROM users u JOIN roles r ON r.id = u.role_id'
+                        . ($kemDaXoa ? '' : ' WHERE u.deleted_at IS NULL') . '
                         ORDER BY u.id')->fetchAll();
 }
 
+// Tài khoản đã xoá coi như không còn: không sửa, khoá, xoá lại được.
 function timNguoiDung(PDO $pdo, int $id): ?array
 {
-    $cau = $pdo->prepare('SELECT id, username, full_name, role_id, is_locked FROM users WHERE id = ?');
+    $cau = $pdo->prepare('SELECT id, username, full_name, role_id, is_locked FROM users WHERE id = ? AND deleted_at IS NULL');
     $cau->execute([$id]);
     return $cau->fetch() ?: null;
 }
@@ -162,6 +166,9 @@ function khoaNguoiDung(PDO $pdo, int $id, int $idNguoiThucHien): ?string
     if ($id === $idNguoiThucHien) {
         return 'Bạn không thể tự khoá tài khoản của mình.';
     }
+    if (timNguoiDung($pdo, $id) === null) {
+        return 'Người dùng không còn tồn tại.';
+    }
     $pdo->prepare('UPDATE users SET is_locked = 1 WHERE id = ?')->execute([$id]);
     ghiNhatKy($pdo, 'khoa', 'nguoi_dung', $id, tenDoiTuong($pdo, 'nguoi_dung', $id));
     return null;
@@ -170,18 +177,29 @@ function khoaNguoiDung(PDO $pdo, int $id, int $idNguoiThucHien): ?string
 function moKhoaNguoiDung(PDO $pdo, int $id): void
 {
     // Xoá luôn trạng thái tạm chặn, để người dùng vào được ngay sau khi Admin mở khoá.
-    $pdo->prepare('UPDATE users SET is_locked = 0, failed_logins = 0, locked_until = NULL WHERE id = ?')
+    $pdo->prepare('UPDATE users SET is_locked = 0, failed_logins = 0, locked_until = NULL WHERE id = ? AND deleted_at IS NULL')
         ->execute([$id]);
     ghiNhatKy($pdo, 'mo_khoa', 'nguoi_dung', $id, tenDoiTuong($pdo, 'nguoi_dung', $id));
 }
 
-// Ai đã có dòng nhật ký đứng tên (kể cả chỉ đăng nhập) thì khoá ngoại chặn xoá: dùng khoá tài khoản.
+// Xoá = đánh dấu deleted_at (QD-26, user chốt 12/11/2026): dòng còn lại để nhật ký, chứng chỉ, lịch sử gia hạn vẫn biết
+// ai đã làm; khoá ngoại từ ba bảng đó cũng không cho xoá hẳn. Trước đó người đã có lịch sử chỉ khoá được.
+// Mã băm mật khẩu thay bằng '!' (password_verify không bao giờ khớp): một câu truy vấn lỡ quên điều kiện deleted_at cũng
+// không mở được đường đăng nhập, và phiên đang mở bị đẩy ra vì dấu mật khẩu đổi (nguoiDungHienTai trong src/auth.php).
 function xoaNguoiDung(PDO $pdo, int $id, int $idNguoiThucHien): ?string
 {
     if ($id === $idNguoiThucHien) {
         return 'Bạn không thể tự xoá tài khoản của mình.';
     }
-    return xoaVaGhiNhatKy($pdo, 'nguoi_dung', $id, 'Người dùng này đã có lịch sử thao tác nên không xoá được, chỉ có thể khoá.');
+    $ten = tenDoiTuong($pdo, 'nguoi_dung', $id);
+    $cau = $pdo->prepare("UPDATE users SET deleted_at = NOW(), password_hash = '!', failed_logins = 0, locked_until = NULL
+                          WHERE id = ? AND deleted_at IS NULL");
+    $cau->execute([$id]);
+    if ($cau->rowCount() === 0) {
+        return 'Người dùng không còn tồn tại.';
+    }
+    ghiNhatKy($pdo, 'xoa', 'nguoi_dung', $id, $ten);
+    return null;
 }
 
 function suaHoTen(PDO $pdo, int $id, string $hoTen): array

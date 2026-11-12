@@ -1,5 +1,7 @@
 <?php
 // Danh sách người dùng, chỉ Admin. Nút khoá, mở khoá, xoá gửi tới nguoi_dung_thao_tac.php.
+// Xoá (QD-26): tài khoản không đăng nhập được nữa và biến khỏi danh sách; nhật ký, chứng chỉ, lịch sử gia hạn vẫn giữ tên
+// kèm "(đã xoá)"; tên đăng nhập dùng lại được cho tài khoản mới. Lỗi chính: tự xoá mình, xoá người không còn tồn tại.
 require __DIR__ . '/../../src/khoi_dong.php';
 require __DIR__ . '/../../src/nguoi_dung.php';
 
@@ -70,7 +72,7 @@ require __DIR__ . '/../../views/dau_trang.php';
                                                 <?php endif; ?>
                                             </form>
                                             <form method="post" action="<?= e(url('admin/nguoi_dung_thao_tac.php')) ?>"
-                                                  data-xac-nhan="Xoá người dùng <?= e($dong['username']) ?>?">
+                                                  data-xac-nhan="Xoá người dùng <?= e($dong['username']) ?>? Tài khoản sẽ không đăng nhập được nữa; nhật ký vẫn giữ việc người này đã làm.">
                                                 <input type="hidden" name="csrf" value="<?= e(maCsrf()) ?>">
                                                 <input type="hidden" name="id" value="<?= (int) $dong['id'] ?>">
                                                 <button class="btn btn-sm btn-outline-danger" name="hanh_dong" value="xoa">Xoá</button>

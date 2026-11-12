@@ -13,6 +13,8 @@
 #   thu        Chạy bộ test trên MariaDB của VPS bằng CSDL tạm, rồi xoá CSDL đó.
 #   caddy      Nối khối Caddy, kiểm tra cú pháp, nạp lại.
 #   cap_nhat   Lấy code mới từ GitHub. Không đụng CSDL.
+#   sua_bang   Đổi bảng users cho xoá người dùng (QD-26, 12/11/2026): sao lưu CSDL rồi thêm cột. Chạy TRƯỚC lần cap_nhat
+#              đầu tiên lấy code có QD-26, vì code đó đọc cột deleted_at. Chạy lại được: cột đã có thì bỏ qua.
 #   go         Gỡ khối Caddy và tắt PHP-FPM, MariaDB. Giữ nguyên dữ liệu.
 
 set -euo pipefail
@@ -265,6 +267,27 @@ cap_nhat() {
     la_cipher git -C "$THU_MUC" log --oneline -1
 }
 
+# Đưa bảng users trên VPS về đúng database/schema.sql (QD-26) mà không mất dữ liệu: không chạy lại schema.sql vì file đó
+# xoá sạch bảng (QD-14). Đã thử trên bản dựng từ schema cũ 12/11/2026: kết quả giống hệt SHOW CREATE TABLE của schema mới.
+# Thêm UNIQUE mới trước, bỏ UNIQUE cũ sau, để không lúc nào tên đăng nhập hết bị ràng buộc.
+sua_bang() {
+    if mariadb -N cipher -e "SHOW COLUMNS FROM users LIKE 'deleted_at'" | grep -q deleted_at; then
+        echo "Bảng users đã có deleted_at, không đổi gì."
+        return
+    fi
+    local sao_luu
+    sao_luu="/root/cipher-truoc-xoa-nguoi-dung-$(date +%Y%m%d-%H%M%S).sql"
+    mariadb-dump --routines --triggers cipher > "$sao_luu"
+    echo "Sao lưu: $sao_luu (khôi phục: mariadb cipher < $sao_luu)"
+    mariadb cipher <<'SQL'
+ALTER TABLE users ADD COLUMN deleted_at DATETIME NULL AFTER locked_until;
+ALTER TABLE users ADD COLUMN username_dang_dung VARCHAR(50) AS (IF(deleted_at IS NULL, username, NULL)) PERSISTENT AFTER deleted_at,
+    ADD CONSTRAINT uq_users_username_dang_dung UNIQUE (username_dang_dung);
+ALTER TABLE users DROP INDEX username;
+SQL
+    mariadb -N cipher -e 'SELECT id, username, username_dang_dung FROM users'
+}
+
 go() {
     # Xray đang ngụy trang bằng chính web này: gỡ khối Caddy là VPN không nhận được kết nối mới.
     if grep -q '127.0.0.1:8443' /usr/local/etc/xray/config.json; then
@@ -289,6 +312,7 @@ case "${1:-}" in
     thu) thu ;;
     caddy) caddy_noi ;;
     cap_nhat) cap_nhat ;;
+    sua_bang) sua_bang ;;
     go) go ;;
     *) chet "Bước không hợp lệ: ${1:-trống}. Xem danh sách ở đầu file." ;;
 esac

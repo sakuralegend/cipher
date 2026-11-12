@@ -511,21 +511,47 @@ function test_admin_khong_tu_khoa_tu_xoa_tu_doi_vai_tro(PDO $pdo): void
     kiem((int) timNguoiDung($pdo, 2)['is_locked'] === 1, 'Người bị khoá phải có is_locked = 1');
 }
 
-// Luật: Xoá người có lịch sử thì báo "chỉ có thể khoá"; người chưa có lịch sử thì xoá được.
-// Vì sao: Đề đòi chức năng xoá, nhưng xoá người đã thao tác sẽ mất dấu vết.
-// Đỏ nghĩa là: xoaNguoiDung() không còn nhận ra lỗi khoá ngoại, trang sẽ báo lỗi hệ thống.
-// Đừng: đếm lịch sử bằng truy vấn riêng, vì thêm bảng mới là quên cập nhật.
+// Luật: Xoá người dùng chỉ đánh dấu đã xoá: tài khoản không đăng nhập được, biến khỏi danh sách; nhật ký, lịch sử gia hạn vẫn giữ tên kèm "(đã xoá)".
+// Vì sao: User chốt 12/11/2026 (QD-26): "phải xoá được chứ", nhật ký vẫn lưu. Trước đó người đã có lịch sử chỉ khoá được, vì khoá ngoại từ nhật ký, chứng chỉ, gia hạn chặn xoá hẳn dòng.
+// Đỏ nghĩa là: xoaNguoiDung() xoá hẳn dòng (mất dấu vết), hoặc một chỗ đọc users quên điều kiện deleted_at nên người đã xoá vẫn vào được hay vẫn hiện.
+// Đừng: xoá hẳn dòng users hay đổi khoá ngoại sang ON DELETE SET NULL; nhật ký sẽ không còn biết ai đã làm.
 // Nhóm: Người dùng (Nb)
-function test_xoa_nguoi_co_lich_su_bao_chi_co_the_khoa(PDO $pdo): void
+function test_xoa_nguoi_dung_khong_vao_duoc_nua_nhat_ky_van_giu_ten(PDO $pdo): void
 {
-    $loi = xoaNguoiDung($pdo, 2, 1);
-    kiem($loi !== null && str_contains($loi, 'chỉ có thể khoá'), 'Phải báo chỉ có thể khoá');
-    kiem(timNguoiDung($pdo, 2) !== null, 'Người có lịch sử phải còn');
+    $phienCu = phienCua($pdo, 2);
+    ghiNhatKy($pdo, 'dang_nhap', 'nguoi_dung', 2, 'nhanvien', 2); // Dữ liệu mẫu chưa có dòng nhật ký nào do nhanvien làm.
+    $soNhatKy = fn(): int => (int) $pdo->query('SELECT COUNT(*) FROM audit_logs WHERE user_id = 2')->fetchColumn();
+    $nhatKyTruoc = $soNhatKy();
+    $idDangDung = fn(bool $kemDaXoa): array => array_map('intval', array_column(danhSachNguoiDung($pdo, $kemDaXoa), 'id'));
 
-    themNguoiDung($pdo, duLieuNguoiMoi());
-    $id = (int) $pdo->query("SELECT id FROM users WHERE username = 'nguoi.moi'")->fetchColumn();
-    kiem(xoaNguoiDung($pdo, $id, 1) === null, 'Người chưa có lịch sử phải xoá được');
-    kiem(timNguoiDung($pdo, $id) === null, 'Đã xoá thì không còn');
+    kiem(xoaNguoiDung($pdo, 2, 1) === null, 'Người đã có lịch sử phải xoá được');
+    kiem(isset(dangNhap($pdo, 'nhanvien', 'Cipher@2026')['loi']), 'Đã xoá thì không đăng nhập được');
+    $_SESSION = $phienCu;
+    kiem(nguoiDungHienTai($pdo) === null, 'Phiên đang mở của người bị xoá phải bị đẩy ra');
+    $_SESSION = [];
+    kiem(timNguoiDung($pdo, 2) === null && !in_array(2, $idDangDung(false), true), 'Phải biến khỏi danh sách người dùng');
+    kiem(in_array(2, $idDangDung(true), true), 'Bộ lọc nhật ký vẫn chọn được người đã xoá');
+
+    kiem($soNhatKy() === $nhatKyTruoc, 'Nhật ký của người bị xoá phải còn nguyên');
+    kiem(str_ends_with(lichSuGiaHan($pdo, 8)[0]['renewed_by_name'], '(đã xoá)'), 'Lịch sử gia hạn phải ghi rõ người đã xoá');
+    $dong = layNhatKy($pdo, docLocNhatKy(['nguoi' => '2']), 1)['dong'];
+    kiem($dong !== [] && (int) $dong[0]['nguoi_da_xoa'] === 1, 'Nhật ký phải đánh dấu người làm đã xoá');
+    kiem(xoaNguoiDung($pdo, 2, 1) !== null && khoaNguoiDung($pdo, 2, 1) !== null, 'Thao tác trên người đã xoá phải báo không còn tồn tại');
+}
+
+// Luật: Tên đăng nhập của tài khoản đã xoá dùng lại được; giữa các tài khoản còn dùng vẫn không được trùng (không phân biệt hoa thường).
+// Vì sao: User chọn 12/11/2026: tạo nhầm rồi tạo lại thì dùng lại được tên. Nhật ký vẫn phân biệt hai người theo mã, người cũ hiện "(đã xoá)".
+// Đỏ nghĩa là: UNIQUE trên username_dang_dung (schema.sql) bị đổi: hoặc tên cũ bị giữ mãi, hoặc hai tài khoản đang dùng trùng tên.
+// Đừng: đổi tên tài khoản cũ khi xoá (thêm hậu tố) để nhường tên; nhật ký và chứng chỉ sẽ hiện tên đã bị sửa.
+// Nhóm: Người dùng (Nb)
+function test_ten_cua_tai_khoan_da_xoa_dung_lai_duoc(PDO $pdo): void
+{
+    kiem(isset(themNguoiDung($pdo, duLieuNguoiMoi(['username' => 'NhanVien']))['username']), 'Tên đang dùng phải bị từ chối, không phân biệt hoa thường');
+    kiem(xoaNguoiDung($pdo, 2, 1) === null, 'Phải xoá được');
+    kiem(themNguoiDung($pdo, duLieuNguoiMoi(['username' => 'nhanvien'])) === [], 'Tên của tài khoản đã xoá phải dùng lại được');
+    $moi = dangNhap($pdo, 'nhanvien', 'MatKhau@123');
+    kiem(isset($moi['id']) && $moi['id'] !== 2, 'Đăng nhập bằng tên đó phải vào tài khoản mới');
+    kiem(isset(themNguoiDung($pdo, duLieuNguoiMoi(['username' => 'nhanvien']))['username']), 'Hai tài khoản đang dùng không được trùng tên');
 }
 
 // Luật: Mở khoá xoá luôn trạng thái tạm chặn, và người dùng vào được ngay.

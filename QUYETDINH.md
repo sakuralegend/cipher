@@ -17,6 +17,7 @@
 ## 🗂️ Sổ
 | QD | Chọn | Thay vì | Vì | Hết hạn khi (trạng thái đo được, không dùng ngày tuyệt đối) |
 |---|---|---|---|---|
+| QD-26 | Xoá người dùng = đánh dấu `deleted_at`; tên đăng nhập chỉ không trùng giữa tài khoản còn dùng; VPS đổi bảng bằng bước `sua_bang` | Xoá hẳn dòng, hoặc chặn xoá như cũ | User chốt 12/11/2026: phải xoá được, nhật ký vẫn giữ; khoá ngoại không cho xoá hẳn | Cần xoá hẳn dữ liệu cá nhân theo yêu cầu |
 | QD-25 | Chỉ tối; quản trị nền xám xanh `#222838` như app Better Stack, landing đen xanh | Quản trị sáng có nút đổi (QD-21) | User chốt 09/11/2026 sau khi so mẫu: dùng cả ngày nên cần dịu mắt | Đã nộp và muốn đổi giao diện |
 | QD-24 | Brand ngắn "Cipher Cert" (logo, menu khoá bằng test) | Giữ "Quản lý chứng chỉ số" | User chốt 08/11/2026: quản trị liền một sản phẩm với landing; tên đề tài đầy đủ ở landing, đăng nhập, báo cáo | Đổi tên miền sau khi nộp |
 | QD-23 | Chuyển động bằng CSS + JS thuần, chỉ ở landing và trang đăng nhập (chuyển cảnh qua `@view-transition` có sẵn) | Thư viện Motion, GSAP | Hiệu ứng không cần thư viện; giữ tinh thần không CDN của QD-13 và không thêm thứ phải nuôi | Đã nộp và muốn hiệu ứng phức tạp hơn |
