@@ -2745,6 +2745,24 @@ function test_chay_bat_va_readme_nap_du_file_sql_dung_thu_tu(PDO $pdo): void
     kiem($thieu === [], 'database/ có file không được nạp: ' . implode(', ', $thieu));
 }
 
+// Luật: CHAY.bat dừng và bảo giải nén khi không thấy database\ và public\ cạnh nó, và dừng khi một file SQL nạp hỏng.
+// Vì sao: Lỗi user gặp 13/11/2026: bấm CHAY.bat ngay trong file nén bằng WinRAR, WinRAR chỉ bung riêng file bat vào
+//         Temp\Rar$DIa..., cả 3 file SQL "cannot find the path" mà bat vẫn báo Xong, rồi web báo thiếu thư mục public.
+// Đỏ nghĩa là: Bỏ bước kiểm đủ file trước bước tìm XAMPP, hoặc lệnh nạp SQL quay về "if errorlevel 1" (mở file thất bại
+//         thì lệnh không chạy, errorlevel không đổi, nên lỗi bị nuốt).
+// Đừng: Tự tìm thư mục bài ở nơi khác; người chấm cần biết phải giải nén.
+// Nhóm: CSDL, ràng buộc, dữ liệu mẫu (Ng, Nj)
+function test_chay_bat_dung_khi_chay_trong_file_nen_hoac_nap_hong(PDO $pdo): void
+{
+    $bat = file_get_contents(__DIR__ . '/../CHAY.bat');
+    $timXampp = strpos($bat, '---------- 1. Tim XAMPP'); // Dòng tiêu đề bước 1, không phải dòng tóm tắt đầu file.
+    foreach (['database\schema.sql', 'public\index.php'] as $tep) {
+        $kiemTep = strpos($bat, 'if not exist "' . $tep . '" goto loi_chua_giai_nen');
+        kiem($kiemTep !== false && $kiemTep < $timXampp, "CHAY.bat phải kiểm $tep trước khi tìm XAMPP");
+    }
+    kiem(preg_match('/< "database\\\\%%F\.sql" \|\| goto loi_nap/', $bat) === 1, 'Lệnh nạp SQL phải dừng bằng "|| goto loi_nap"');
+}
+
 // KHÔNG phải test thường: chạy riêng bằng "php tests/chay.php --tai-lieu", lúc đồng bộ tài liệu nộp lần cuối.
 // User chốt 09/11/2026: README và docs/ chỉ tạo, đồng bộ một lần trước khi nộp; giữa chừng mỗi lần sửa chỉ cần chú
 // thích trong code và thân commit đủ rõ. Để chung bộ test thường thì nó đỏ suốt tới lúc đó, che mất lỗi thật.

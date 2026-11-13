@@ -14,7 +14,9 @@ Có hai cách chạy trên máy Windows đã cài [XAMPP](https://www.apachefrie
 
 ## Cách 1: bấm đúp `CHAY.bat` (nhanh nhất)
 
-1. Giải nén bài ra một thư mục bất kỳ (không cần chép vào `htdocs`).
+1. **Giải nén** file nén ra một thư mục bất kỳ: bấm chuột phải vào file nén → **Extract All** (Giải nén).
+   Không cần chép vào `htdocs`. Bấm `CHAY.bat` ngay bên trong file nén sẽ không chạy, vì chương trình nén
+   chỉ bung riêng file đó ra thư mục tạm.
 2. Bấm đúp **`CHAY.bat`**. Không cần mở XAMPP Control Panel trước.
 3. Trình duyệt tự mở trang giới thiệu. Bấm **Đăng nhập**, dùng tài khoản ở [mục Tài khoản](#tài-khoản).
 

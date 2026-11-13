@@ -19,6 +19,12 @@ echo   Cipher Cert - He thong quan ly chung chi so
 echo ============================================================
 echo.
 
+rem ---------- 0. Du file chua ----------
+rem Bam CHAY.bat ngay trong file nen thi chuong trinh nen chi bung rieng file nay ra thu muc tam, khong co
+rem database\ va public\ (do 13/11/2026: WinRAR bung vao Temp\Rar$DIa...). Dung ngay va bao giai nen truoc.
+if not exist "database\schema.sql" goto loi_chua_giai_nen
+if not exist "public\index.php" goto loi_chua_giai_nen
+
 rem ---------- 1. Tim XAMPP ----------
 set "XAMPP="
 for %%D in (C D E F) do if not defined XAMPP if exist "%%D:\xampp\php\php.exe" set "XAMPP=%%D:\xampp"
@@ -68,10 +74,10 @@ echo [3/4] Dang tao CSDL cipher_dev va nap du lieu mau...
 "%MYSQL%" -u root -e "CREATE DATABASE IF NOT EXISTS cipher_dev CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci"
 if errorlevel 1 goto loi_nap
 rem Thu tu bat buoc: schema tao bang (xoa bang cu), seed them tai khoan va 9 chung chi, seed_demo them 41 chung chi.
+rem Dung "|| goto" chu khong "if errorlevel": mo file that bai thi lenh khong chay, errorlevel khong doi, se bao Xong sai.
 for %%F in (schema seed seed_demo) do (
     echo       database\%%F.sql
-    "%MYSQL%" -u root --default-character-set=utf8mb4 cipher_dev < "database\%%F.sql"
-    if errorlevel 1 goto loi_nap
+    "%MYSQL%" -u root --default-character-set=utf8mb4 cipher_dev < "database\%%F.sql" || goto loi_nap
 )
 echo       Xong: 50 chung chi mau, 2 tai khoan.
 
@@ -117,6 +123,13 @@ goto cho_web
 start "" "http://localhost:%2/"
 exit /b 0
 
+:loi_chua_giai_nen
+echo LOI: Khong thay thu muc database va public canh file nay:
+echo      %~dp0
+echo Co le ban dang bam CHAY.bat ngay trong file nen .zip, nen chi rieng file nay duoc bung ra thu muc tam.
+echo Hay giai nen ca file .zip truoc: bam chuot phai vao file nen, chon Extract All hoac Giai nen,
+echo roi bam dup CHAY.bat trong thu muc vua giai nen.
+goto dung
 :loi_xampp
 echo.
 echo LOI: Khong thay PHP hoac MySQL trong "%XAMPP%".
