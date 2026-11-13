@@ -2,3 +2,20 @@
 *.sh text eol=lf
 scripts/hook-commit-msg text eol=lf
 *.bat text eol=crlf
+
+# Gói nộp cho giảng viên (git archive) chỉ gồm thứ để chạy: public, src, views, config, database, CHAY.bat,
+# README. Bộ test, tài liệu nội bộ, sổ làm việc, cấu hình VPS không vào gói (user chốt 13/11/2026); tài liệu
+# nộp là file báo cáo riêng. Lệnh đóng gói: git archive --format=zip --prefix=cipher/ -o <file>.zip HEAD
+/.claude export-ignore
+/CLAUDE.md export-ignore
+/QUYETDINH.md export-ignore
+/SONO.md export-ignore
+/VIECDANGLAM.md export-ignore
+/ban_do_test.py export-ignore
+/deploy export-ignore
+/docs export-ignore
+/scripts export-ignore
+/temp export-ignore
+/tests export-ignore
+/.gitattributes export-ignore
+/.gitignore export-ignore

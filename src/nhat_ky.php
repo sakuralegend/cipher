@@ -34,8 +34,8 @@ const LOAI_DOI_TUONG = [
 
 // $idNguoi: người làm; để null thì lấy người đang đăng nhập trong phiên (không có ai thì để trống,
 // ví dụ đăng nhập sai). Chi tiết lưu tên đối tượng lúc đó, vì đối tượng có thể bị đổi tên hay xoá sau này.
-// IP lấy từ máy chủ web (REMOTE_ADDR). Trên VPS khách đi qua Xray ở 443 rồi mới tới Caddy; từ 08/11/2026 Xray
-// gửi kèm IP gốc bằng PROXY protocol nên đây là IP thật của khách (dòng cũ hơn ghi 127.0.0.1). Không đọc header
+// IP lấy từ máy chủ web (REMOTE_ADDR). Trên VPS khách đi qua một cổng trung chuyển ở 443 rồi mới tới Caddy; từ
+// 08/11/2026 cổng đó gửi kèm IP gốc bằng PROXY protocol nên đây là IP thật của khách (dòng cũ hơn ghi 127.0.0.1). Không đọc header
 // X-Forwarded-For: khách tự gõ được header đó để giả IP.
 function ghiNhatKy(PDO $pdo, string $hanhDong, ?string $loai = null, ?int $idDoiTuong = null, ?string $chiTiet = null, ?int $idNguoi = null): void
 {
