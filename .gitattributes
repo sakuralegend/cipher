@@ -1,3 +1,4 @@
 * text=auto
 *.sh text eol=lf
 scripts/hook-commit-msg text eol=lf
+*.bat text eol=crlf

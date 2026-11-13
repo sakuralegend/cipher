@@ -2724,10 +2724,31 @@ function test_nhat_ky_hien_ip_o_moi_do_rong_man_hinh(PDO $pdo): void
     kiem(str_contains($trang, 'o-xuong-dong'), 'Ô mô tả dài phải được xuống dòng (o-xuong-dong)');
 }
 
+// Luật: CHAY.bat và hướng dẫn cài tay trong README nạp đúng mọi file SQL có thật, theo thứ tự schema → seed → seed_demo.
+// Vì sao: User 13/11/2026 chốt hai đường chạy cho người chấm: bấm CHAY.bat, hoặc làm tay theo README (bảng Bước 4).
+//         Sai thứ tự là hỏng: seed cần bảng của schema, seed_demo cần danh mục và tài khoản của seed.
+// Đỏ nghĩa là: Đổi tên, thêm, bớt file trong database/ mà quên sửa vòng for của CHAY.bat hoặc bảng Bước 4 của README,
+//         hoặc hai nơi ghi thứ tự khác nhau.
+// Đừng: Ghép ba file thành một trong repo: schema.sql còn dùng nạp CSDL test, seed_demo tách riêng vì test dựa vào đúng 9 chứng chỉ của seed.
+// Nhóm: CSDL, ràng buộc, dữ liệu mẫu (Ng, Nj)
+function test_chay_bat_va_readme_nap_du_file_sql_dung_thu_tu(PDO $pdo): void
+{
+    $goc = __DIR__ . '/..';
+    $coThat = array_map(fn(string $f): string => basename($f, '.sql'), glob("$goc/database/*.sql"));
+    kiem(preg_match('/for %%F in \(([^)]+)\) do/', file_get_contents("$goc/CHAY.bat"), $m) === 1, 'CHAY.bat phải nạp SQL bằng vòng "for %%F in (...)"');
+    $thuTuBat = preg_split('/\s+/', trim($m[1]));
+    preg_match_all('/^\| \d \| `database\\\\(\w+)\.sql` \|/m', file_get_contents("$goc/README.md"), $m);
+    $thuTuReadme = $m[1];
+    kiem($thuTuBat === ['schema', 'seed', 'seed_demo'], 'CHAY.bat nạp theo thứ tự ' . implode(', ', $thuTuBat) . ', phải là schema, seed, seed_demo');
+    kiem($thuTuReadme === $thuTuBat, 'README Bước 4 ghi ' . implode(', ', $thuTuReadme) . ', khác CHAY.bat');
+    $thieu = array_diff($coThat, $thuTuBat);
+    kiem($thieu === [], 'database/ có file không được nạp: ' . implode(', ', $thieu));
+}
+
 // KHÔNG phải test thường: chạy riêng bằng "php tests/chay.php --tai-lieu", lúc đồng bộ tài liệu nộp lần cuối.
 // User chốt 09/11/2026: README và docs/ chỉ tạo, đồng bộ một lần trước khi nộp; giữa chừng mỗi lần sửa chỉ cần chú
 // thích trong code và thân commit đủ rõ. Để chung bộ test thường thì nó đỏ suốt tới lúc đó, che mất lỗi thật.
-// Kiểm: số test ở README, KIEM_THU (XANH, "Cả N", Tổng, tiêu đề nhóm, bảng tổng hợp) bằng số test thật; bảng KIEM_THU
+// Kiểm: số test ở KIEM_THU (XANH, "Cả N", Tổng, tiêu đề nhóm, bảng tổng hợp) bằng số test thật; bảng KIEM_THU
 // có đúng một dòng cho mỗi test, câu trùng câu Luật; mọi `tênHàm()` được nhắc có thật; mọi link tới file trong repo
 // trỏ tới file có thật; tài liệu không có chữ VPN, Xray. Không kiểm được nghĩa câu chữ: phần đó rà theo git log.
 function kiemTaiLieuKhopCode(): void
@@ -2766,9 +2787,8 @@ function kiemTaiLieuKhopCode(): void
             $bao(false, 'Cần bật MySQL để so docs/ERD.md với CSDL');
         }
     }
-    foreach (['README.md' => '/`XANH: (\d+) test`/', 'docs/KIEM_THU.md' => '/`XANH: (\d+) test`/'] as $tep => $mau) {
-        $bao(preg_match($mau, $noiDung[$tep] ?? '', $so) === 1 && (int) $so[1] === $soTest, "$tep ghi XANH: " . ($so[1] ?? '?') . ", thật là $soTest");
-    }
+    // README không ghi số test: từ 13/11/2026 README viết cho người chấm (cách chạy), gói nộp không kèm bộ test.
+    $bao(preg_match('/`XANH: (\d+) test`/', $kt, $so) === 1 && (int) $so[1] === $soTest, 'docs/KIEM_THU.md ghi XANH: ' . ($so[1] ?? '?') . ", thật là $soTest");
     $bao(preg_match('/Cả (\d+) test đều \*\*đạt\*\*/', $kt, $so) === 1 && (int) $so[1] === $soTest, 'KIEM_THU ghi "Cả ' . ($so[1] ?? '?') . " test\", thật là $soTest");
     $bao(preg_match('/\| \*\*Tổng\*\* \| \*\*(\d+)\*\* \|/', $kt, $so) === 1 && (int) $so[1] === $soTest, 'Dòng Tổng của KIEM_THU ghi ' . ($so[1] ?? '?') . ", thật là $soTest");
 
