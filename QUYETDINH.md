@@ -17,6 +17,7 @@
 ## 🗂️ Sổ
 | QD | Chọn | Thay vì | Vì | Hết hạn khi (trạng thái đo được, không dùng ngày tuyệt đối) |
 |---|---|---|---|---|
+| QD-27 | Xếp theo độ an toàn: lấy hết dòng đã lọc, chấm hạng bằng `chamDiem()`, xếp rồi mới cắt trang (`sapTheoAnToan`) | Viết lại luật chấm hạng bằng SQL để xếp trong CSDL | User xin 14/11/2026; luật hạng chỉ được ở một nơi, vài trăm dòng xếp bằng PHP vẫn nhanh | Số chứng chỉ lên hàng nghìn và trang Danh sách chậm thấy rõ |
 | QD-26 | Xoá người dùng = đánh dấu `deleted_at`; tên đăng nhập chỉ không trùng giữa tài khoản còn dùng; VPS đã đổi bảng 13/11/2026 (bước `sua_bang`, gỡ 14/11, còn trong `git log`) | Xoá hẳn dòng, hoặc chặn xoá như cũ | User chốt 12/11/2026: phải xoá được, nhật ký vẫn giữ; khoá ngoại không cho xoá hẳn | Cần xoá hẳn dữ liệu cá nhân theo yêu cầu |
 | QD-25 | Chỉ tối; quản trị nền xám xanh `#222838` như app Better Stack, landing đen xanh | Quản trị sáng có nút đổi (QD-21) | User chốt 09/11/2026 sau khi so mẫu: dùng cả ngày nên cần dịu mắt | Đã nộp và muốn đổi giao diện |
 | QD-24 | Brand ngắn "Cipher Cert" (logo, menu khoá bằng test) | Giữ "Quản lý chứng chỉ số" | User chốt 08/11/2026: quản trị liền một sản phẩm với landing; tên đề tài đầy đủ ở landing, đăng nhập, báo cáo | Đổi tên miền sau khi nộp |
@@ -30,7 +31,6 @@
 | QD-14 | `schema.sql` DROP rồi tạo lại, không `CREATE DATABASE`/`USE` | File tự tạo CSDL | Nạp được vào cả `cipher_dev`, `cipher_test`; chạy lại trước khi nộp. Chạy nhầm trên VPS là mất dữ liệu | Có dữ liệu thật cần giữ trên VPS: khi đó phải đổi sang migrate |
 | QD-13 | Giao diện Tabler 1.7.3 (MIT), tải về repo, không CDN | AdminLTE 4, CoreUI | Hợp dark mode và phong cách user muốn; không CDN để demo không phụ thuộc mạng. Đổi lại CSS nặng gấp đôi AdminLTE | Đã nộp và muốn đổi giao diện |
 | QD-11 | Gia hạn sửa trên cùng dòng, lưu fingerprint + serial cũ ở `renewals` | Mỗi lần gia hạn một dòng chứng chỉ | Đơn giản, danh sách mỗi chứng chỉ một dòng | Cần tra cứu bản cũ như chứng chỉ độc lập |
-| QD-10 | Repo ở `D:\Desktop\cipher`, chạy bằng `php -S` | Đặt trong `htdocs` | User muốn để ở Desktop; không dựa `.htaccess` | Bài đã nộp; trước đó phải thử chạy trong `htdocs` |
 | QD-09 | MariaDB 10.11 trên VPS, 10.4 ở XAMPP | MySQL 8 | XAMPP thực chất là MariaDB nên ít lệch; báo cáo ghi rõ | Giảng viên yêu cầu đúng MySQL |
 | QD-07 | VPS chung: thêm khối Caddy nghe 8443, PHP + CSDL có trần RAM, user riêng; khách vào qua 443 của Xray (QD-08) | VPS riêng, Caddy giữ 443 | Không tốn thêm; RAM còn 1 084 MB (06/11/2026) | Chuyển sang VPS khác |
 | QD-05 | Bảo mật làm thật: prepared statements, phân quyền, chặn ~5 lần sai | Làm cho đủ điểm | Web thật trên internet, chung máy với VPN và bot | Web ngừng chạy trên internet |

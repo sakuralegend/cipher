@@ -2847,6 +2847,53 @@ function test_them_chung_chi_hai_tab_thu_cong_mo_truoc(PDO $pdo): void
         'Mở thẳng chung_chi_nhap.php phải chuyển về tab Nhập tự động');
 }
 
+// Luật: Sắp xếp "gần đây" theo thứ tự thêm: mới thêm trước (giam) hoặc thêm lâu nhất trước (tang); ô "Sắp xếp theo" gửi xep = "cột.chiều".
+// Vì sao: User 14/11/2026 xin bộ lọc có "Sắp xếp theo": gần đây, hạn hết, độ an toàn, mỗi cách hai chiều. Bảng chứng chỉ
+//         không có cột ngày tạo; id tăng theo lúc thêm.
+// Đỏ nghĩa là: gan_day không còn xếp theo id, chiều bị đảo, hoặc docSapXep không đọc được xep (bấm Tìm mất cách xếp).
+// Đừng: Thêm cột created_at chỉ để xếp: đổi schema sát ngày nộp, id đã đủ thứ tự.
+// Nhóm: Danh sách, tìm kiếm, lọc, sắp xếp (Nd)
+function test_sap_xep_gan_day_theo_thu_tu_them_hai_chieu(PDO $pdo): void
+{
+    kiem(docSapXep(['xep' => 'gan_day.giam']) === ['sap_xep' => 'gan_day', 'chieu' => 'giam'], 'docSapXep phải đọc xep = gan_day.giam');
+    kiem(docSapXep(['xep' => '', 'sap_xep' => 'ma']) === ['sap_xep' => '', 'chieu' => 'tang'], 'xep rỗng là mặc định, thắng sap_xep');
+    kiem(docSapXep(['xep' => 'xoa_bang.giam']) === ['sap_xep' => '', 'chieu' => 'tang'], 'xep lạ coi như chưa chọn');
+    $ids = array_map('intval', array_column(tatCaChungChi($pdo, docBoLoc([]), docSapXep(['xep' => 'gan_day.giam'])), 'id'));
+    $giam = $ids;
+    rsort($giam);
+    kiem($ids === $giam && count($ids) > 1, 'Mới thêm trước: id giảm dần');
+    $idsTang = array_map('intval', array_column(tatCaChungChi($pdo, docBoLoc([]), docSapXep(['xep' => 'gan_day.tang'])), 'id'));
+    kiem($idsTang === array_reverse($ids), 'Thêm lâu nhất trước: đúng ngược lại');
+}
+
+// Luật: Sắp theo độ an toàn chia trang không sót, không lặp, đúng thứ tự hạng (kém trước: F, C, B, A; hoặc ngược lại).
+// Vì sao: Hạng tính bằng PHP (chamDiem) nên phải chấm hết các dòng đã lọc rồi mới cắt trang (QD-27); cắt sai thì một
+//         chứng chỉ hiện ở hai trang hoặc không trang nào.
+// Đỏ nghĩa là: danhSachChungChi xếp hạng trong từng trang thay vì toàn bộ, lệch số dòng mỗi trang, hoặc chiều bị đảo.
+// Đừng: Viết lại luật chấm hạng bằng SQL để xếp trong CSDL: hai nơi giữ một luật, sửa một nơi là lệch.
+// Nhóm: Danh sách, tìm kiếm, lọc, sắp xếp (Nd)
+function test_sap_xep_an_toan_chia_trang_khong_sot_khong_lap(PDO $pdo): void
+{
+    chayFileSql($pdo, 'seed_demo.sql'); // 50 chứng chỉ: 3 trang, đủ các hạng.
+    $loc = docBoLoc([]);
+    $thuTu = ['F' => 0, 'C' => 1, 'B' => 2, 'A' => 3];
+    foreach (['tang' => 1, 'giam' => -1] as $chieu => $dau) {
+        $sapXep = docSapXep(['sap_xep' => 'an_toan', 'chieu' => $chieu]);
+        $ghep = [];
+        for ($trang = 1; $trang <= 3; $trang++) {
+            $mot = danhSachChungChi($pdo, $trang, $loc, $sapXep);
+            kiem(count($mot) === ($trang < 3 ? SO_DONG_MOT_TRANG : 10), "Trang $trang ($chieu) phải có đúng số dòng");
+            $ghep = [...$ghep, ...$mot];
+        }
+        $ids = array_column($ghep, 'id');
+        kiem(count(array_unique($ids)) === 50, "Chiều $chieu: 3 trang phải gồm đủ 50 chứng chỉ, không lặp");
+        $hang = array_map(fn(array $cc): int => $thuTu[chamDiem($cc)['hang']] * $dau, $ghep);
+        $sapDung = $hang;
+        sort($sapDung);
+        kiem($hang === $sapDung && count(array_unique($hang)) > 1, "Chiều $chieu: hạng phải theo đúng thứ tự trên cả 3 trang");
+    }
+}
+
 // KHÔNG phải test thường: chạy riêng bằng "php tests/chay.php --tai-lieu", lúc đồng bộ tài liệu nộp lần cuối.
 // User chốt 09/11/2026: README và docs/ chỉ tạo, đồng bộ một lần trước khi nộp; giữa chừng mỗi lần sửa chỉ cần chú
 // thích trong code và thân commit đủ rõ. Để chung bộ test thường thì nó đỏ suốt tới lúc đó, che mất lỗi thật.

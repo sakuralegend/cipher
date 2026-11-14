@@ -275,16 +275,47 @@ const COT_SAP_XEP = [
     'het_han' => 'c.valid_to',
     'con_lai' => 'c.valid_to',
     'trang_thai' => null, // Tính ở mucGapSql(), vì lấy từ thứ tự của TRANG_THAI.
+    'gan_day' => 'c.id', // Bảng không có cột ngày tạo; id tăng dần theo lúc thêm nên id lớn là mới thêm.
+    'an_toan' => null, // Hạng tính bằng PHP (chamDiem), xếp ở sapTheoAnToan() sau khi lấy dữ liệu (QD-27).
+];
+
+// Ô "Sắp xếp theo" trong bộ lọc của Danh sách (user chốt 14/11/2026): giá trị "cột.chiều", '' là mặc định (mức gấp).
+// Chiều tang của an_toan là kém an toàn trước (F, C, B, A).
+const CACH_SAP_XEP = [
+    '' => 'Mức gấp (mặc định)',
+    'gan_day.giam' => 'Mới thêm trước',
+    'gan_day.tang' => 'Thêm lâu nhất trước',
+    'het_han.tang' => 'Hết hạn gần nhất trước',
+    'het_han.giam' => 'Hết hạn xa nhất trước',
+    'an_toan.tang' => 'Kém an toàn trước',
+    'an_toan.giam' => 'An toàn nhất trước',
 ];
 
 // Giá trị sai bị coi như chưa chọn, giống docBoLoc(). Trả về ['sap_xep' => khoá hoặc '', 'chieu' => 'tang' | 'giam'].
+// Hai nguồn: tiêu đề cột gửi sap_xep và chieu; ô "Sắp xếp theo" gửi xep = "cột.chiều" (có xep thì xep thắng, xep rỗng
+// là mặc định), nên form lọc không cần gửi kèm sap_xep, chieu ẩn.
 function docSapXep(array $nguon): array
 {
+    if (array_key_exists('xep', $nguon)) {
+        $phan = is_string($nguon['xep']) ? explode('.', $nguon['xep'], 2) : [];
+        $nguon = ['sap_xep' => $phan[0] ?? '', 'chieu' => $phan[1] ?? ''];
+    }
     $cot = $nguon['sap_xep'] ?? '';
     if (!is_string($cot) || !array_key_exists($cot, COT_SAP_XEP)) {
         return ['sap_xep' => '', 'chieu' => 'tang'];
     }
     return ['sap_xep' => $cot, 'chieu' => ($nguon['chieu'] ?? '') === 'giam' ? 'giam' : 'tang'];
+}
+
+// Xếp theo hạng an toàn bằng PHP (QD-27): viết lại luật chấm hạng bằng SQL là trùng logic với chamDiem().
+// usort của PHP 8 giữ nguyên thứ tự các dòng cùng hạng, nên trong một hạng vẫn theo mức gấp như mặc định.
+function sapTheoAnToan(array $cacChungChi, string $chieu): array
+{
+    $thuTu = ['F' => 0, 'C' => 1, 'B' => 2, 'A' => 3];
+    $hang = array_map(fn(array $cc): int => $thuTu[chamDiem($cc)['hang']], $cacChungChi);
+    $viTri = array_keys($cacChungChi);
+    usort($viTri, fn(int $a, int $b): int => $chieu === 'giam' ? $hang[$b] <=> $hang[$a] : $hang[$a] <=> $hang[$b]);
+    return array_map(fn(int $i): array => $cacChungChi[$i], $viTri);
 }
 
 // Dãy trạng thái lấy từ khoá của TRANG_THAI viết trong code, không có dữ liệu người dùng.
@@ -299,8 +330,12 @@ function menhDeSapXep(array $sapXep): string
 {
     $cot = $sapXep['sap_xep'] ?? '';
     $chieu = ($sapXep['chieu'] ?? '') === 'giam' ? 'DESC' : 'ASC';
-    if ($cot === '') {
+    // an_toan: CSDL trả theo mặc định, sapTheoAnToan() xếp lại sau.
+    if ($cot === '' || $cot === 'an_toan') {
         return mucGapSql() . ', c.valid_to, c.id';
+    }
+    if ($cot === 'gan_day') {
+        return "c.id $chieu";
     }
     if ($cot === 'trang_thai') {
         return mucGapSql() . " $chieu, c.valid_to, c.id";
@@ -339,11 +374,16 @@ function tatCaChungChi(PDO $pdo, array $loc = [], array $sapXep = []): array
     [$where, $thamSo] = dieuKienLoc($loc);
     $cau = $pdo->prepare(COT_CHUNG_CHI . NGUON_CHUNG_CHI . " $where ORDER BY " . menhDeSapXep($sapXep));
     $cau->execute($thamSo);
-    return $cau->fetchAll();
+    $ds = $cau->fetchAll();
+    return ($sapXep['sap_xep'] ?? '') === 'an_toan' ? sapTheoAnToan($ds, $sapXep['chieu'] ?? 'tang') : $ds;
 }
 
 function danhSachChungChi(PDO $pdo, int $trang, array $loc = [], array $sapXep = []): array
 {
+    // Xếp theo hạng thì phải chấm hạng mọi dòng đã lọc trước, rồi mới cắt trang được (QD-27).
+    if (($sapXep['sap_xep'] ?? '') === 'an_toan') {
+        return array_slice(tatCaChungChi($pdo, $loc, $sapXep), (max($trang, 1) - 1) * SO_DONG_MOT_TRANG, SO_DONG_MOT_TRANG);
+    }
     [$where, $thamSo] = dieuKienLoc($loc);
     $cau = $pdo->prepare(COT_CHUNG_CHI . NGUON_CHUNG_CHI . " $where
                           ORDER BY " . menhDeSapXep($sapXep) . '

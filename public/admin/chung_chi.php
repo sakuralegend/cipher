@@ -57,8 +57,8 @@ require __DIR__ . '/../../views/tieu_de_trang.php';
                             <?= $tieuDeCot('het_han', 'Hết hạn') ?>
                             <?= $tieuDeCot('con_lai', 'Còn lại') ?>
                             <?= $tieuDeCot('trang_thai', 'Trạng thái') ?>
-                            <?php // Hạng an toàn tính bằng PHP (chamDiem) nên không xếp theo được. ?>
-                            <th>An toàn</th>
+                            <?php // Hạng tính bằng PHP (chamDiem); xếp được nhờ sapTheoAnToan() (QD-27). Lần bấm đầu: kém an toàn trước. ?>
+                            <?= $tieuDeCot('an_toan', 'An toàn') ?>
                             <th class="w-1"><span class="visually-hidden">Thao tác</span></th>
                         </tr>
                     </thead>

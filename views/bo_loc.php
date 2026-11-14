@@ -6,8 +6,16 @@ $coGiaTri = fn(string $giaTri): bool => $giaTri !== '';
 $locDangDung = array_filter($loc, $coGiaTri);
 $sapXepDangDung = $sapXep['sap_xep'] === '' ? [] : $sapXep;
 
-// Các ô nằm trong phần thu gọn. Đang lọc bằng ô nào trong đó thì mở sẵn, để không quên là đang lọc.
-$soLocTrongPhanGon = count(array_intersect_key($locDangDung, array_flip(['het_han_tu', 'het_han_den', 'ca_id', 'domain_id', 'server_id'])));
+// Ô "Sắp xếp theo" chỉ ở Danh sách (Thống kê không có danh sách để xếp). Giá trị "cột.chiều" như CACH_SAP_XEP; đang xếp
+// theo một cột không có trong danh sách chọn (bấm tiêu đề cột Mã, Tên...) thì thêm một lựa chọn cho cách đó, để bấm Tìm
+// không làm mất cách xếp đang dùng.
+$coChonSapXep = $trangLoc === 'admin/chung_chi.php';
+$xepDangChon = $sapXepDangDung === [] ? '' : $sapXep['sap_xep'] . '.' . $sapXep['chieu'];
+$cacCachXep = CACH_SAP_XEP + ($xepDangChon !== '' && !isset(CACH_SAP_XEP[$xepDangChon]) ? [$xepDangChon => 'Theo cột đang chọn'] : []);
+
+// Các ô nằm trong phần thu gọn. Đang lọc bằng ô nào trong đó (hoặc đang chọn cách xếp) thì mở sẵn, để không quên.
+$soLocTrongPhanGon = count(array_intersect_key($locDangDung, array_flip(['het_han_tu', 'het_han_den', 'ca_id', 'domain_id', 'server_id'])))
+    + ($coChonSapXep && $xepDangChon !== '' ? 1 : 0);
 ?>
 <div class="d-flex flex-wrap gap-2 mb-3 d-print-none">
     <a class="btn btn-sm <?= $loc['trang_thai'] === '' ? 'btn-primary' : '' ?>"
@@ -24,8 +32,8 @@ $soLocTrongPhanGon = count(array_intersect_key($locDangDung, array_flip(['het_ha
 </div>
 
 <form class="card mb-3 d-print-none" method="get" action="<?= e(url($trangLoc)) ?>">
-    <?php // Bấm Tìm vẫn giữ nút trạng thái và cách xếp đang chọn. ?>
-    <?php foreach (array_filter(['trang_thai' => $loc['trang_thai'], ...$sapXepDangDung], $coGiaTri) as $khoa => $giaTri): ?>
+    <?php // Bấm Tìm vẫn giữ nút trạng thái và cách xếp đang chọn (ở Danh sách, cách xếp đi qua ô "Sắp xếp theo"). ?>
+    <?php foreach (array_filter(['trang_thai' => $loc['trang_thai'], ...($coChonSapXep ? [] : $sapXepDangDung)], $coGiaTri) as $khoa => $giaTri): ?>
         <input type="hidden" name="<?= e($khoa) ?>" value="<?= e($giaTri) ?>">
     <?php endforeach; ?>
     <div class="card-body">
@@ -59,6 +67,17 @@ $soLocTrongPhanGon = count(array_intersect_key($locDangDung, array_flip(['het_ha
                 <div class="col-6 col-sm-4 col-lg">
                     <?= oChon('server_id', 'Máy chủ', $cacMayChu, $loc['server_id'], [], '', false) ?>
                 </div>
+                <?php if ($coChonSapXep): ?>
+                    <?php // Rộng hơn các ô khác ở màn lớn: nhãn dài nhất ("Hết hạn gần nhất trước") bị cắt khi chia đều sáu ô. ?>
+                    <div class="col-12 col-sm-4 col-lg-3">
+                        <label class="form-label" for="xep">Sắp xếp theo</label>
+                        <select class="form-select" id="xep" name="xep">
+                            <?php foreach ($cacCachXep as $giaTri => $nhan): ?>
+                                <option value="<?= e($giaTri) ?>"<?= $giaTri === $xepDangChon ? ' selected' : '' ?>><?= e($nhan) ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+                <?php endif; ?>
             </div>
         </div>
     </div>
