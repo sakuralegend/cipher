@@ -33,7 +33,8 @@ function dangNhap(PDO $pdo, string $ten, string $matKhau): array
 
     // Đang tạm chặn thì bỏ qua kết quả mật khẩu; nếu báo khác đi, kẻ dò vẫn thử tiếp được.
     if ($nguoi['dang_tam_chan']) {
-        ghiNhatKy($pdo, 'dang_nhap_sai', 'nguoi_dung', $id, $ten . ', đang bị tạm chặn');
+        // Mã riêng (mức Nguy hiểm): đã sai đủ 5 lần mà vẫn thử là dấu hiệu dò mật khẩu.
+        ghiNhatKy($pdo, 'dang_nhap_bi_chan', 'nguoi_dung', $id, $ten . ', đang bị tạm chặn');
         return ['loi' => LOI_DANG_NHAP];
     }
 

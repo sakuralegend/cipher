@@ -18,20 +18,18 @@ if (PHP_SAPI === 'cli-server') {
         } catch (Throwable) {
             $nguoi = $id === null ? 'khach' : "#$id"; // CSDL hỏng thì vẫn in được dòng này.
         }
-        // Gửi form bị từ chối: các trang gom lỗi vào $loi (mảng theo ô, hoặc một câu), đọc chứng chỉ hỏng vào $loiDoc,
-        // lỗi thao tác rồi chuyển trang thì nằm ở thông báo đỏ. Đăng nhập sai bỏ qua: ghiNhatKy() đã in dòng *.
+        // Gửi form bị từ chối: các trang gom lỗi vào $loi (mảng theo ô, hoặc một câu), lỗi thao tác rồi chuyển trang thì
+        // nằm ở thông báo đỏ. Bỏ qua đăng nhập sai và đọc chứng chỉ hỏng ($loiDoc): ghiNhatKy() đã in dòng có mức cho
+        // hai việc đó, in thêm là trùng.
         if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST' && basename($_SERVER['SCRIPT_NAME'] ?? '') !== 'login.php') {
             $loi = $GLOBALS['loi'] ?? null;
             $cacLoi = is_array($loi) ? $loi : (is_string($loi) && $loi !== '' ? [$loi] : []);
-            if (is_string($GLOBALS['loiDoc'] ?? null)) {
-                $cacLoi['doc'] = $GLOBALS['loiDoc'];
-            }
             if (($_SESSION['thong_bao']['loai'] ?? '') === 'danger') {
                 $cacLoi[] = $_SESSION['thong_bao']['noi_dung'];
             }
             if ($cacLoi !== []) {
                 $tung = array_map(fn($o, $cau) => is_int($o) ? $cau : "o $o: $cau", array_keys($cacLoi), $cacLoi);
-                inRaManHinh("! $nguoi: bi tu choi - " . implode(' | ', $tung));
+                inRaManHinh("[CANH BAO] $nguoi: bi tu choi - " . implode(' | ', $tung));
             }
         }
         $ms = (int) round((microtime(true) - $_SERVER['REQUEST_TIME_FLOAT']) * 1000);

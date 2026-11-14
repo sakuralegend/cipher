@@ -101,8 +101,8 @@ echo   Trinh duyet se tu mo. DONG CUA SO NAY LA TAT WEB.
 echo   MySQL van chay; tat bang XAMPP Control Panel hoac dong cua so MySQL thu nho.
 echo ============================================================
 echo   NHAT KY: moi trang mo la mot dong: gio, cach gui, dia chi, ma tra ve, thoi gian xu ly, nguoi.
-echo   Dong co dau * la thao tac: dang nhap, them, sua, xoa, gia han, doc chung chi...
-echo   Dong co dau ! la lan gui form bi tu choi, kem ly do.
+echo   Dong thao tac mo dau bang muc: [THONG TIN] viec binh thuong; [CANH BAO] dang nhap sai, thu hoi,
+echo   khoa, doc chung chi khong duoc, gui form bi tu choi; [NGUY HIEM] xoa, dau hieu do mat khau hay do mang noi bo.
 echo ============================================================
 rem Mo trinh duyet o mot tien trinh phu: no cho web nghe roi moi mo, con cua so nay giu web chay.
 start "" /b cmd /c ""%~f0" mo_trinh_duyet %CONG%"

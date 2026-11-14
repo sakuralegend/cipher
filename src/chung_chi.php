@@ -919,7 +919,8 @@ function docChungChiTuMayChu(string $nhap, int $congChon): array
     $cacIp = phanGiaiDiaChi($host);
     $loi = kiemTraDiaChiDoc($host, $cong, $cacIp);
     if ($loi !== null) {
-        return ['loi' => $loi];
+        // noi_bo: bị chặn vì có IP nội bộ, để nhật ký ghi mức Nguy hiểm (docChungChiChoForm).
+        return ['loi' => $loi, 'noi_bo' => array_filter($cacIp, 'laDiaChiNoiBo') !== []];
     }
 
     $ip = $cacIp[0];
@@ -1263,8 +1264,10 @@ function docChungChiChoForm(PDO $pdo, string $nhap, int $congChon): array
 {
     $ketQua = docChungChiTuMayChu($nhap, $congChon);
     if (isset($ketQua['loi'])) {
-        ghiNhatKy($pdo, 'doc_chung_chi', null, null, mb_substr(trim($nhap), 0, 200) . ': ' . $ketQua['loi']);
-        return $ketQua;
+        // Bị chặn vì trỏ vào mạng nội bộ là dấu hiệu dò mạng (mức Nguy hiểm); hỏng vì lý do khác là Cảnh báo.
+        ghiNhatKy($pdo, empty($ketQua['noi_bo']) ? 'doc_chung_chi_loi' : 'doc_chung_chi_chan', null, null,
+            mb_substr(trim($nhap), 0, 200) . ': ' . $ketQua['loi']);
+        return array_diff_key($ketQua, ['noi_bo' => true]);
     }
     $doc = giaTriTuChungChi($ketQua['chung_chi']);
     $nguon = nguonTuKetQuaDoc($ketQua, $doc);

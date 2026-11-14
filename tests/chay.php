@@ -1960,7 +1960,7 @@ function test_moi_thao_tac_deu_ghi_nhat_ky(PDO $pdo): void
     // Đọc chứng chỉ bị chặn vẫn phải ghi: địa chỉ nội bộ bị từ chối trước khi kết nối, nên test không cần mạng.
     $_SESSION['user_id'] = 1;
     kiem(isset(docChungChiChoForm($pdo, '127.0.0.1', 443)['loi']), 'Đọc 127.0.0.1 phải bị chặn');
-    $mong('Đọc chứng chỉ bị chặn', 'doc_chung_chi', null, null, 1);
+    $mong('Đọc chứng chỉ bị chặn', 'doc_chung_chi_chan', null, null, 1);
     unset($_SESSION['user_id']);
 }
 
@@ -2904,6 +2904,51 @@ function test_doc_chung_chi_cho_du_lau_cho_may_chu_o_xa(PDO $pdo): void
 {
     kiem(GIAY_CHO_DOC_CHUNG_CHI >= 10 && GIAY_CHO_DOC_CHUNG_CHI < 30, 'Thời gian chờ đọc chứng chỉ phải từ 10 đến dưới 30 giây, đang là ' . GIAY_CHO_DOC_CHUNG_CHI);
     kiem(str_contains(codeKhongChuThich(__DIR__ . '/../src/chung_chi.php'), 'GIAY_CHO_DOC_CHUNG_CHI,'), 'stream_socket_client phải dùng GIAY_CHO_DOC_CHUNG_CHI');
+}
+
+// Luật: Mỗi hành động trong nhật ký có đúng một trong ba mức Thông tin, Cảnh báo, Nguy hiểm; Nguy hiểm là xoá và hai dấu hiệu tấn công.
+// Vì sao: User 14/11/2026 chốt 3 mức như nhật ký người dùng thường chia; Nguy hiểm dành cho việc không hoàn tác được
+//         (xoá) và dấu hiệu tấn công (đăng nhập khi đang bị tạm chặn, đọc địa chỉ nội bộ); Cảnh báo cho thu hồi, khoá,
+//         đăng nhập sai, đọc chứng chỉ không được.
+// Đỏ nghĩa là: Thêm hành động mới mà quên khai mức, khai mức không có trong MUC_DO, hoặc xếp lại nhóm khác bảng đã chốt.
+// Đừng: Thêm mức Lỗi, Debug: lỗi chương trình nằm ở log của PHP, không phải nhật ký người dùng.
+// Nhóm: Nhật ký hoạt động (mở rộng 1) (Mở rộng 1)
+function test_nhat_ky_moi_hanh_dong_mot_trong_ba_muc(PDO $pdo): void
+{
+    kiem(array_keys(MUC_DO) === ['thong_tin', 'canh_bao', 'nguy_hiem'], 'Nhật ký có đúng ba mức');
+    foreach (HANH_DONG as $ma => $hd) {
+        kiem(isset(MUC_DO[$hd['muc'] ?? '']), "Hành động $ma chưa khai mức hợp lệ");
+    }
+    $nhom = fn(string $muc): array => array_values(array_diff(hanhDongTheoMuc($muc), []));
+    $sapXep = function (array $a): array { sort($a); return $a; };
+    kiem($sapXep($nhom('nguy_hiem')) === ['dang_nhap_bi_chan', 'doc_chung_chi_chan', 'xoa'], 'Nguy hiểm: xoá và hai dấu hiệu tấn công');
+    kiem($sapXep($nhom('canh_bao')) === ['dang_nhap_sai', 'doc_chung_chi_loi', 'khoa', 'thu_hoi'], 'Cảnh báo: đăng nhập sai, đọc không được, khoá, thu hồi');
+}
+
+// Luật: Đọc địa chỉ nội bộ ghi doc_chung_chi_chan, đọc tên miền không có ghi doc_chung_chi_loi, đăng nhập khi đang bị tạm chặn ghi dang_nhap_bi_chan; lọc theo mức ra đúng các dòng đó.
+// Vì sao: Ba trường hợp này trước 14/11/2026 dùng chung mã với việc bình thường (doc_chung_chi, dang_nhap_sai) nên không
+//         phân được mức; trang Nhật ký lọc theo mức bằng danh sách mã.
+// Đỏ nghĩa là: Một trong ba chỗ ghi quay về mã cũ, hoặc lọc mức Nguy hiểm, Cảnh báo sót hay thừa dòng.
+// Đừng: Đoán mức từ câu chi tiết (dễ vỡ khi đổi câu chữ); mức chỉ đọc từ mã hành động.
+// Nhóm: Nhật ký hoạt động (mở rộng 1) (Mở rộng 1)
+function test_nhat_ky_tach_ma_dau_hieu_tan_cong_va_loc_theo_muc(PDO $pdo): void
+{
+    $pdo->exec('TRUNCATE TABLE audit_logs'); // Chỉ đếm các dòng test này tạo ra.
+    $_SESSION['user_id'] = 1;
+    docChungChiChoForm($pdo, '127.0.0.1', 443); // Bị chặn trước khi kết nối: không cần mạng.
+    docChungChiChoForm($pdo, 'khongtontai.invalid', 443); // Tên miền .invalid không bao giờ có IP.
+    unset($_SESSION['user_id']);
+    for ($i = 0; $i < SO_LAN_SAI_TOI_DA; $i++) {
+        dangNhap($pdo, 'nhanvien', 'mat-khau-sai');
+    }
+    dangNhap($pdo, 'nhanvien', 'Cipher@2026'); // Đúng mật khẩu nhưng đang bị tạm chặn.
+    $cacMa = fn(string $muc): array => array_column(layNhatKy($pdo, docLocNhatKy(['muc' => $muc]), 1)['dong'], 'action');
+    $nguyHiem = $cacMa('nguy_hiem');
+    sort($nguyHiem);
+    kiem($nguyHiem === ['dang_nhap_bi_chan', 'doc_chung_chi_chan'], 'Lọc Nguy hiểm sai: ' . implode(', ', $nguyHiem));
+    kiem(array_count_values($cacMa('canh_bao')) === ['dang_nhap_sai' => SO_LAN_SAI_TOI_DA, 'doc_chung_chi_loi' => 1],
+        'Lọc Cảnh báo phải ra 5 lần đăng nhập sai và 1 lần đọc không được');
+    kiem(docLocNhatKy(['muc' => 'debug'])['muc'] === '', 'Mức lạ coi như chưa lọc');
 }
 
 // KHÔNG phải test thường: chạy riêng bằng "php tests/chay.php --tai-lieu", lúc đồng bộ tài liệu nộp lần cuối.

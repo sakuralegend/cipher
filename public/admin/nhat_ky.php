@@ -17,6 +17,7 @@ foreach (danhSachNguoiDung($pdo, true) as $nd) {
     $cacNguoi[$nd['id']] = $nd['full_name'] . ' (' . $nd['username'] . ')' . ($nd['deleted_at'] !== null ? ', đã xoá' : '');
 }
 $cacHanhDong = array_map(fn(array $hd): string => $hd['nhan'], HANH_DONG);
+$cacMuc = array_map(fn(array $m): string => $m['nhan'], MUC_DO);
 
 // Địa chỉ của một trang kết quả, giữ nguyên bộ lọc đang dùng.
 $diaChiTrang = fn(int $so): string => url('admin/nhat_ky.php?' . http_build_query(array_filter($loc, fn($v) => $v !== '') + ['trang' => $so]));
@@ -32,6 +33,8 @@ require __DIR__ . '/../../views/tieu_de_trang.php';
             <div class="card-body pb-0">
                 <div class="row">
                     <div class="col-sm-6 col-lg-3"><?= oChon('nguoi', 'Người làm', $cacNguoi, $loc['nguoi'], [], '', false) ?></div>
+                    <?php // Mức độ (MUC_DO, user chốt 14/11/2026): lọc nhanh các dòng Cảnh báo, Nguy hiểm. ?>
+                    <div class="col-sm-6 col-lg-2"><?= oChon('muc', 'Mức độ', $cacMuc, $loc['muc'], [], '', false) ?></div>
                     <div class="col-sm-6 col-lg-3"><?= oChon('hanh_dong', 'Hành động', $cacHanhDong, $loc['hanh_dong'], [], '', false) ?></div>
                     <div class="col-sm-6 col-lg-2">
                         <div class="mb-3">
@@ -45,7 +48,7 @@ require __DIR__ . '/../../views/tieu_de_trang.php';
                             <input class="form-control" type="date" id="den_ngay" name="den_ngay" value="<?= e($loc['den_ngay']) ?>">
                         </div>
                     </div>
-                    <div class="col-lg-2 d-flex align-items-end gap-2 mb-3">
+                    <div class="col-sm-6 col-lg-2 d-flex align-items-end gap-2 mb-3">
                         <button class="btn btn-primary flex-fill" type="submit">Lọc</button>
                         <a class="btn flex-fill" href="<?= e(url('admin/nhat_ky.php')) ?>">Bỏ lọc</a>
                     </div>
@@ -63,6 +66,7 @@ require __DIR__ . '/../../views/tieu_de_trang.php';
                 <table class="table table-vcenter card-table bang-keo-ngang">
                     <thead>
                         <tr>
+                            <th>Mức</th>
                             <th>Thời gian</th>
                             <th>Người làm</th>
                             <th>Hành động</th>
@@ -73,10 +77,12 @@ require __DIR__ . '/../../views/tieu_de_trang.php';
                     <tbody>
                         <?php foreach ($ketQua['dong'] as $dong): ?>
                             <?php
-                            $hd = HANH_DONG[$dong['action']] ?? ['nhan' => $dong['action'], 'mau' => 'secondary'];
+                            $hd = HANH_DONG[$dong['action']] ?? ['nhan' => $dong['action'], 'mau' => 'secondary', 'muc' => 'thong_tin'];
+                            $muc = MUC_DO[$hd['muc']];
                             $loai = LOAI_DOI_TUONG[$dong['object_type']] ?? null;
                             ?>
                             <tr>
+                                <td><span class="badge bg-<?= e($muc['mau']) ?>-lt"><?= e($muc['nhan']) ?></span></td>
                                 <?php // Ngày và giờ hai dòng, để bảng vừa màn hình điện thoại mà không bỏ cột nào. ?>
                                 <td class="text-nowrap">
                                     <?= e(date('d/m/Y', strtotime($dong['created_at']))) ?>

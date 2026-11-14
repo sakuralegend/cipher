@@ -180,7 +180,7 @@ HUONG_DAN = [
     "",
     "Ngày tự tính theo hôm nay (công thức =TODAY()+N): mở file ngày nào cũng ra đúng số ngày còn lại và đúng mốc cảnh báo.",
     "Ô ngày trên web dán được chữ ngày/tháng/năm: chép ô ngày trong file rồi dán thẳng vào ô ngày của form.",
-    "Chạy bằng CHAY.bat thì cửa sổ đen ghi từng thao tác (dòng có dấu *) và từng lần bị từ chối kèm lý do (dòng có dấu !).",
+    "Chạy bằng CHAY.bat thì cửa sổ đen ghi từng thao tác kèm mức [THONG TIN] / [CANH BAO] / [NGUY HIEM]; lần bị từ chối là [CANH BAO] kèm lý do.",
     "Muốn nhập lại từ đầu: bấm CHAY.bat và chọn C để nạp lại dữ liệu mẫu (xoá mọi thứ đã nhập).",
     "Trang 7 cần máy có internet. badssl.com là máy chủ thử nghiệm ở Mỹ, đôi khi chậm vài giây: nếu một dòng báo không trả lời thì đọc lại.",
 ]

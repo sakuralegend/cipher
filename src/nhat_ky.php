@@ -5,23 +5,44 @@
 
 const NHAT_KY_MOI_TRANG = 50;
 
-// Nhãn và màu nhãn (lớp bg-*-lt của Tabler) cho từng hành động lưu ở cột action.
-const HANH_DONG = [
-    'them' => ['nhan' => 'Thêm', 'mau' => 'green'],
-    'sua' => ['nhan' => 'Sửa', 'mau' => 'blue'],
-    'xoa' => ['nhan' => 'Xoá', 'mau' => 'red'],
-    'gia_han' => ['nhan' => 'Gia hạn', 'mau' => 'green'],
-    'thu_hoi' => ['nhan' => 'Thu hồi', 'mau' => 'orange'],
-    'khoa' => ['nhan' => 'Khoá', 'mau' => 'orange'],
-    'mo_khoa' => ['nhan' => 'Mở khoá', 'mau' => 'blue'],
-    'doi_mat_khau' => ['nhan' => 'Đổi mật khẩu', 'mau' => 'blue'],
-    'dang_nhap' => ['nhan' => 'Đăng nhập', 'mau' => 'secondary'],
-    'dang_xuat' => ['nhan' => 'Đăng xuất', 'mau' => 'secondary'],
-    'dang_nhap_sai' => ['nhan' => 'Đăng nhập sai', 'mau' => 'red'],
-    // Đọc chứng chỉ từ máy chủ ngoài (form Thêm chứng chỉ): chi tiết ghi địa chỉ đã đọc và kết quả,
-    // để biết ai đã cho máy chủ kết nối đi đâu.
-    'doc_chung_chi' => ['nhan' => 'Đọc chứng chỉ', 'mau' => 'blue'],
+// Ba mức của nhật ký (user chốt 14/11/2026), theo cách nhật ký người dùng xem thường chia (Windows Event Viewer;
+// OWASP khuyên đánh dấu riêng đăng nhập sai, thao tác rủi ro cao, dấu hiệu tấn công). Không có mức Lỗi hay Debug:
+// nhật ký này ghi việc người dùng làm, lỗi chương trình nằm ở log của PHP. Nhãn trên trang và chữ in ra cửa sổ CHAY.bat.
+const MUC_DO = [
+    'thong_tin' => ['nhan' => 'Thông tin', 'mau' => 'secondary', 'man_hinh' => 'THONG TIN'],
+    'canh_bao' => ['nhan' => 'Cảnh báo', 'mau' => 'yellow', 'man_hinh' => 'CANH BAO'],
+    'nguy_hiem' => ['nhan' => 'Nguy hiểm', 'mau' => 'red', 'man_hinh' => 'NGUY HIEM'],
 ];
+
+// Nhãn, màu nhãn (lớp bg-*-lt của Tabler) và mức cho từng hành động lưu ở cột action. Mức tính từ mã hành động chứ
+// không lưu cột riêng (không đổi CSDL); ba trường hợp cần mức khác nhau nên có mã riêng từ 14/11/2026.
+const HANH_DONG = [
+    'them' => ['nhan' => 'Thêm', 'mau' => 'green', 'muc' => 'thong_tin'],
+    'sua' => ['nhan' => 'Sửa', 'mau' => 'blue', 'muc' => 'thong_tin'],
+    'xoa' => ['nhan' => 'Xoá', 'mau' => 'red', 'muc' => 'nguy_hiem'], // Không hoàn tác được.
+    'gia_han' => ['nhan' => 'Gia hạn', 'mau' => 'green', 'muc' => 'thong_tin'],
+    'thu_hoi' => ['nhan' => 'Thu hồi', 'mau' => 'orange', 'muc' => 'canh_bao'],
+    'khoa' => ['nhan' => 'Khoá', 'mau' => 'orange', 'muc' => 'canh_bao'],
+    'mo_khoa' => ['nhan' => 'Mở khoá', 'mau' => 'blue', 'muc' => 'thong_tin'],
+    'doi_mat_khau' => ['nhan' => 'Đổi mật khẩu', 'mau' => 'blue', 'muc' => 'thong_tin'],
+    'dang_nhap' => ['nhan' => 'Đăng nhập', 'mau' => 'secondary', 'muc' => 'thong_tin'],
+    'dang_xuat' => ['nhan' => 'Đăng xuất', 'mau' => 'secondary', 'muc' => 'thong_tin'],
+    'dang_nhap_sai' => ['nhan' => 'Đăng nhập sai', 'mau' => 'red', 'muc' => 'canh_bao'],
+    // Tài khoản đang bị tạm chặn (sai đủ 5 lần) mà vẫn có người thử: dấu hiệu dò mật khẩu.
+    'dang_nhap_bi_chan' => ['nhan' => 'Đăng nhập khi đang bị chặn', 'mau' => 'red', 'muc' => 'nguy_hiem'],
+    // Đọc chứng chỉ từ máy chủ ngoài (form Thêm chứng chỉ): chi tiết ghi địa chỉ đã đọc và kết quả,
+    // để biết ai đã cho máy chủ kết nối đi đâu. Tách ba mã theo kết quả.
+    'doc_chung_chi' => ['nhan' => 'Đọc chứng chỉ', 'mau' => 'blue', 'muc' => 'thong_tin'],
+    'doc_chung_chi_loi' => ['nhan' => 'Đọc chứng chỉ không được', 'mau' => 'orange', 'muc' => 'canh_bao'],
+    // Địa chỉ trỏ vào mạng nội bộ bị chặn: dấu hiệu mượn web dò mạng nội bộ (SSRF).
+    'doc_chung_chi_chan' => ['nhan' => 'Đọc địa chỉ nội bộ bị chặn', 'mau' => 'red', 'muc' => 'nguy_hiem'],
+];
+
+// Các mã hành động thuộc một mức, để lọc trang Nhật ký bằng action IN (...).
+function hanhDongTheoMuc(string $muc): array
+{
+    return array_keys(array_filter(HANH_DONG, fn(array $h): bool => $h['muc'] === $muc));
+}
 
 // Loại đối tượng lưu ở cột object_type: bảng, cột dùng làm tên, trang xem hoặc sửa đối tượng.
 const LOAI_DOI_TUONG = [
@@ -52,14 +73,15 @@ function ghiNhatKy(PDO $pdo, string $hanhDong, ?string $loai = null, ?int $idDoi
     if (PHP_SAPI === 'cli-server') {
         // "admin: Đăng nhập - admin" chứ không "Đăng nhập người dùng": với đăng nhập, đăng xuất, loại đối tượng là thừa.
         $doiTuong = $loai === null || str_starts_with($hanhDong, 'dang_') ? '' : ' ' . mb_strtolower(LOAI_DOI_TUONG[$loai]['nhan']);
-        inRaManHinh('* ' . tenDangNhap($pdo, $idNguoi) . ': ' . (HANH_DONG[$hanhDong]['nhan'] ?? $hanhDong) . $doiTuong
+        $muc = MUC_DO[HANH_DONG[$hanhDong]['muc'] ?? 'thong_tin']['man_hinh'];
+        inRaManHinh("[$muc] " . tenDangNhap($pdo, $idNguoi) . ': ' . (HANH_DONG[$hanhDong]['nhan'] ?? $hanhDong) . $doiTuong
             . ($chiTiet === null ? '' : ' - ' . $chiTiet));
     }
 }
 
 // Nhật ký ra cửa sổ dòng lệnh (user 14/11/2026: cửa sổ CHAY.bat phải cho biết hệ thống đang làm gì, thay cho các dòng
-// Accepted/Closing vô nghĩa của PHP). Hai nguồn: ghiNhatKy() in mỗi thao tác (dòng có dấu *), khoi_dong.php in mỗi trang
-// mở và mỗi lần gửi form bị từ chối kèm lý do (dòng có dấu !). Chỉ in khi web chạy bằng máy chủ có sẵn của PHP (php -S, tức CHAY.bat); trên VPS (PHP-FPM) và trong bộ test (cli)
+// Accepted/Closing vô nghĩa của PHP). Hai nguồn: ghiNhatKy() in mỗi thao tác, mở đầu bằng mức ([THONG TIN], [CANH BAO],
+// [NGUY HIEM]); khoi_dong.php in mỗi trang mở, và mỗi lần gửi form bị từ chối thành dòng [CANH BAO] kèm lý do. Chỉ in khi web chạy bằng máy chủ có sẵn của PHP (php -S, tức CHAY.bat); trên VPS (PHP-FPM) và trong bộ test (cli)
 // không in gì. Chữ bỏ dấu vì cửa sổ lệnh Windows hay vỡ chữ có dấu, như lời nhắn trong CHAY.bat. Ghi hỏng (cửa sổ đã
 // đóng) thì bỏ qua: nhật ký màn hình không được làm hỏng thao tác. $sapi, $dich chỉ để test thay được.
 function inRaManHinh(string $noiDung, string $sapi = PHP_SAPI, string $dich = 'php://stderr'): void
@@ -139,12 +161,16 @@ function docLocNhatKy(array $nguon): array
         'hanh_dong' => $chuoi('hanh_dong'),
         'tu_ngay' => $chuoi('tu_ngay'),
         'den_ngay' => $chuoi('den_ngay'),
+        'muc' => $chuoi('muc'),
     ];
     if ($loc['nguoi'] !== 'khong_ro' && !ctype_digit($loc['nguoi'])) {
         $loc['nguoi'] = '';
     }
     if (!isset(HANH_DONG[$loc['hanh_dong']])) {
         $loc['hanh_dong'] = '';
+    }
+    if (!isset(MUC_DO[$loc['muc']])) {
+        $loc['muc'] = '';
     }
     foreach (['tu_ngay', 'den_ngay'] as $o) {
         $ngay = DateTime::createFromFormat('!Y-m-d', $loc[$o]);
@@ -170,6 +196,11 @@ function layNhatKy(PDO $pdo, array $loc, int $trang): array
     if ($loc['hanh_dong'] !== '') {
         $dieuKien[] = 'a.action = ?';
         $thamSo[] = $loc['hanh_dong'];
+    }
+    if (($loc['muc'] ?? '') !== '') {
+        $cacMa = hanhDongTheoMuc($loc['muc']);
+        $dieuKien[] = 'a.action IN (' . implode(',', array_fill(0, count($cacMa), '?')) . ')';
+        array_push($thamSo, ...$cacMa);
     }
     if ($loc['tu_ngay'] !== '') {
         $dieuKien[] = 'a.created_at >= ?';
