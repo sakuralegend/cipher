@@ -8,6 +8,38 @@ require_once __DIR__ . '/nhat_ky.php';
 
 batDauPhien();
 
+// Chạy bằng php -S (CHAY.bat): mỗi trang mở in một dòng ra cửa sổ (inRaManHinh ở nhat_ky.php): cách gửi, địa chỉ, mã trả về,
+// thời gian xử lý, người. In lúc trang chạy xong để có mã trả về thật (302 khi chuyển hướng, 403 khi không đủ quyền).
+if (PHP_SAPI === 'cli-server') {
+    register_shutdown_function(function (): void {
+        $id = isset($_SESSION['user_id']) ? (int) $_SESSION['user_id'] : null;
+        try {
+            $nguoi = tenDangNhap(ketNoiCsdl(), $id);
+        } catch (Throwable) {
+            $nguoi = $id === null ? 'khach' : "#$id"; // CSDL hỏng thì vẫn in được dòng này.
+        }
+        // Gửi form bị từ chối: các trang gom lỗi vào $loi (mảng theo ô, hoặc một câu), đọc chứng chỉ hỏng vào $loiDoc,
+        // lỗi thao tác rồi chuyển trang thì nằm ở thông báo đỏ. Đăng nhập sai bỏ qua: ghiNhatKy() đã in dòng *.
+        if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST' && basename($_SERVER['SCRIPT_NAME'] ?? '') !== 'login.php') {
+            $loi = $GLOBALS['loi'] ?? null;
+            $cacLoi = is_array($loi) ? $loi : (is_string($loi) && $loi !== '' ? [$loi] : []);
+            if (is_string($GLOBALS['loiDoc'] ?? null)) {
+                $cacLoi['doc'] = $GLOBALS['loiDoc'];
+            }
+            if (($_SESSION['thong_bao']['loai'] ?? '') === 'danger') {
+                $cacLoi[] = $_SESSION['thong_bao']['noi_dung'];
+            }
+            if ($cacLoi !== []) {
+                $tung = array_map(fn($o, $cau) => is_int($o) ? $cau : "o $o: $cau", array_keys($cacLoi), $cacLoi);
+                inRaManHinh("! $nguoi: bi tu choi - " . implode(' | ', $tung));
+            }
+        }
+        $ms = (int) round((microtime(true) - $_SERVER['REQUEST_TIME_FLOAT']) * 1000);
+        inRaManHinh(sprintf('%-4s %-42s %3d %5d ms  %s', $_SERVER['REQUEST_METHOD'] ?? '', $_SERVER['REQUEST_URI'] ?? '',
+            http_response_code(), $ms, $nguoi));
+    });
+}
+
 // Tên thương hiệu ngắn trên logo, menu và tab trình duyệt (QD-24). Tên đề tài đầy đủ vẫn ở landing, đăng nhập, báo cáo.
 const TEN_THUONG_HIEU = 'Cipher Cert';
 

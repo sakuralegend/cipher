@@ -100,9 +100,15 @@ echo.
 echo   Trinh duyet se tu mo. DONG CUA SO NAY LA TAT WEB.
 echo   MySQL van chay; tat bang XAMPP Control Panel hoac dong cua so MySQL thu nho.
 echo ============================================================
+echo   NHAT KY: moi trang mo la mot dong: gio, cach gui, dia chi, ma tra ve, thoi gian xu ly, nguoi.
+echo   Dong co dau * la thao tac: dang nhap, them, sua, xoa, gia han, doc chung chi...
+echo   Dong co dau ! la lan gui form bi tu choi, kem ly do.
+echo ============================================================
 rem Mo trinh duyet o mot tien trinh phu: no cho web nghe roi moi mo, con cua so nay giu web chay.
 start "" /b cmd /c ""%~f0" mo_trinh_duyet %CONG%"
-"%PHP%" -S localhost:%CONG% -t public
+rem -q: PHP thoi in dong Accepted/Closing va dong truy cap cua no (do 14/11/2026); web tu in nhat ky co nghia hon
+rem (inRaManHinh trong src\nhat_ky.php, chi chay khi web chay bang php -S nhu o day).
+"%PHP%" -q -S localhost:%CONG% -t public
 echo.
 echo Web da dung.
 pause

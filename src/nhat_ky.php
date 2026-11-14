@@ -49,6 +49,53 @@ function ghiNhatKy(PDO $pdo, string $hanhDong, ?string $loai = null, ?int $idDoi
             $chiTiet === null ? null : mb_substr($chiTiet, 0, 500),
             $_SERVER['REMOTE_ADDR'] ?? null,
         ]);
+    if (PHP_SAPI === 'cli-server') {
+        // "admin: Đăng nhập - admin" chứ không "Đăng nhập người dùng": với đăng nhập, đăng xuất, loại đối tượng là thừa.
+        $doiTuong = $loai === null || str_starts_with($hanhDong, 'dang_') ? '' : ' ' . mb_strtolower(LOAI_DOI_TUONG[$loai]['nhan']);
+        inRaManHinh('* ' . tenDangNhap($pdo, $idNguoi) . ': ' . (HANH_DONG[$hanhDong]['nhan'] ?? $hanhDong) . $doiTuong
+            . ($chiTiet === null ? '' : ' - ' . $chiTiet));
+    }
+}
+
+// Nhật ký ra cửa sổ dòng lệnh (user 14/11/2026: cửa sổ CHAY.bat phải cho biết hệ thống đang làm gì, thay cho các dòng
+// Accepted/Closing vô nghĩa của PHP). Hai nguồn: ghiNhatKy() in mỗi thao tác (dòng có dấu *), khoi_dong.php in mỗi trang
+// mở và mỗi lần gửi form bị từ chối kèm lý do (dòng có dấu !). Chỉ in khi web chạy bằng máy chủ có sẵn của PHP (php -S, tức CHAY.bat); trên VPS (PHP-FPM) và trong bộ test (cli)
+// không in gì. Chữ bỏ dấu vì cửa sổ lệnh Windows hay vỡ chữ có dấu, như lời nhắn trong CHAY.bat. Ghi hỏng (cửa sổ đã
+// đóng) thì bỏ qua: nhật ký màn hình không được làm hỏng thao tác. $sapi, $dich chỉ để test thay được.
+function inRaManHinh(string $noiDung, string $sapi = PHP_SAPI, string $dich = 'php://stderr'): void
+{
+    if ($sapi !== 'cli-server') {
+        return;
+    }
+    @file_put_contents($dich, date('H:i:s') . '  ' . boDau($noiDung) . PHP_EOL, FILE_APPEND);
+}
+
+function boDau(string $chu): string
+{
+    static $bang = null;
+    if ($bang === null) {
+        $bang = [];
+        $nhom = ['a' => 'àáạảãâầấậẩẫăằắặẳẵ', 'e' => 'èéẹẻẽêềếệểễ', 'i' => 'ìíịỉĩ', 'o' => 'òóọỏõôồốộổỗơờớợởỡ',
+            'u' => 'ùúụủũưừứựửữ', 'y' => 'ỳýỵỷỹ', 'd' => 'đ'];
+        foreach ($nhom as $khongDau => $coDau) {
+            foreach (mb_str_split($coDau) as $c) {
+                $bang[$c] = $khongDau;
+                $bang[mb_strtoupper($c)] = strtoupper($khongDau);
+            }
+        }
+    }
+    return strtr($chu, $bang);
+}
+
+// Tên đăng nhập để in ra màn hình; "khach" khi chưa đăng nhập (ví dụ đăng nhập sai).
+function tenDangNhap(PDO $pdo, ?int $id): string
+{
+    if ($id === null) {
+        return 'khach';
+    }
+    $cau = $pdo->prepare('SELECT username FROM users WHERE id = ?');
+    $cau->execute([$id]);
+    return (string) ($cau->fetchColumn() ?: "#$id");
 }
 
 // Tên hiện tại của đối tượng (mã chứng chỉ, tên máy chủ...), null nếu không còn.

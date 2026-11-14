@@ -2783,6 +2783,27 @@ function test_o_ngay_nhan_chu_dan_tu_excel(PDO $pdo): void
         'Mẫu ngày/tháng/năm của docNgayDan phải khớp chữ Excel chép ra: 24/11/2026 00:00');
 }
 
+// Luật: Nhật ký ra màn hình chỉ in khi web chạy bằng php -S (CHAY.bat), mỗi lần một dòng có giờ, chữ bỏ dấu; CHAY.bat chạy php -S với -q.
+// Vì sao: User 14/11/2026: cửa sổ CHAY.bat chỉ toàn dòng Accepted/Closing vô nghĩa, cần biết từng thao tác. Trên VPS
+//         (PHP-FPM) không có cửa sổ nào để in, và in vào bộ test thì làm rối kết quả test.
+// Đỏ nghĩa là: inRaManHinh in cả khi không phải cli-server, in chữ có dấu (cửa sổ lệnh Windows vỡ chữ), hoặc CHAY.bat
+//         bỏ -q làm các dòng Accepted/Closing quay lại.
+// Đừng: Lọc dòng của PHP bằng findstr: đo 14/11/2026 findstr dồn dữ liệu, nhật ký không hiện kịp.
+// Nhóm: Giao diện, triển khai (Giao diện)
+function test_nhat_ky_man_hinh_chi_in_khi_chay_bang_php_s(PDO $pdo): void
+{
+    $tep = tempnam(sys_get_temp_dir(), 'nk');
+    foreach (['cli', 'fpm-fcgi', 'apache2handler'] as $sapi) {
+        inRaManHinh('Thêm chứng chỉ', $sapi, $tep);
+    }
+    kiem(file_get_contents($tep) === '', 'Không phải php -S thì không được in gì');
+    inRaManHinh('* admin: Thêm chứng chỉ - Đường', 'cli-server', $tep);
+    $dong = file_get_contents($tep);
+    unlink($tep);
+    kiem(preg_match('/^\d{2}:\d{2}:\d{2}  \* admin: Them chung chi - Duong\R$/D', $dong) === 1, "Dòng in ra sai: $dong");
+    kiem(str_contains(file_get_contents(__DIR__ . '/../CHAY.bat'), '"%PHP%" -q -S localhost:'), 'CHAY.bat phải chạy php -S với -q');
+}
+
 // KHÔNG phải test thường: chạy riêng bằng "php tests/chay.php --tai-lieu", lúc đồng bộ tài liệu nộp lần cuối.
 // User chốt 09/11/2026: README và docs/ chỉ tạo, đồng bộ một lần trước khi nộp; giữa chừng mỗi lần sửa chỉ cần chú
 // thích trong code và thân commit đủ rõ. Để chung bộ test thường thì nó đỏ suốt tới lúc đó, che mất lỗi thật.
