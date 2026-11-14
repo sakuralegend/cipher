@@ -51,7 +51,7 @@ INSERT INTO certificate_authorities (name, country, is_trusted) VALUES
     ('CA thử nghiệm GOST', 'Việt Nam', 0);
 
 -- Bảng tạm để mỗi chứng chỉ gọn trên một dòng.
--- cap_cach: cấp cách đây bao nhiêu ngày, số âm là chưa tới ngày bắt đầu. con_ngay: còn bao nhiêu ngày, số âm là đã quá hạn.
+-- cap_cach: cấp cách đây bao nhiêu ngày, số âm là chưa tới ngày cấp. con_ngay: còn bao nhiêu ngày, số âm là đã quá hạn.
 -- Chứng chỉ của CA công khai có cap_cach + con_ngay <= 200: từ 15/03/2026 Baseline Requirements chỉ cho tối đa 200 ngày
 -- (THOI_HAN_TOI_DA trong src/chung_chi.php); Let's Encrypt, ZeroSSL cấp 90 ngày. Chỉ CA nội bộ, CA GOST thử nghiệm (không bị
 -- luật đó ràng buộc) mới dài hơn. Trước 12/11/2026 dữ liệu cấp 365–730 ngày nên 20/50 chứng chỉ ra hạng C.

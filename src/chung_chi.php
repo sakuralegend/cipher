@@ -76,13 +76,13 @@ function kiemTraChungChi(PDO $pdo, array $d): array
         $loi['domain_id'] = 'Hãy chọn tên miền.';
     }
     if ($d['valid_from'] === null) {
-        $loi['valid_from'] = 'Ngày bắt đầu không hợp lệ.';
+        $loi['valid_from'] = 'Ngày cấp không hợp lệ.';
     }
     if ($d['valid_to'] === null) {
         $loi['valid_to'] = 'Ngày hết hạn không hợp lệ.';
     } elseif ($d['valid_from'] !== null && $d['valid_to'] <= $d['valid_from']) {
         // So sánh chuỗi đúng thứ tự thời gian, vì cả hai đều ở dạng Y-m-d H:i:s.
-        $loi['valid_to'] = 'Ngày hết hạn phải sau ngày bắt đầu.';
+        $loi['valid_to'] = 'Ngày hết hạn phải sau ngày cấp.';
     }
     if (!array_key_exists($d['key_algorithm'], THUAT_TOAN_KHOA)) {
         $loi['key_algorithm'] = 'Hãy chọn thuật toán khoá.';
@@ -635,7 +635,7 @@ function nhanTrucThang(array $theoThang): array
 
 // ---------- Báo cáo ----------
 
-const COT_CSV = ['Mã quản lý', 'Tên chính', 'Tên phụ', 'Tổ chức cấp', 'Tên miền', 'Máy chủ', 'Ngày bắt đầu', 'Ngày hết hạn',
+const COT_CSV = ['Mã quản lý', 'Tên chính', 'Tên phụ', 'Tổ chức cấp', 'Tên miền', 'Máy chủ', 'Ngày cấp', 'Ngày hết hạn',
     'Còn lại', 'Trạng thái', 'Thuật toán khoá', 'Độ dài khoá', 'Thuật toán ký', 'Fingerprint SHA-256', 'Serial'];
 
 // Excel chạy ô bắt đầu bằng = + - @ như công thức, nên dữ liệu người dùng nhập có thể thành lệnh khi

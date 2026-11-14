@@ -834,7 +834,7 @@ function test_ma_quan_ly_va_fingerprint_trung_bao_loi_ro_rang(PDO $pdo): void
     kiem(luuChungChi($pdo, 1, $giuNguyen, 1) === [], 'Sửa chứng chỉ, giữ nguyên mã của chính nó thì không tính là trùng');
 }
 
-// Luật: Ngày hết hạn phải sau ngày bắt đầu; bằng nhau cũng bị từ chối.
+// Luật: Ngày hết hạn phải sau ngày cấp; bằng nhau cũng bị từ chối.
 // Vì sao: Đây là chức năng 4 của đề; nếu không kiểm tra, CSDL từ chối và người dùng thấy trang lỗi.
 // Đỏ nghĩa là: so sánh ngày trong kiemTraChungChi() đã đổi.
 // Đừng: so sánh chuỗi trước khi chuanHoaNgay() đưa về cùng một dạng.
@@ -842,7 +842,7 @@ function test_ma_quan_ly_va_fingerprint_trung_bao_loi_ro_rang(PDO $pdo): void
 function test_ngay_het_han_phai_sau_ngay_bat_dau(PDO $pdo): void
 {
     $truocDo = luuChungChi($pdo, null, chungChiHopLe(['valid_from' => '2027-01-02T00:00', 'valid_to' => '2027-01-01T00:00']), 1);
-    kiem(isset($truocDo['valid_to']), 'Hết hạn trước ngày bắt đầu phải báo lỗi');
+    kiem(isset($truocDo['valid_to']), 'Hết hạn trước ngày cấp phải báo lỗi');
     $bangNhau = luuChungChi($pdo, null, chungChiHopLe(['valid_from' => '2027-01-01T00:00', 'valid_to' => '2027-01-01T00:00:00']), 1);
     kiem(isset($bangNhau['valid_to']), 'Hai ngày bằng nhau phải báo lỗi, kể cả khi viết khác dạng');
 
@@ -1476,7 +1476,7 @@ function test_csv_ngay_dang_nam_thang_ngay_khong_nham_ngay_thang(PDO $pdo): void
 {
     $pdo->exec("UPDATE certificates SET valid_from = '2026-02-03 08:30:00', valid_to = '2027-09-11 23:59:59' WHERE cert_code = 'CERT-001'");
     $dong = dongCsv(timDongBaoCao($pdo, 'CERT-001'));
-    kiem($dong[6] === '2026-02-03', 'Sai ngày bắt đầu: ' . $dong[6]);
+    kiem($dong[6] === '2026-02-03', 'Sai ngày cấp: ' . $dong[6]);
     kiem($dong[7] === '2027-09-11', 'Sai ngày hết hạn: ' . $dong[7]);
 }
 

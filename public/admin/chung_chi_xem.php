@@ -54,7 +54,7 @@ require __DIR__ . '/../../views/tieu_de_trang.php';
                                 <div class="datagrid-content"><?= e($cc['ca_name']) ?></div>
                             </div>
                             <div class="datagrid-item">
-                                <div class="datagrid-title">Ngày bắt đầu</div>
+                                <div class="datagrid-title">Ngày cấp</div>
                                 <div class="datagrid-content"><?= e($ngayGio($cc['valid_from'])) ?></div>
                             </div>
                             <div class="datagrid-item">
