@@ -4,6 +4,9 @@
 // Kết quả đọc nằm trong phiên (khoá nhap_hang_loat) giữa hai bước: bước Lưu chỉ nhận SỐ THỨ TỰ dòng từ trình duyệt,
 // không nhận dữ liệu chứng chỉ, nên không ai gửi được chứng chỉ hay IP giả qua trang này.
 // Có JavaScript thì thanh tiến trình chạy theo số địa chỉ đã đọc (đọc từng địa chỉ một, xem khối "Hai cách đọc" bên dưới).
+// Từ 14/11/2026 ô nhập danh sách nằm ở tab "Nhập tự động" của chung_chi_form.php (dưới ô đọc một địa chỉ, user chốt);
+// trang này chỉ nhận form đó và hiện các bước tiếp theo (báo lỗi danh sách, xem trước, kết quả) dưới cùng tab. Mở thẳng
+// trang này (GET, ví dụ dấu trang cũ) thì chuyển về tab đó.
 require __DIR__ . '/../../src/khoi_dong.php';
 require __DIR__ . '/../../src/danh_muc.php';
 require __DIR__ . '/../../src/chung_chi.php';
@@ -37,6 +40,7 @@ $traJson = function (array $duLieu): never {
 // - Không có JavaScript: hanh_dong=doc đọc cả lượt trong một yêu cầu như trước.
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     unset($_SESSION['nhap_hang_loat'], $_SESSION['nhap_dang_doc']);
+    chuyenHuong('admin/chung_chi_form.php?che_do=tu_dong');
 } else {
     yeuCauCsrf();
     $hanhDong = chuoiPost('hanh_dong');
@@ -117,14 +121,14 @@ $idTheoMa = function (string $ma) use ($pdo): int {
 };
 
 $tieuDe = 'Thêm chứng chỉ';
-$trangHienTai = 'chung_chi_nhap';
+$trangHienTai = 'chung_chi_them'; // Menu không còn mục Nhập hàng loạt riêng: sáng mục Thêm chứng chỉ.
 require __DIR__ . '/../../views/dau_trang.php';
 require __DIR__ . '/../../views/tieu_de_trang.php';
 ?>
 <div class="page-body">
     <div class="container-xl">
         <div class="card">
-            <?= tabThemChungChi('hang_loat') ?>
+            <?= tabThemChungChi('tu_dong') ?>
 
             <?php if ($ketQuaLuu !== null): ?>
                 <div class="card-body">
@@ -149,44 +153,11 @@ require __DIR__ . '/../../views/tieu_de_trang.php';
                     <?php endif; ?>
                 </div>
                 <div class="card-footer text-end">
-                    <a class="btn" href="<?= e(url('admin/chung_chi_nhap.php')) ?>">Nhập tiếp</a>
+                    <a class="btn" href="<?= e(url('admin/chung_chi_form.php?che_do=tu_dong')) ?>">Nhập tiếp</a>
                     <a class="btn btn-primary" href="<?= e(url('admin/chung_chi.php')) ?>">Xem danh sách chứng chỉ</a>
                 </div>
             <?php else: ?>
-                <?php // data-nhap-tung-dia-chi: app.js đọc từng địa chỉ và chạy thanh .nhap-tien-do; lỗi giữa chừng thì gửi form như thường. ?>
-                <form class="card-body<?= $cacDong !== null ? ' border-bottom' : '' ?>" method="post"
-                      action="<?= e(url('admin/chung_chi_nhap.php')) ?>" data-dang-cho="Đang đọc…" data-nhap-tung-dia-chi>
-                    <input type="hidden" name="csrf" value="<?= e(maCsrf()) ?>">
-                    <label class="form-label" for="dia_chi">Danh sách địa chỉ</label>
-                    <textarea class="form-control ma-so<?= $loiNhap !== null ? ' is-invalid' : '' ?>" id="dia_chi" name="dia_chi"
-                              rows="<?= $cacDong !== null ? 3 : 8 ?>" required autocapitalize="off" spellcheck="false"
-                              placeholder="Mỗi dòng một địa chỉ, ví dụ:&#10;vnexpress.net&#10;smtp.gmail.com:465"><?= e($nhap) ?></textarea>
-                    <?php if ($loiNhap !== null): ?>
-                        <div class="invalid-feedback"><?= e($loiNhap) ?></div>
-                    <?php endif; ?>
-                    <div class="row g-2 mt-1 align-items-center">
-                        <div class="col col-md-auto">
-                            <select class="form-select" name="cong" aria-label="Cổng khi địa chỉ không ghi cổng">
-                                <?php foreach (CONG_DOC_CHUNG_CHI as $cong => $nhanCong): ?>
-                                    <option value="<?= $cong ?>"<?= $cong === $congChon ? ' selected' : '' ?>><?= e($nhanCong) ?></option>
-                                <?php endforeach; ?>
-                            </select>
-                        </div>
-                        <div class="col-auto">
-                            <button type="submit" class="btn btn-primary" name="hanh_dong" value="doc">Đọc tất cả</button>
-                        </div>
-                    </div>
-                    <small class="form-hint mt-2">Tối đa <?= SO_DIA_CHI_TOI_DA ?> địa chỉ mỗi lượt, cách nhau bằng xuống dòng,
-                        dấu cách hoặc dấu phẩy. Cổng chọn ở trên dùng cho địa chỉ không ghi cổng. Mỗi địa chỉ chờ tối đa
-                        <?= GIAY_CHO_DOC_CHUNG_CHI ?> giây; <?= SO_DIA_CHI_TOI_DA ?> địa chỉ thường mất dưới một phút. Đọc xong
-                        chưa lưu gì: xem lại rồi mới bấm Lưu.</small>
-                    <div class="nhap-tien-do mt-3" hidden>
-                        <div class="progress progress-sm">
-                            <div class="progress-bar" role="progressbar" aria-label="Tiến độ đọc" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"></div>
-                        </div>
-                        <div class="small text-secondary mt-1" aria-live="polite"></div>
-                    </div>
-                </form>
+                <?= formNhapHangLoat($nhap, $congChon, $loiNhap, $cacDong !== null) ?>
 
                 <?php if ($cacDong !== null): ?>
                     <?php $soDuoc = count(array_filter($cacDong, $luuDuoc)); ?>
@@ -245,7 +216,7 @@ require __DIR__ . '/../../views/tieu_de_trang.php';
                             </ul>
                         </div>
                         <div class="card-footer text-end">
-                            <a class="btn" href="<?= e(url('admin/chung_chi_nhap.php')) ?>">Huỷ</a>
+                            <a class="btn" href="<?= e(url('admin/chung_chi_form.php?che_do=tu_dong')) ?>">Huỷ</a>
                             <button type="submit" class="btn btn-primary" name="hanh_dong" value="luu"<?= $soDuoc === 0 ? ' disabled' : '' ?>>Lưu các dòng đã chọn</button>
                         </div>
                     </form>

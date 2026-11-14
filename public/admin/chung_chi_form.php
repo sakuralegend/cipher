@@ -1,10 +1,13 @@
 <?php
 // Form thêm (không có ?id=) và sửa (có ?id=) chứng chỉ.
 // Form sửa dùng để sửa thông tin nhập sai, không ghi lịch sử; chứng chỉ được cấp lại thì dùng Gia hạn.
-// Form thêm có 3 tab: "Đọc từ máy chủ" (mở trước) kết nối tới máy chủ, lấy chứng chỉ đang chạy rồi điền sẵn các ô,
-// bấm Thêm thì tạo luôn tên miền, máy chủ, tổ chức cấp còn thiếu (user chốt 09/11/2026); "Nhập hàng loạt" là trang
-// chung_chi_nhap.php; "Nhập thủ công" là form trống. Mọi nút đều gửi về chính trang này: hanh_dong=doc là đọc,
-// cap_nhat_ip là sửa IP máy chủ, còn lại là lưu. Không cần JavaScript, nên form vẫn dùng được khi trình duyệt tắt nó.
+// Form thêm có 2 tab (user chốt 14/11/2026, thay 3 tab của 09/11/2026):
+// - "Nhập thủ công" (mở trước khi bấm Thêm chứng chỉ): form trống.
+// - "Nhập tự động" (?che_do=tu_dong): trên là đọc một địa chỉ: kết nối tới máy chủ, lấy chứng chỉ đang chạy rồi điền sẵn
+//   các ô, bấm Thêm thì tạo luôn tên miền, máy chủ, tổ chức cấp còn thiếu (user chốt 09/11/2026); dưới là nhập hàng loạt
+//   (formNhapHangLoat(), gửi sang chung_chi_nhap.php).
+// Mọi nút của form một địa chỉ đều gửi về chính trang này: hanh_dong=doc là đọc, cap_nhat_ip là sửa IP máy chủ, còn lại
+// là lưu. Không cần JavaScript, nên form vẫn dùng được khi trình duyệt tắt nó.
 require __DIR__ . '/../../src/khoi_dong.php';
 require __DIR__ . '/../../src/danh_muc.php';
 require __DIR__ . '/../../src/chung_chi.php';
@@ -40,9 +43,9 @@ if ($id !== null) {
     }
 }
 
-// Tab đang mở. Form sửa chỉ có nhập thủ công.
-$cheDo = $_POST['che_do'] ?? $_GET['che_do'] ?? 'tu_dong';
-$cheDo = $id === null && $cheDo !== 'thu_cong' ? 'tu_dong' : 'thu_cong';
+// Tab đang mở: mặc định nhập thủ công. Form sửa chỉ có nhập thủ công.
+$cheDo = $_POST['che_do'] ?? $_GET['che_do'] ?? 'thu_cong';
+$cheDo = $id === null && $cheDo === 'tu_dong' ? 'tu_dong' : 'thu_cong';
 
 // Trạng thái của tab đọc: địa chỉ đã gõ, lỗi khi đọc, và tóm tắt chứng chỉ vừa đọc được.
 $diaChiDoc = '';
@@ -230,7 +233,8 @@ require __DIR__ . '/../../views/tieu_de_trang.php';
                 <form class="card-body border-bottom" method="post" action="<?= e(url($hanhDong)) ?>">
                     <input type="hidden" name="csrf" value="<?= e(maCsrf()) ?>">
                     <input type="hidden" name="che_do" value="tu_dong">
-                    <label class="form-label" for="dia_chi">Địa chỉ máy chủ</label>
+                    <h2 class="card-title mb-1">Đọc một địa chỉ</h2>
+                    <label class="form-label text-secondary fw-normal" for="dia_chi">Địa chỉ máy chủ</label>
                     <div class="row g-2">
                         <div class="col-12 col-md">
                             <input class="form-control<?= $loiDoc !== null ? ' is-invalid' : '' ?>" id="dia_chi" name="dia_chi"
@@ -353,6 +357,11 @@ require __DIR__ . '/../../views/tieu_de_trang.php';
                         <button type="submit" class="btn btn-primary"><?= $id === null ? 'Thêm chứng chỉ' : 'Lưu thay đổi' ?></button>
                     </div>
                 </form>
+            <?php endif; ?>
+
+            <?php if ($cheDo === 'tu_dong'): ?>
+                <?php // Form đọc đã có viền dưới; chỉ cần viền trên khi form lưu (có chân thẻ) đứng giữa. ?>
+                <div<?= $hienFormLuu ? ' class="border-top"' : '' ?>><?= formNhapHangLoat('', 443, null, false) ?></div>
             <?php endif; ?>
         </div>
     </div>

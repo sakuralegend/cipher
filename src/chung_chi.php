@@ -1281,22 +1281,52 @@ function danhDauTrungTrongLuot(array $cacDong): array
     return $cacDong;
 }
 
+// Hai tab của trang Thêm chứng chỉ (user chốt 14/11/2026, thay ba tab của 09/11/2026): "Nhập thủ công" mở trước khi bấm
+// Thêm; "Nhập tự động" gộp đọc một địa chỉ (trên) và nhập hàng loạt (dưới). Phần xem trước, kết quả của nhập hàng loạt ở
+// chung_chi_nhap.php cũng nằm dưới tab "Nhập tự động".
 function tabThemChungChi(string $dangMo): string
 {
     $cacTab = [
-        'tu_dong' => ['admin/chung_chi_form.php?che_do=tu_dong', 'Đọc từ máy chủ', 'Máy chủ'],
-        'hang_loat' => ['admin/chung_chi_nhap.php', 'Nhập hàng loạt', 'Hàng loạt'],
-        'thu_cong' => ['admin/chung_chi_form.php?che_do=thu_cong', 'Nhập thủ công', 'Thủ công'],
+        'thu_cong' => ['admin/chung_chi_form.php', 'Nhập thủ công'],
+        'tu_dong' => ['admin/chung_chi_form.php?che_do=tu_dong', 'Nhập tự động'],
     ];
-    // Màn hẹp hơn 576px dùng nhãn ngắn: ba nhãn đầy đủ rớt xuống hai dòng ở khổ iPhone 390px (chụp 09/11/2026).
     $html = '<div class="card-header"><ul class="nav nav-tabs card-header-tabs">';
-    foreach ($cacTab as $ma => [$duongDan, $nhan, $nhanNgan]) {
+    foreach ($cacTab as $ma => [$duongDan, $nhan]) {
         $mo = $ma === $dangMo;
         $html .= '<li class="nav-item"><a class="nav-link' . ($mo ? ' active' : '') . '" href="' . e(url($duongDan)) . '"'
-            . ($mo ? ' aria-current="page"' : '') . '><span class="d-none d-sm-inline">' . e($nhan) . '</span>'
-            . '<span class="d-sm-none">' . e($nhanNgan) . '</span></a></li>';
+            . ($mo ? ' aria-current="page"' : '') . '>' . e($nhan) . '</a></li>';
     }
     return $html . '</ul></div>';
+}
+
+// Khung nhập hàng loạt (tối đa SO_DIA_CHI_TOI_DA địa chỉ), dùng ở tab Nhập tự động của chung_chi_form.php và ở các bước
+// của chung_chi_nhap.php. Luôn gửi về chung_chi_nhap.php. $gon: đang có bảng xem trước bên dưới thì thu ô nhập lại.
+// Ô danh sách có id riêng (ds_dia_chi) vì cùng trang còn ô đọc một địa chỉ (id dia_chi).
+// data-nhap-tung-dia-chi: app.js đọc từng địa chỉ và chạy thanh .nhap-tien-do; lỗi giữa chừng thì gửi form như thường.
+function formNhapHangLoat(string $nhap, int $congChon, ?string $loiNhap, bool $gon): string
+{
+    $html = '<form class="card-body' . ($gon ? ' border-bottom' : '') . '" method="post" action="' . e(url('admin/chung_chi_nhap.php'))
+        . '" data-dang-cho="Đang đọc…" data-nhap-tung-dia-chi>'
+        . '<input type="hidden" name="csrf" value="' . e(maCsrf()) . '">'
+        . '<h2 class="card-title mb-1">Nhập hàng loạt</h2>'
+        . '<label class="form-label text-secondary fw-normal" for="ds_dia_chi">Dán nhiều địa chỉ, hệ thống đọc lần lượt rồi cho xem lại trước khi lưu.</label>'
+        . '<textarea class="form-control ma-so' . ($loiNhap !== null ? ' is-invalid' : '') . '" id="ds_dia_chi" name="dia_chi" rows="'
+        . ($gon ? 3 : 6) . '" required autocapitalize="off" spellcheck="false"'
+        . ' placeholder="Mỗi dòng một địa chỉ, ví dụ:&#10;vnexpress.net&#10;smtp.gmail.com:465">' . e($nhap) . '</textarea>'
+        . ($loiNhap !== null ? '<div class="invalid-feedback">' . e($loiNhap) . '</div>' : '')
+        . '<div class="row g-2 mt-1 align-items-center"><div class="col col-md-auto">'
+        . '<select class="form-select" name="cong" aria-label="Cổng khi địa chỉ không ghi cổng">';
+    foreach (CONG_DOC_CHUNG_CHI as $cong => $nhanCong) {
+        $html .= '<option value="' . $cong . '"' . ($cong === $congChon ? ' selected' : '') . '>' . e($nhanCong) . '</option>';
+    }
+    return $html . '</select></div>'
+        . '<div class="col-auto"><button type="submit" class="btn btn-primary" name="hanh_dong" value="doc">Đọc tất cả</button></div></div>'
+        . '<small class="form-hint mt-2">Tối đa ' . SO_DIA_CHI_TOI_DA . ' địa chỉ mỗi lượt, cách nhau bằng xuống dòng, dấu cách hoặc'
+        . ' dấu phẩy. Cổng chọn ở trên dùng cho địa chỉ không ghi cổng. Mỗi địa chỉ chờ tối đa ' . GIAY_CHO_DOC_CHUNG_CHI . ' giây; '
+        . SO_DIA_CHI_TOI_DA . ' địa chỉ thường mất dưới một phút. Đọc xong chưa lưu gì: xem lại rồi mới bấm Lưu.</small>'
+        . '<div class="nhap-tien-do mt-3" hidden><div class="progress progress-sm">'
+        . '<div class="progress-bar" role="progressbar" aria-label="Tiến độ đọc" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"></div>'
+        . '</div><div class="small text-secondary mt-1" aria-live="polite"></div></div></form>';
 }
 
 // Chứng chỉ đã lưu có fingerprint này (id, mã quản lý), null nếu chưa có: báo trước khi người dùng bấm Lưu.

@@ -31,7 +31,6 @@ const BIEU_TUONG_MENU = [
     'khu_chung_chi' => '<circle cx="15" cy="15" r="3"/><path d="M13 17.5V22l2-1.5 2 1.5v-4.5"/><path d="M10 19H5a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v10a2 2 0 0 1-1 1.73"/><path d="M6 9h12M6 12h3M6 15h2"/>',
     'chung_chi' => '<path d="M9 6h11M9 12h11M9 18h11M5 6v.01M5 12v.01M5 18v.01"/>',
     'chung_chi_them' => '<path d="M12 5v14M5 12h14"/>',
-    'chung_chi_nhap' => '<path d="M4 17v2a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-2"/><path d="M7 11l5 5 5-5M12 4v12"/>',
     'thong_ke' => '<rect x="3" y="12" width="6" height="8" rx="1"/><rect x="9" y="8" width="6" height="12" rx="1"/><rect x="15" y="4" width="6" height="16" rx="1"/><path d="M4 20h14"/>',
     'ha_tang' => '<rect x="3" y="4" width="18" height="7" rx="2"/><rect x="3" y="13" width="18" height="7" rx="2"/><path d="M7 8v.01M7 17v.01"/>',
     'may_chu' => '<rect x="3" y="4" width="18" height="7" rx="2"/><rect x="3" y="13" width="18" height="7" rx="2"/><path d="M7 8v.01M7 17v.01"/>',
@@ -60,7 +59,8 @@ function bieuTuongMenu(string $ten, string $lop = 'dropdown-item-icon'): string
 $khuMenu = [
     'tong_quan' => ['Tổng quan', [['dashboard', 'admin/index.php', 'Dashboard'], ['thong_ke', 'admin/thong_ke.php', 'Thống kê và báo cáo']]],
     'canh_bao' => ['Cảnh báo', [['canh_bao', 'admin/canh_bao.php', 'Cảnh báo']]],
-    'chung_chi' => ['Chứng chỉ', [['chung_chi', 'admin/chung_chi.php', 'Danh sách chứng chỉ'], ['chung_chi_them', 'admin/chung_chi_form.php', 'Thêm chứng chỉ'], ['chung_chi_nhap', 'admin/chung_chi_nhap.php', 'Nhập hàng loạt']]],
+    // Hai mục (user chốt 14/11/2026): nhập hàng loạt nằm trong tab "Nhập tự động" của trang Thêm chứng chỉ.
+    'chung_chi' => ['Chứng chỉ', [['chung_chi', 'admin/chung_chi.php', 'Danh sách chứng chỉ'], ['chung_chi_them', 'admin/chung_chi_form.php', 'Thêm chứng chỉ']]],
     'ha_tang' => ['Hạ tầng', [['ten_mien', 'admin/ten_mien.php', 'Tên miền'], ['may_chu', 'admin/may_chu.php', 'Máy chủ'], ['to_chuc_cap', 'admin/to_chuc_cap.php', 'Tổ chức cấp']]],
 ];
 // Chỉ ẩn mục; quyền thật do từng trang kiểm tra bằng yeuCauAdmin().

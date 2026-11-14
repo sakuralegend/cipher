@@ -1735,7 +1735,7 @@ function test_ban_in_luon_nen_trang_chu_toi(PDO $pdo): void
 
 // Luật: Menu quản trị hai tầng theo app Better Stack: thanh khu Tổng quan, Cảnh báo, Chứng chỉ, Hạ tầng (+ Hệ thống cho Admin), bảng phụ chỉ cho khu nhiều trang, tài khoản ở đáy thanh; điện thoại là ngăn kéo trượt từ phải.
 // Vì sao: User 09/11/2026 duyệt mẫu: ghép 5 khu, mỗi tầng thu gọn riêng (nhớ trên máy), đại diện vuông bo góc hình nhân, ngăn kéo bên phải mở ra chỉ thấy khu lớn.
-// Đỏ nghĩa là: Thứ tự khu đổi, thiếu lối Thêm chứng chỉ, Nhập hàng loạt, ngăn kéo không còn offcanvas-end, đại diện quay lại chữ cái đầu, app.js không nhớ trạng thái thu gọn, hoặc logo lại là nút thu (mất lối về landing).
+// Đỏ nghĩa là: Thứ tự khu đổi, thiếu lối Thêm chứng chỉ (nhập hàng loạt nằm trong trang này từ 14/11/2026), ngăn kéo không còn offcanvas-end, đại diện quay lại chữ cái đầu, app.js không nhớ trạng thái thu gọn, hoặc logo lại là nút thu (mất lối về landing).
 // Đừng: Đưa lại menu xổ xuống của Tabler (navbar-collapse) cho điện thoại; user muốn trượt ngang từ phía nút ba gạch.
 // Nhóm: Giao diện, triển khai (Giao diện)
 function test_menu_quan_tri_hai_tang_nam_khu(PDO $pdo): void
@@ -1743,7 +1743,7 @@ function test_menu_quan_tri_hai_tang_nam_khu(PDO $pdo): void
     $dauTrang = codeKhongChuThich(__DIR__ . '/../views/dau_trang.php');
     kiem(preg_match_all("/^\s*'(tong_quan|canh_bao|chung_chi|ha_tang)' => \['/m", $dauTrang, $m) === 4
         && $m[1] === ['tong_quan', 'canh_bao', 'chung_chi', 'ha_tang'], 'Thanh khu phải theo thứ tự Tổng quan, Cảnh báo, Chứng chỉ, Hạ tầng');
-    foreach (['admin/chung_chi_form.php', 'admin/chung_chi_nhap.php', 'admin/thong_ke.php'] as $dich) {
+    foreach (['admin/chung_chi_form.php', 'admin/thong_ke.php'] as $dich) {
         kiem(str_contains($dauTrang, "'$dich'"), "Bảng phụ thiếu lối tới $dich");
     }
     kiem(str_contains($dauTrang, 'offcanvas offcanvas-end'), 'Menu điện thoại phải là ngăn kéo trượt từ phải (offcanvas-end)');
@@ -2821,6 +2821,30 @@ function test_nut_xuat_bao_cao_o_dong_tieu_de(PDO $pdo): void
     foreach (['bao_cao_csv.php', 'bao_cao_in.php'] as $dich) {
         kiem(str_contains($ham, "diaChiCoLoc('admin/$dich', \$loc, \$sapXep)"), "Nút tới $dich phải mang bộ lọc và cách xếp");
     }
+}
+
+// Luật: Trang Thêm chứng chỉ có hai tab, Nhập thủ công (mở trước) và Nhập tự động (đọc một địa chỉ ở trên, nhập hàng loạt ở dưới); menu Chứng chỉ còn Danh sách và Thêm.
+// Vì sao: User 14/11/2026: menu ba mục và ba tab rối; bấm dấu cộng phải ra nhập thủ công, muốn tự động thì bấm tab
+//         Nhập tự động. Đảo quyết định 09/11/2026 "Đọc từ máy chủ mở trước".
+// Đỏ nghĩa là: Thêm lại tab hay mục menu Nhập hàng loạt riêng, mặc định quay về tự động, nhập hàng loạt nằm trên ô đọc
+//         một địa chỉ, hoặc mở thẳng chung_chi_nhap.php không còn đưa về tab Nhập tự động (dấu trang cũ gãy).
+// Đừng: Gộp phần xử lý của chung_chi_nhap.php vào chung_chi_form.php; hai luồng đọc khác nhau (một địa chỉ / từng địa chỉ có tiến trình).
+// Nhóm: Chứng chỉ: thêm, sửa, thu hồi, xoá (D1, D4, D5, Nf)
+function test_them_chung_chi_hai_tab_thu_cong_mo_truoc(PDO $pdo): void
+{
+    $goc = __DIR__ . '/..';
+    $ham = codeKhongChuThich("$goc/src/chung_chi.php");
+    kiem(preg_match("/function tabThemChungChi.*?\\\$cacTab = \[\s*'(\w+)' =>.*?\n\s*'(\w+)' =>[^\n]*\n\s*\];/s", $ham, $m) === 1
+        && [$m[1], $m[2]] === ['thu_cong', 'tu_dong'], 'tabThemChungChi phải có đúng hai tab: thu_cong rồi tu_dong');
+    $form = codeKhongChuThich("$goc/public/admin/chung_chi_form.php");
+    kiem(str_contains($form, "\$_GET['che_do'] ?? 'thu_cong'"), 'Mở trang Thêm (không che_do) phải ra nhập thủ công');
+    $docMot = strpos($form, 'Đọc một địa chỉ');
+    $hangLoat = strpos($form, 'formNhapHangLoat(');
+    kiem($docMot !== false && $hangLoat !== false && $docMot < $hangLoat, 'Tab tự động: đọc một địa chỉ ở trên, nhập hàng loạt ở dưới');
+    $menu = codeKhongChuThich("$goc/views/dau_trang.php");
+    kiem(!str_contains($menu, 'chung_chi_nhap'), 'Menu không còn mục Nhập hàng loạt riêng');
+    kiem(str_contains(codeKhongChuThich("$goc/public/admin/chung_chi_nhap.php"), "chuyenHuong('admin/chung_chi_form.php?che_do=tu_dong');"),
+        'Mở thẳng chung_chi_nhap.php phải chuyển về tab Nhập tự động');
 }
 
 // KHÔNG phải test thường: chạy riêng bằng "php tests/chay.php --tai-lieu", lúc đồng bộ tài liệu nộp lần cuối.
