@@ -1,6 +1,7 @@
 <?php
-// Hàng nút trạng thái, ô tìm kiếm, bộ lọc thu gọn và nút xuất báo cáo; dùng chung cho danh sách và thống kê.
+// Hàng nút trạng thái, ô tìm kiếm, bộ lọc thu gọn; dùng chung cho danh sách và thống kê.
 // Cần: $trangLoc (trang đang mở), $loc, $sapXep, $soTheoTrangThai, $cacToChuc, $cacTenMien, $cacMayChu.
+// Nút Xuất CSV, Bản in nằm ở dòng tiêu đề (nutXuatBaoCao(), tieu_de_trang.php), mang theo đúng bộ lọc này.
 $coGiaTri = fn(string $giaTri): bool => $giaTri !== '';
 $locDangDung = array_filter($loc, $coGiaTri);
 $sapXepDangDung = $sapXep['sap_xep'] === '' ? [] : $sapXep;
@@ -20,10 +21,6 @@ $soLocTrongPhanGon = count(array_intersect_key($locDangDung, array_flip(['het_ha
             <span class="ms-1"><?= $soTheoTrangThai[$khoa] ?></span>
         </a>
     <?php endforeach; ?>
-    <div class="ms-auto d-flex gap-2">
-        <a class="btn btn-sm" href="<?= e(diaChiCoLoc('admin/bao_cao_csv.php', $loc, $sapXep)) ?>">Xuất CSV</a>
-        <a class="btn btn-sm" href="<?= e(diaChiCoLoc('admin/bao_cao_in.php', $loc, $sapXep)) ?>">Bản in</a>
-    </div>
 </div>
 
 <form class="card mb-3 d-print-none" method="get" action="<?= e(url($trangLoc)) ?>">

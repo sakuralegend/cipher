@@ -32,6 +32,7 @@ $nhanThang = array_map(fn(string $thang): string => substr($thang, 5) . '/' . su
 
 $tieuDe = 'Thống kê';
 $trangHienTai = 'thong_ke';
+$nutPhu = nutXuatBaoCao($loc, $sapXep);
 $coBieuDo = true;
 require __DIR__ . '/../../views/dau_trang.php';
 require __DIR__ . '/../../views/tieu_de_trang.php';

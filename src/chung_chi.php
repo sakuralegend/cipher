@@ -321,6 +321,15 @@ function diaChiCoLoc(string $trang, array $loc, array $sapXep = [], array $doi =
     return url($trang . ($thamSo === [] ? '' : '?' . http_build_query($thamSo)));
 }
 
+// Nút Xuất CSV, Bản in ở dòng tiêu đề của Danh sách và Thống kê ($nutPhu của tieu_de_trang.php), xuất đúng bộ lọc đang xem.
+function nutXuatBaoCao(array $loc, array $sapXep): array
+{
+    return [
+        ['nhan' => 'Xuất CSV', 'href' => diaChiCoLoc('admin/bao_cao_csv.php', $loc, $sapXep)],
+        ['nhan' => 'Bản in', 'href' => diaChiCoLoc('admin/bao_cao_in.php', $loc, $sapXep)],
+    ];
+}
+
 // ca_tin_cay: mức tin cậy của tổ chức cấp, chamDiem() cần.
 const COT_CHUNG_CHI = 'SELECT c.*, a.name AS ca_name, a.is_trusted AS ca_tin_cay, d.domain_name, s.hostname AS server_name FROM ';
 

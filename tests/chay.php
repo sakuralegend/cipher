@@ -2804,6 +2804,25 @@ function test_nhat_ky_man_hinh_chi_in_khi_chay_bang_php_s(PDO $pdo): void
     kiem(str_contains(file_get_contents(__DIR__ . '/../CHAY.bat'), '"%PHP%" -q -S localhost:'), 'CHAY.bat phải chạy php -S với -q');
 }
 
+// Luật: Nút Xuất CSV, Bản in nằm ở dòng tiêu đề của Danh sách và Thống kê, mang theo bộ lọc và cách xếp đang xem.
+// Vì sao: User 14/11/2026: hai nút nằm cuối hàng nút trạng thái, màn hẹp bị đẩy xuống chiếm riêng một dòng.
+// Đỏ nghĩa là: Hai nút quay về bo_loc.php, một trong hai trang thôi truyền $nutPhu, hoặc địa chỉ nút mất tham số lọc.
+// Đừng: Ẩn hai nút trên màn hẹp; người dùng điện thoại vẫn cần xuất báo cáo.
+// Nhóm: Dashboard, thống kê, báo cáo (D8, D9, Ne, Nh)
+function test_nut_xuat_bao_cao_o_dong_tieu_de(PDO $pdo): void
+{
+    $goc = __DIR__ . '/..';
+    kiem(!str_contains(file_get_contents("$goc/views/bo_loc.php"), 'bao_cao_csv.php'), 'bo_loc.php không còn nút xuất');
+    foreach (['chung_chi.php', 'thong_ke.php'] as $trang) {
+        kiem(str_contains(file_get_contents("$goc/public/admin/$trang"), '$nutPhu = nutXuatBaoCao($loc, $sapXep);'), "$trang phải đặt nút xuất ở dòng tiêu đề");
+    }
+    // Bộ test không nạp khoi_dong.php (không có url()), nên kiểm mã: cả hai nút dựng bằng diaChiCoLoc với đúng lọc, cách xếp.
+    $ham = codeKhongChuThich("$goc/src/chung_chi.php");
+    foreach (['bao_cao_csv.php', 'bao_cao_in.php'] as $dich) {
+        kiem(str_contains($ham, "diaChiCoLoc('admin/$dich', \$loc, \$sapXep)"), "Nút tới $dich phải mang bộ lọc và cách xếp");
+    }
+}
+
 // KHÔNG phải test thường: chạy riêng bằng "php tests/chay.php --tai-lieu", lúc đồng bộ tài liệu nộp lần cuối.
 // User chốt 09/11/2026: README và docs/ chỉ tạo, đồng bộ một lần trước khi nộp; giữa chừng mỗi lần sửa chỉ cần chú
 // thích trong code và thân commit đủ rõ. Để chung bộ test thường thì nó đỏ suốt tới lúc đó, che mất lỗi thật.

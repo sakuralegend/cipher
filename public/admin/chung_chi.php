@@ -36,6 +36,7 @@ $tieuDeCot = function (string $cot, string $nhan, string $lop = '') use ($sapXep
 
 $tieuDe = 'Chứng chỉ';
 $trangHienTai = 'chung_chi';
+$nutPhu = nutXuatBaoCao($loc, $sapXep);
 require __DIR__ . '/../../views/dau_trang.php';
 require __DIR__ . '/../../views/tieu_de_trang.php';
 ?>
