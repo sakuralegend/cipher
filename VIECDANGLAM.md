@@ -7,9 +7,11 @@
 **Coi là XONG khi:** chụp lại 1440, 1024, 390 không còn các lỗi trên; 3 lệnh nghiệm thu và `--tai-lieu` xanh; báo cáo và `D:\Music\cipher.zip` dựng lại, mở kiểm; VPS cập nhật, bước `kiem` xanh.
 **CỐ Ý KHÔNG làm:** thêm nút Thêm ở Danh sách chứng chỉ (quyết định 09/11, có test); đổi màu, font, bố cục menu; đổi hành vi nghiệp vụ.
 
-### Kế hoạch — CHỜ DUYỆT
+**TRẠNG THÁI (15/11/2026, hết phiên):** mới rà và lập kế hoạch, CHƯA sửa dòng code nào. User trả lời: "Dừng phiên này tại đây, lưu tiến trình vào commit để phiên tiếp làm toàn bộ" ⇒ hiểu là giao phiên sau làm cả G1–G10 theo kế hoạch dưới; thấy chưa chắc thì hỏi lại một câu trước khi sửa. Chi tiết từng chỗ (file, dòng, class), cách dựng lại môi trường chụp ảnh và danh sách ảnh phải chụp lại: thân commit "Bàn giao phiên 14–15/11" (`git log --grep "Bàn giao phiên 14"`). Công cụ chụp ảnh: `temp/cong_cu_bao_cao/`.
+
+### Kế hoạch (user giao phiên sau làm toàn bộ, 15/11/2026)
 1. `views/bo_loc.php`, `public/admin/nhat_ky.php`: lưới bộ lọc 3 ô một hàng dưới 1400px (Nhật ký dưới 1200px); điện thoại: hai ô ngày một hàng, mỗi ô chọn một hàng; chữ gợi ý ô tìm ngắn lại.
 2. `public/assets/app.css`: bảng kéo ngang không xuống dòng áp dưới 1200px (đang 992px); bảng Dashboard không gãy tên. Sửa câu Luật của `test_moi_bang_quan_tri_keo_ngang_tren_dien_thoai` theo mốc mới.
 3. `public/admin/chung_chi_form.php`: Thuật toán khoá + Độ dài khoá chung nửa trái, Thuật toán ký nửa phải. `may_chu_form.php`: IP + Cổng một hàng, Môi trường + Người phụ trách một hàng. G7, G8: sửa chữ.
 4. Chụp lại 9 ảnh `public/assets/landing/` và các ảnh báo cáo bị đổi; README sửa bảng menu 5 khu; `python scripts/tao_bao_cao.py`; đóng gói lại `D:\Music\cipher.zip` (lệnh ở đầu `.gitattributes`); `git push` + `cap_nhat` + `kiem`.
-- Rủi ro: sửa CSS chung có thể lệch trang khác ⇒ chụp lại đủ 3 cỡ. Lùi: `git revert`, đóng gói lại. Đang chạy tạm: `php -S` cổng 8765 và CSDL `cipher_baocao` (xong việc thì tắt, xoá).
+- Rủi ro: sửa CSS chung có thể lệch trang khác ⇒ chụp lại đủ 3 cỡ. Lùi: `git revert`, đóng gói lại. Bản web tạm cổng 8765 và CSDL `cipher_baocao` đã tắt, đã xoá 15/11; phiên sau dựng lại theo thân commit bàn giao, xong việc lại tắt, xoá.
