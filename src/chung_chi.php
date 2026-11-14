@@ -813,7 +813,10 @@ const CONG_DOC_CHUNG_CHI = [
     993 => '993 · IMAP qua TLS', 995 => '995 · POP3 qua TLS', 636 => '636 · LDAP qua TLS', 853 => '853 · DNS qua TLS',
     5061 => '5061 · SIP qua TLS',
 ];
-const GIAY_CHO_DOC_CHUNG_CHI = 5;
+// Thời gian chờ kết nối và bắt tay TLS, tính chung (stream_socket_client). 10 chứ không 5: đo 14/11/2026 máy chủ thử
+// nghiệm badssl.com (Mỹ) bắt tay mất 0,8–5 giây, VPS có lần hỏng đúng 5,005 giây; user gặp self-signed.badssl.com báo
+// "không trả lời". Đổi lại: địa chỉ chết hẳn chờ 10 giây mới báo; tên miền không có IP vẫn báo ngay (không kết nối).
+const GIAY_CHO_DOC_CHUNG_CHI = 10;
 
 // true nếu không được kết nối tới IP này: nội bộ, loopback, link-local, dành riêng, CGNAT, hoặc không phải IP.
 // IPv6 có thể chứa IPv4 bên trong (::ffff:127.0.0.1, ::ffff:7f00:1, ::127.0.0.1, 64:ff9b::7f00:1): tách ra xét
@@ -1282,7 +1285,8 @@ function docChungChiChoForm(PDO $pdo, string $nhap, int $congChon): array
     ];
 }
 
-// Nhập hàng loạt: tối đa 50 địa chỉ mỗi lượt, mỗi địa chỉ chờ tối đa GIAY_CHO_DOC_CHUNG_CHI giây (tệ nhất ~4 phút).
+// Nhập hàng loạt: tối đa 50 địa chỉ mỗi lượt, mỗi địa chỉ chờ tối đa GIAY_CHO_DOC_CHUNG_CHI giây (tệ nhất ~8 phút,
+// khi cả 50 địa chỉ đều chết; có JavaScript thì đọc từng địa chỉ một, mỗi yêu cầu không quá thời gian chờ đó).
 const SO_DIA_CHI_TOI_DA = 50;
 
 // Tách ô dán thành danh sách địa chỉ: cách nhau bởi xuống dòng, dấu cách, phẩy hoặc chấm phẩy; bỏ dòng trống,

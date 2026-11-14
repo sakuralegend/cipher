@@ -182,6 +182,7 @@ HUONG_DAN = [
     "Ô ngày trên web dán được chữ ngày/tháng/năm: chép ô ngày trong file rồi dán thẳng vào ô ngày của form.",
     "Chạy bằng CHAY.bat thì cửa sổ đen ghi từng thao tác (dòng có dấu *) và từng lần bị từ chối kèm lý do (dòng có dấu !).",
     "Muốn nhập lại từ đầu: bấm CHAY.bat và chọn C để nạp lại dữ liệu mẫu (xoá mọi thứ đã nhập).",
+    "Trang 7 cần máy có internet. badssl.com là máy chủ thử nghiệm ở Mỹ, đôi khi chậm vài giây: nếu một dòng báo không trả lời thì đọc lại.",
 ]
 
 # Kiểu ô: 0 trống (Excel 16 không căn lề kiểu 0, đo 14/11/2026), 1 tiêu đề cột, 2 ngày giờ, 3 Đúng, 4 Sai,

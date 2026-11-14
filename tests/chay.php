@@ -2894,6 +2894,18 @@ function test_sap_xep_an_toan_chia_trang_khong_sot_khong_lap(PDO $pdo): void
     }
 }
 
+// Luật: Đọc chứng chỉ từ máy chủ chờ kết nối và bắt tay TLS ít nhất 10 giây trước khi báo "không trả lời".
+// Vì sao: Lỗi user gặp 14/11/2026: nhập hàng loạt báo self-signed.badssl.com không trả lời trong 5 giây. Đo cùng ngày:
+//         badssl.com (một máy chủ ở Mỹ) bắt tay mất 0,8–5 giây, từ VPS có lần hỏng đúng 5,005 giây; github.com chỉ 0,05–0,13 giây.
+// Đỏ nghĩa là: GIAY_CHO_DOC_CHUNG_CHI bị hạ dưới 10, máy chủ ở xa lại báo không trả lời dù vẫn chạy.
+// Đừng: Đẩy lên quá cao (30 giây trở lên): địa chỉ chết hẳn làm người dùng chờ lâu, và gần giới hạn 30 giây của PHP.
+// Nhóm: Đọc chứng chỉ thật (mở rộng 2) (Mở rộng 2)
+function test_doc_chung_chi_cho_du_lau_cho_may_chu_o_xa(PDO $pdo): void
+{
+    kiem(GIAY_CHO_DOC_CHUNG_CHI >= 10 && GIAY_CHO_DOC_CHUNG_CHI < 30, 'Thời gian chờ đọc chứng chỉ phải từ 10 đến dưới 30 giây, đang là ' . GIAY_CHO_DOC_CHUNG_CHI);
+    kiem(str_contains(codeKhongChuThich(__DIR__ . '/../src/chung_chi.php'), 'GIAY_CHO_DOC_CHUNG_CHI,'), 'stream_socket_client phải dùng GIAY_CHO_DOC_CHUNG_CHI');
+}
+
 // KHÔNG phải test thường: chạy riêng bằng "php tests/chay.php --tai-lieu", lúc đồng bộ tài liệu nộp lần cuối.
 // User chốt 09/11/2026: README và docs/ chỉ tạo, đồng bộ một lần trước khi nộp; giữa chừng mỗi lần sửa chỉ cần chú
 // thích trong code và thân commit đủ rõ. Để chung bộ test thường thì nó đỏ suốt tới lúc đó, che mất lỗi thật.
