@@ -91,20 +91,24 @@ Menu dọc bên trái chia 4 nhóm:
 
 Đổi mật khẩu, sửa họ tên ở biểu tượng người dùng cuối menu → **Tài khoản và mật khẩu**.
 
+**Thử nhập tay:** mở **`DU_LIEU_NHAP_TAY.xlsx`** (cùng thư mục với file này). Mỗi trang tính là một form, có dòng
+nhập đúng, dòng cố ý sai và kết quả mong đợi; ngày tự tính theo hôm nay. Ô ngày trên web dán được chữ ngày/tháng/năm
+chép từ file.
+
 **Các việc hay làm:**
 
-1. **Thêm chứng chỉ của một website có thật:** Danh sách chứng chỉ → **Thêm chứng chỉ** → tab **Đọc từ máy
-   chủ** → gõ tên miền (ví dụ `github.com`), chọn cổng → **Đọc chứng chỉ**. Hệ thống điền sẵn các ô; kiểm tra
-   lại rồi bấm **Thêm chứng chỉ**. Tên miền, máy chủ, tổ chức cấp chưa có thì được tạo cùng lúc.
-2. **Thêm nhiều chứng chỉ một lúc:** **Nhập hàng loạt** → dán tối đa 50 địa chỉ, mỗi dòng một → xem trước, tick
-   những dòng muốn lưu.
-3. **Thêm chứng chỉ bằng tay:** cùng form, tab **Nhập thủ công**. Ô Tên miền và Tổ chức cấp có gợi ý, chỉ nhận
-   tên đã có trong danh mục.
+1. **Thêm chứng chỉ bằng tay:** Chứng chỉ → **Thêm chứng chỉ** (mở sẵn tab **Nhập thủ công**). Ô Tên miền và Tổ
+   chức cấp có gợi ý, chỉ nhận tên đã có trong danh mục.
+2. **Thêm chứng chỉ của một website có thật:** cùng trang, tab **Nhập tự động** → khung **Đọc một địa chỉ** → gõ
+   tên miền (ví dụ `github.com`), chọn cổng → **Đọc chứng chỉ**. Hệ thống điền sẵn các ô; kiểm tra lại rồi bấm
+   **Thêm chứng chỉ**. Tên miền, máy chủ, tổ chức cấp chưa có thì được tạo cùng lúc.
+3. **Thêm nhiều chứng chỉ một lúc:** tab **Nhập tự động** → khung **Nhập hàng loạt** ở dưới → dán tối đa 50 địa
+   chỉ, mỗi dòng một → xem trước, tick những dòng muốn lưu.
 4. **Xử lý cảnh báo:** mục **Cảnh báo** → xem chứng chỉ sắp hết hạn → **Gia hạn** hoặc **Đã xem**.
 5. **Gia hạn:** mở một chứng chỉ → **Gia hạn** → nhập ngày hết hạn mới (fingerprint, serial mới nếu có). Thông
    tin cũ vào bảng Lịch sử gia hạn ngay dưới.
-6. **Xuất báo cáo:** Danh sách chứng chỉ hoặc Thống kê → chọn bộ lọc → **Xuất CSV** (mở bằng Excel) hoặc
-   **Bản in** (in hoặc lưu PDF bằng lệnh In của trình duyệt).
+6. **Xuất báo cáo:** Danh sách chứng chỉ hoặc Thống kê → chọn bộ lọc → nút **Xuất CSV** (mở bằng Excel) hoặc
+   **Bản in** (in hoặc lưu PDF bằng lệnh In của trình duyệt) ở góc trên bên phải.
 
 ## Thư viện và nguồn
 
