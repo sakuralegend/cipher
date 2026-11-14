@@ -113,7 +113,7 @@ trình duyệt hiện cảnh báo đỏ chặn cả trang.
 | Tên chính (CN, Common Name) | `cert.cipher.id.vn` | Tên miền chứng chỉ này bảo vệ | `subject_cn` |
 | Tên phụ (SAN, Subject Alternative Name) | chỉ có `cert.cipher.id.vn` (trùng tên chính, nên hệ thống không ghi lại) | Các tên miền khác cũng dùng chứng chỉ này | `san` |
 | Tổ chức cấp | Let's Encrypt | CA đã ký | `ca_id` (trỏ sang bảng tổ chức cấp) |
-| Ngày bắt đầu | 06/11/2026 | Trước ngày này chứng chỉ chưa có hiệu lực | `valid_from` |
+| Ngày cấp | 06/11/2026 | Trước ngày này chứng chỉ chưa có hiệu lực | `valid_from` |
 | Ngày hết hạn | 04/02/2027 | Sau ngày này trình duyệt chặn | `valid_to` |
 | Thuật toán khoá | ECDSA, 256 bit | Loại cặp khoá và độ dài | `key_algorithm`, `key_size` |
 | Số sê-ri (serial) | một dãy số hex | CA đánh số cho từng chứng chỉ nó cấp | `serial` |
@@ -1132,7 +1132,7 @@ phát hiện sau khi có dữ liệu thật thì phải chuyển cả bảng.
 
 ### G4. Bước 4: viết đặc tả trước khi code
 
-[SPEC](SPEC.md) ghi các quy tắc thành câu: mã quản lý tối đa 30 ký tự, ngày hết hạn phải sau ngày bắt đầu, trạng thái
+[SPEC](SPEC.md) ghi các quy tắc thành câu: mã quản lý tối đa 30 ký tự, ngày hết hạn phải sau ngày cấp, trạng thái
 xét theo thứ tự nào, cảnh báo tạo khi nào, gia hạn chặn trường hợp nào. Viết ra giấy có hai lợi ích:
 
 - Lộ ra các trường hợp chưa nghĩ tới ("gia hạn chứng chỉ đã hết hạn có được không?", "đã thu hồi rồi thì sao?").
@@ -1141,7 +1141,7 @@ xét theo thứ tự nào, cảnh báo tạo khi nào, gia hạn chặn trườn
 ### G5. Bước 5: test viết cùng lúc với code
 
 **Test** là đoạn code tự kiểm tra code khác: "gọi hàm này với dữ liệu này, kết quả phải là thế này". Bộ test của Cipher
-Cert ở [tests/chay.php](../tests/chay.php), hiện có 89 test, chạy mất khoảng 20 giây.
+Cert ở [tests/chay.php](../tests/chay.php), hiện có 135 test, chạy mất khoảng 40 giây.
 
 Vài cách làm đáng học:
 
@@ -1284,7 +1284,7 @@ tiên đúng:
 | Thứ tự | Trạng thái | Điều kiện | Vì sao đứng ở vị trí này |
 |---|---|---|---|
 | 1 | Đã thu hồi | Đã bấm thu hồi | Dù còn hạn cũng không được tin, nên phải thắng mọi trạng thái khác |
-| 2 | Chưa hiệu lực | Chưa tới ngày bắt đầu | Chưa dùng được, dù hạn còn xa |
+| 2 | Chưa hiệu lực | Chưa tới ngày cấp | Chưa dùng được, dù hạn còn xa |
 | 3 | Đã hết hạn | Đã qua ngày hết hạn | |
 | 4 | Sắp hết hạn | Còn tối đa 30 ngày | 30 là mốc cảnh báo xa nhất của đề |
 | 5 | Còn hiệu lực | Các trường hợp còn lại | |
@@ -1359,7 +1359,7 @@ hạn nhiều lần, không phải nhiều thứ.
   thu hồi nghĩa là không được tin nữa, muốn dùng lại thì thêm chứng chỉ mới.
 - **Để trống fingerprint, serial mới thì lưu NULL, không giữ giá trị cũ.** Giữ giá trị cũ thì chứng chỉ mới mang vân tay
   của chứng chỉ cũ: thông tin sai. Giá trị cũ vẫn nằm trong lịch sử.
-- **Gia hạn không đổi ngày bắt đầu.** Cần sửa ngày bắt đầu thì dùng form Sửa.
+- **Gia hạn không đổi ngày cấp.** Cần sửa ngày cấp thì dùng form Sửa.
 
 Code: `giaHanChungChi()`, `kiemTraGiaHan()`, `lichSuGiaHan()` trong [src/chung_chi.php](../src/chung_chi.php).
 
@@ -1465,8 +1465,9 @@ bản. Ý tưởng lấy từ đề 65 (quản lý nhật ký).
   được mãi.
 - **Cột mã đối tượng cố ý không có khoá ngoại.** Có khoá ngoại thì hoặc không xoá được chứng chỉ (vì nhật ký còn trỏ
   tới), hoặc xoá chứng chỉ thì nhật ký bị xoá theo. Cả hai đều sai.
-- **Ngược lại, cột người làm có khoá ngoại kiểu chặn.** Hệ quả cố ý: người đã có dòng nhật ký (kể cả chỉ đăng nhập)
-  không xoá được nữa, chỉ khoá được. Dấu vết luôn còn người làm.
+- **Ngược lại, cột người làm có khoá ngoại kiểu chặn.** Hệ quả: dòng người dùng đã có nhật ký không xoá hẳn được.
+  Vì vậy chức năng xoá người dùng chỉ đánh dấu đã xoá (cột `deleted_at`): tài khoản không đăng nhập được nữa, còn nhật ký
+  vẫn giữ tên người làm kèm "(đã xoá)".
 - **Không ai sửa, xoá được nhật ký.** Web không có nút sửa xoá, và CSDL có 2 trigger từ chối mọi lệnh sửa, xoá dòng
   (D10), kể cả lệnh gõ thẳng vào CSDL. Nói rõ giới hạn: người có toàn quyền CSDL vẫn dọn được cả bảng bằng lệnh
   `TRUNCATE` hoặc gỡ trigger; nhưng bảng trống trơn thì nhìn là biết đã bị dọn.
@@ -1501,7 +1502,7 @@ forgery, mượn máy chủ gửi yêu cầu).
 | **Chỉ cho các cổng TLS phổ biến** (443, 8443, 465, 993...) | Cho cổng tuỳ ý thì chức năng thành công cụ quét cổng |
 | **Tra DNS lấy mọi IP của tên miền, chặn nếu bất kỳ IP nào là nội bộ** (127.x, 10.x, 192.168.x, kể cả IPv4 giấu trong IPv6) | Kẻ xấu tạo tên miền trỏ tới `127.0.0.1`; kiểm tên miền thôi thì không thấy |
 | **Kết nối tới đúng IP vừa kiểm**, không tra DNS lần nữa | Kẻ xấu có thể đổi bản ghi DNS sang `127.0.0.1` ngay giữa lúc kiểm và lúc kết nối (gọi là *DNS rebinding*) |
-| **Chờ tối đa 5 giây** | Máy chủ không trả lời thì không treo trang mãi |
+| **Chờ tối đa 10 giây** | Máy chủ không trả lời thì không treo trang mãi; máy chủ ở xa có lúc bắt tay mất tới 5 giây nên không đặt ngắn hơn |
 | **Ghi nhật ký mọi lần đọc**, đọc được hay không | Biết ai đã cho máy chủ kết nối đi đâu |
 
 **Cố ý không kiểm chứng chỉ có hợp lệ không.** Trình duyệt từ chối chứng chỉ hết hạn, tự ký, sai tên. Nhưng chức năng
@@ -1532,14 +1533,14 @@ Code: chuỗi hàm `phanTichDiaChi()` → `phanGiaiDiaChi()` → `kiemTraDiaChiD
 
 ### H13. Giao diện
 
-- **Khu quản trị ưu tiên dễ nhìn, mặc định sáng; phần đẹp dồn vào trang giới thiệu** (QD-21). Khu quản trị là nơi dùng
+- **Cả web chỉ có giao diện tối; khu quản trị nền xám xanh dịu hơn trang giới thiệu** (QD-25). Khu quản trị là nơi dùng
   hằng ngày, cần đọc nhanh, ít mỏi mắt. Trang giới thiệu là nơi gây ấn tượng lần đầu.
-- **Menu dọc chia 4 nhóm** (Tổng quan, Chứng chỉ, Hạ tầng, Hệ thống). Mười mấy mục xếp một hàng thì khó tìm; chia nhóm
+- **Menu hai tầng chia 5 khu** (Tổng quan, Cảnh báo, Chứng chỉ, Hạ tầng, Hệ thống). Mười mấy mục xếp một hàng thì khó tìm; chia nhóm
   theo việc thì nhìn là biết mục nằm đâu. Nhóm Hệ thống (Người dùng, Nhật ký) chỉ hiện với Admin.
 - **Tên ngắn "Cipher Cert"** trên logo, menu, tab trình duyệt; tên đề tài đầy đủ ở trang giới thiệu, trang đăng nhập và
   báo cáo (QD-24). Tên đầy đủ quá dài cho một tab trình duyệt.
 - **Sáng và tối**, nhớ lựa chọn khi chuyển trang và mở lại trình duyệt.
-- **Dùng được trên điện thoại** (khổ 390px như iPhone): bảng ẩn bớt cột phụ thay vì bắt kéo ngang, menu thu vào một nút.
+- **Dùng được trên điện thoại** (khổ 390px như iPhone): bảng hiện đủ cột và kéo ngang được, menu thu vào một ngăn kéo.
   Quản trị viên hay xem cảnh báo trên điện thoại.
 - **Trang giới thiệu** cho người lần đầu vào: hệ thống làm gì, có nút Đăng nhập. Đăng xuất xong cũng về đây.
 - **Hiệu ứng chuyển động viết bằng CSS và JavaScript thuần**, không dùng thư viện hiệu ứng (QD-23), chỉ ở trang giới
@@ -1570,13 +1571,13 @@ hiện ở thẻ số.
 
 Nó cho người dùng bảo máy chủ kết nối tới địa chỉ tuỳ ý, có thể dùng để dò dịch vụ nội bộ (SSRF). Chặn bằng: chỉ cổng
 TLS trong danh sách; tra mọi IP của tên miền, chặn nếu bất kỳ IP nào nội bộ; kết nối đúng IP đã kiểm (chống DNS
-rebinding); giới hạn 5 giây; ghi nhật ký.
+rebinding); giới hạn 10 giây; ghi nhật ký.
 </details>
 
 <details><summary>5. Vì sao cột mã đối tượng trong nhật ký không có khoá ngoại, còn cột người làm thì có?</summary>
 
 Mã đối tượng không có khoá ngoại để xoá chứng chỉ vẫn giữ được dòng nhật ký về nó. Người làm có khoá ngoại kiểu chặn
-để không xoá được người đã có hoạt động: dấu vết luôn còn tên người làm.
+nên xoá người dùng chỉ là đánh dấu đã xoá: dấu vết luôn còn tên người làm.
 </details>
 
 ---
@@ -1593,7 +1594,7 @@ Mã đối tượng không có khoá ngoại để xoá chứng chỉ vẫn gi�
                  │  HTML: nội dung   CSS (Tabler): hình thức │
                  │  JavaScript (app.js): kiểm form nhanh,    │
                  │  hỏi lại trước khi xoá, vẽ biểu đồ        │
-                 │  (Chart.js), đổi sáng/tối                 │
+                 │  (Chart.js), dán ngày, tiến trình         │
                  │  Cookie: chỉ giữ mã phiên cipher_sid      │
                  └─────────────────────┬─────────────────────┘
                                        │ HTTPS (TLS, chứng chỉ Let's Encrypt)
