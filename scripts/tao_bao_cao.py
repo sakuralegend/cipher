@@ -31,6 +31,7 @@ CHROME = [r"C:\Program Files\Google\Chrome\Application\chrome.exe", r"C:\Program
           r"C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe"]
 # Tài liệu được kéo vào thành phần nào của báo cáo: link giữa các file .md đổi thành tên phần.
 PHAN = {"SPEC.md": "Phần II", "ERD.md": "Phần III", "USECASE.md": "Phần IV", "BAO_CAO.md": "Phần V", "KIEM_THU.md": "Phần VII"}
+KIEU_VE = "2"         # Phiên bản cấu hình vẽ Mermaid, nằm trong tên ảnh đã vẽ (xem ve_mermaid).
 RONG_TRANG_CM = 16.0  # A4 rộng 21 cm trừ lề trái 3 cm, lề phải 2 cm.
 CAO_HINH_CM = 21.0    # Hình cao hơn thì thu lại cho vừa một trang cùng chú thích.
 
@@ -66,7 +67,8 @@ def ve_mermaid(ma: str) -> Path:
         # ERD sinh từ CSDL kèm chú thích từng cột; in trên giấy A4 thì chú thích làm khung quá rộng, chữ nhỏ không đọc
         # được. Bản in lược chú thích cột (ý nghĩa cột đã có ở bảng ngay dưới sơ đồ); docs/ERD.md vẫn giữ đủ.
         ma = re.sub(r'^(\s+\w+ \w+(?: [A-Z, ]+)?) "[^"]*"$', r"\1", ma, flags=re.M)
-    anh = TAM / ("mermaid_" + hashlib.sha256(ma.encode()).hexdigest()[:16] + ".png")
+    # Tên ảnh theo mã băm của sơ đồ và của cách vẽ (KIEU_VE): đổi cấu hình vẽ bên dưới thì tăng KIEU_VE để vẽ lại.
+    anh = TAM / ("mermaid_" + hashlib.sha256((KIEU_VE + ma).encode()).hexdigest()[:16] + ".png")
     if anh.exists():
         return anh
     trang = TAM / (anh.stem + ".html")
