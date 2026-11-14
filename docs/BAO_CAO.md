@@ -115,12 +115,12 @@ Hệ thống có ba lớp. Trình duyệt chỉ hiển thị và báo lỗi nhan
 cuối cùng. Không tin bất cứ thứ gì gửi từ trình duyệt: dữ liệu nào cũng được PHP kiểm lại.
 
 ```mermaid
-flowchart LR
-    ND["Trình duyệt<br/>HTML, CSS, JavaScript<br/>Tabler, Chart.js"] -->|"HTTP GET, POST"| P["public/<br/>mỗi trang một file PHP"]
-    P --> V["views/<br/>mảnh giao diện dùng chung"]
-    P --> S["src/<br/>quy tắc nghiệp vụ"]
-    S --> C["config/db.php<br/>ketNoiCsdl, PDO"]
-    C --> DB[("MariaDB / MySQL<br/>9 bảng, 1 view, 2 trigger")]
+flowchart TB
+    ND["Trình duyệt: HTML, CSS, JavaScript (Tabler, Chart.js)"] -->|"HTTP GET, POST"| P["public/ : mỗi trang một file PHP"]
+    P --> V["views/ : mảnh giao diện dùng chung"]
+    P --> S["src/ : quy tắc nghiệp vụ"]
+    S --> C["config/db.php : ketNoiCsdl, PDO"]
+    C --> DB[("MariaDB / MySQL: 9 bảng, 1 view, 2 trigger")]
     S -.->|"TLS, chỉ khi đọc chứng chỉ"| MC["Máy chủ bên ngoài"]
 ```
 
@@ -128,24 +128,25 @@ flowchart LR
 
 ```
 cipher/
-├── CHAY.bat           Bấm đúp là chạy: bật MySQL, nạp CSDL, chạy web, mở trình duyệt
-├── README.md          Hướng dẫn cài đặt và sử dụng cho người chấm
-├── DU_LIEU_NHAP_TAY.xlsx  Dữ liệu mẫu để tự nhập tay, có dòng đúng và dòng sai
-├── config/db.php      Cửa duy nhất tới CSDL: hàm ketNoiCsdl(), múi giờ, chế độ strict
-├── database/          schema.sql (bảng, view, trigger) · seed.sql · seed_demo.sql
-├── src/               Toàn bộ quy tắc nghiệp vụ, không in HTML
-│   ├── khoi_dong.php  Mọi trang gọi đầu tiên: nạp CSDL, đăng nhập, nhật ký, phiên; hàm e(), url(), ô form
-│   ├── auth.php       Đăng nhập, đăng xuất, phiên, phân quyền, mã CSRF
-│   ├── chung_chi.php  Chứng chỉ, lọc, sắp xếp, gia hạn, cảnh báo, thống kê, CSV, chấm hạng, đọc chứng chỉ thật
-│   ├── danh_muc.php   Máy chủ, tên miền, tổ chức cấp
-│   ├── nguoi_dung.php Người dùng, vai trò, đổi mật khẩu
-│   └── nhat_ky.php    Ghi và đọc nhật ký hoạt động, ba mức
-├── public/            Thư mục duy nhất mở ra web; mỗi file là một trang
-│   ├── index.php      Trang giới thiệu
+├── CHAY.bat                Bấm đúp là chạy: bật MySQL, nạp CSDL, chạy web, mở trình duyệt
+├── README.md               Hướng dẫn cài đặt và sử dụng cho người chấm
+├── DU_LIEU_NHAP_TAY.xlsx   Dữ liệu mẫu để tự nhập tay, có dòng đúng và dòng sai
+├── config/db.php           Cửa duy nhất tới CSDL: ketNoiCsdl(), múi giờ, chế độ strict
+├── database/               schema.sql (bảng, view, trigger), seed.sql, seed_demo.sql
+├── src/                    Toàn bộ quy tắc nghiệp vụ, không in HTML
+│   ├── khoi_dong.php       Mọi trang gọi đầu tiên: nạp CSDL, phiên, nhật ký; hàm e(), ô form
+│   ├── auth.php            Đăng nhập, đăng xuất, phiên, phân quyền, mã CSRF
+│   ├── chung_chi.php       Chứng chỉ, lọc, sắp xếp, gia hạn, cảnh báo, thống kê, CSV,
+│   │                       chấm hạng an toàn, đọc chứng chỉ thật
+│   ├── danh_muc.php        Máy chủ, tên miền, tổ chức cấp
+│   ├── nguoi_dung.php      Người dùng, vai trò, đổi mật khẩu
+│   └── nhat_ky.php         Ghi và đọc nhật ký hoạt động, ba mức
+├── public/                 Thư mục duy nhất mở ra web; mỗi file là một trang
+│   ├── index.php           Trang giới thiệu
 │   ├── login.php, logout.php
-│   ├── admin/         Các trang sau đăng nhập
-│   └── assets/        app.css, app.js; Tabler, Chart.js, font Inter (kèm LICENSE)
-└── views/             Mảnh giao diện dùng chung: đầu trang và menu, bộ lọc, nhãn trạng thái...
+│   ├── admin/              Các trang sau đăng nhập
+│   └── assets/             app.css, app.js; Tabler, Chart.js, font Inter (kèm LICENSE)
+└── views/                  Mảnh giao diện dùng chung: đầu trang và menu, bộ lọc...
 ```
 
 Ngoài gói nộp, nhóm còn giữ bộ test tự động (`tests/chay.php`, 135 test) và các tài liệu gốc của báo cáo này.

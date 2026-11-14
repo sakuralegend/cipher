@@ -76,7 +76,10 @@ def ve_mermaid(ma: str) -> Path:
 <script src="{thu_vien.as_uri()}"></script>
 <script>mermaid.initialize({{startOnLoad:true, theme:'neutral', securityLevel:'loose',
   themeVariables:{{fontFamily:'Arial, sans-serif', fontSize:'15px'}},
-  er:{{useMaxWidth:false}}, sequence:{{useMaxWidth:false, wrap:false}}, state:{{useMaxWidth:false}}, flowchart:{{useMaxWidth:false, htmlLabels:true}}}});</script>
+  er:{{useMaxWidth:false}}, state:{{useMaxWidth:false}}, flowchart:{{useMaxWidth:false, htmlLabels:true}},
+  // Sơ đồ trình tự: cột sát nhau, chữ to, không lặp hàng tác nhân ở đáy, để thu về bề rộng trang giấy mà chữ vẫn đọc được.
+  sequence:{{useMaxWidth:false, wrap:false, mirrorActors:false, actorMargin:18, width:128, height:46, messageMargin:30,
+             messageFontSize:17, actorFontSize:16, noteFontSize:15, boxMargin:6}}}});</script>
 </body></html>""", encoding="utf-8")
     chup(trang, anh, 3400, 3400, 1.5)
     return anh
@@ -245,7 +248,7 @@ th { background: #e8ebf2; font-weight: bold; }
 tr { page-break-inside: avoid; }
 code { font-family: Consolas; font-size: 10.5pt; }
 td code, th code { font-size: 9.5pt; }
-pre { font-family: Consolas; font-size: 8.5pt; line-height: 115%; background: #f3f4f6; border: 1px solid #cccccc; padding: 6pt; margin: 4pt 0 8pt 0; }
+pre { font-family: Consolas; font-size: 8.5pt; line-height: 115%; background: #f3f4f6; margin: 0; }  /* Word tách mỗi dòng của pre thành một đoạn: lề phải bằng 0, không thì các dòng cách xa nhau. */
 pre code { font-size: 8.5pt; }
 p.hinh { text-align: center; margin: 8pt 0 2pt 0; page-break-after: avoid; }
 p.chu-thich { text-align: center; font-style: italic; font-size: 11.5pt; margin: 0 0 10pt 0; }
