@@ -13,8 +13,8 @@
 #   thu        Chạy bộ test trên MariaDB của VPS bằng CSDL tạm, rồi xoá CSDL đó.
 #   caddy      Nối khối Caddy, kiểm tra cú pháp, nạp lại.
 #   cap_nhat   Lấy code mới từ GitHub. Không đụng CSDL.
-#   sua_bang   Đổi bảng users cho xoá người dùng (QD-26, 12/11/2026): sao lưu CSDL rồi thêm cột. Chạy TRƯỚC lần cap_nhat
-#              đầu tiên lấy code có QD-26, vì code đó đọc cột deleted_at. Chạy lại được: cột đã có thì bỏ qua.
+#   nap_mau    Sao lưu CSDL rồi nạp lại đúng dữ liệu mẫu của bản nộp (XOÁ dữ liệu đang có). Chạy lại để làm mới
+#              ngày cho đủ mốc cảnh báo 30/15/7. Bước sua_bang (QD-26, đã chạy 13/11/2026) gỡ 14/11, xem git log.
 #   go         Gỡ khối Caddy và tắt PHP-FPM, MariaDB. Giữ nguyên dữ liệu.
 
 set -euo pipefail
@@ -305,25 +305,24 @@ cap_nhat() {
     la_cipher git -C "$THU_MUC" log --oneline -1
 }
 
-# Đưa bảng users trên VPS về đúng database/schema.sql (QD-26) mà không mất dữ liệu: không chạy lại schema.sql vì file đó
-# xoá sạch bảng (QD-14). Đã thử trên bản dựng từ schema cũ 12/11/2026: kết quả giống hệt SHOW CREATE TABLE của schema mới.
-# Thêm UNIQUE mới trước, bỏ UNIQUE cũ sau, để không lúc nào tên đăng nhập hết bị ràng buộc.
-sua_bang() {
-    if mariadb -N cipher -e "SHOW COLUMNS FROM users LIKE 'deleted_at'" | grep -q deleted_at; then
-        echo "Bảng users đã có deleted_at, không đổi gì."
-        return
-    fi
+# Đưa CSDL trên VPS về đúng dữ liệu của bản nộp: cùng 3 file, cùng thứ tự với CHAY.bat. User chốt 14/11/2026: web thật
+# đồng nhất với file nén, kể cả mật khẩu mẫu Cipher@2026 ghi trong README, tới khi chấm xong (nợ đổi mật khẩu ở SONO.md).
+# schema.sql xoá sạch bảng (QD-14) nên luôn sao lưu trước; set -e dừng ngay nếu sao lưu hay một file nạp hỏng.
+nap_mau() {
     local sao_luu
-    sao_luu="/root/cipher-truoc-xoa-nguoi-dung-$(date +%Y%m%d-%H%M%S).sql"
+    sao_luu="/root/cipher-truoc-nap-mau-$(date +%Y%m%d-%H%M%S).sql"
     mariadb-dump --routines --triggers cipher > "$sao_luu"
+    chmod 600 "$sao_luu"
     echo "Sao lưu: $sao_luu (khôi phục: mariadb cipher < $sao_luu)"
-    mariadb cipher <<'SQL'
-ALTER TABLE users ADD COLUMN deleted_at DATETIME NULL AFTER locked_until;
-ALTER TABLE users ADD COLUMN username_dang_dung VARCHAR(50) AS (IF(deleted_at IS NULL, username, NULL)) PERSISTENT AFTER deleted_at,
-    ADD CONSTRAINT uq_users_username_dang_dung UNIQUE (username_dang_dung);
-ALTER TABLE users DROP INDEX username;
-SQL
-    mariadb -N cipher -e 'SELECT id, username, username_dang_dung FROM users'
+    for tep in schema seed seed_demo; do
+        mariadb --default-character-set=utf8mb4 cipher < "$THU_MUC/database/$tep.sql"
+        echo "Đã nạp $tep.sql"
+    done
+    mariadb -N cipher -e "SELECT COUNT(*), 'chứng chỉ' FROM certificates;
+        SELECT GROUP_CONCAT(username ORDER BY id), 'tài khoản' FROM users;
+        SELECT COUNT(*), CONCAT('cảnh báo mốc ', threshold_days) FROM v_certificates c
+            JOIN (SELECT 7 AS threshold_days UNION SELECT 15 UNION SELECT 30) m
+            ON c.days_left BETWEEN 0 AND m.threshold_days GROUP BY m.threshold_days"
 }
 
 go() {
@@ -350,7 +349,7 @@ case "${1:-}" in
     thu) thu ;;
     caddy) caddy_noi ;;
     cap_nhat) cap_nhat ;;
-    sua_bang) sua_bang ;;
+    nap_mau) nap_mau ;;
     go) go ;;
     *) chet "Bước không hợp lệ: ${1:-trống}. Xem danh sách ở đầu file." ;;
 esac

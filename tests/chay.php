@@ -2724,11 +2724,12 @@ function test_nhat_ky_hien_ip_o_moi_do_rong_man_hinh(PDO $pdo): void
     kiem(str_contains($trang, 'o-xuong-dong'), 'Ô mô tả dài phải được xuống dòng (o-xuong-dong)');
 }
 
-// Luật: CHAY.bat và hướng dẫn cài tay trong README nạp đúng mọi file SQL có thật, theo thứ tự schema → seed → seed_demo.
-// Vì sao: User 13/11/2026 chốt hai đường chạy cho người chấm: bấm CHAY.bat, hoặc làm tay theo README (bảng Bước 4).
+// Luật: CHAY.bat, hướng dẫn cài tay trong README và bước nap_mau của VPS nạp đúng mọi file SQL có thật, theo thứ tự schema → seed → seed_demo.
+// Vì sao: User 13/11/2026 chốt hai đường chạy cho người chấm: bấm CHAY.bat, hoặc làm tay theo README (bảng Bước 4);
+//         14/11/2026 chốt web thật có dữ liệu y như bản nộp (bước nap_mau trong deploy/dung_vps.sh).
 //         Sai thứ tự là hỏng: seed cần bảng của schema, seed_demo cần danh mục và tài khoản của seed.
-// Đỏ nghĩa là: Đổi tên, thêm, bớt file trong database/ mà quên sửa vòng for của CHAY.bat hoặc bảng Bước 4 của README,
-//         hoặc hai nơi ghi thứ tự khác nhau.
+// Đỏ nghĩa là: Đổi tên, thêm, bớt file trong database/ mà quên sửa vòng for của CHAY.bat, bảng Bước 4 của README hoặc
+//         vòng for của nap_mau, hoặc ba nơi ghi thứ tự khác nhau.
 // Đừng: Ghép ba file thành một trong repo: schema.sql còn dùng nạp CSDL test, seed_demo tách riêng vì test dựa vào đúng 9 chứng chỉ của seed.
 // Nhóm: CSDL, ràng buộc, dữ liệu mẫu (Ng, Nj)
 function test_chay_bat_va_readme_nap_du_file_sql_dung_thu_tu(PDO $pdo): void
@@ -2741,6 +2742,8 @@ function test_chay_bat_va_readme_nap_du_file_sql_dung_thu_tu(PDO $pdo): void
     $thuTuReadme = $m[1];
     kiem($thuTuBat === ['schema', 'seed', 'seed_demo'], 'CHAY.bat nạp theo thứ tự ' . implode(', ', $thuTuBat) . ', phải là schema, seed, seed_demo');
     kiem($thuTuReadme === $thuTuBat, 'README Bước 4 ghi ' . implode(', ', $thuTuReadme) . ', khác CHAY.bat');
+    kiem(preg_match('/for tep in ([\w ]+); do/', file_get_contents("$goc/deploy/dung_vps.sh"), $m) === 1
+        && preg_split('/\s+/', trim($m[1])) === $thuTuBat, 'Bước nap_mau trong deploy/dung_vps.sh phải nạp đúng thứ tự như CHAY.bat');
     $thieu = array_diff($coThat, $thuTuBat);
     kiem($thieu === [], 'database/ có file không được nạp: ' . implode(', ', $thieu));
 }

@@ -63,7 +63,8 @@ thư mục này, còn cấu hình và mã xử lý để ngoài (trên máy ch�
 | `admin` | `Cipher@2026` | Admin, toàn quyền |
 | `nhanvien` | `Cipher@2026` | Nhân viên quản trị: không xoá chứng chỉ, không quản lý người dùng, không xem nhật ký |
 
-Hai tài khoản này chỉ có ở máy cài từ dữ liệu mẫu; bản chạy thật trên mạng dùng mật khẩu khác.
+Bản chạy thật trên mạng (<https://cert.cipher.id.vn>) có cùng dữ liệu mẫu và cùng hai tài khoản này trong thời gian
+chấm bài.
 
 ## Cấu hình và lỗi thường gặp
 
