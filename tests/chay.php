@@ -2766,6 +2766,23 @@ function test_chay_bat_dung_khi_chay_trong_file_nen_hoac_nap_hong(PDO $pdo): voi
     kiem(preg_match('/< "database\\\\%%F\.sql" \|\| goto loi_nap/', $bat) === 1, 'Lệnh nạp SQL phải dừng bằng "|| goto loi_nap"');
 }
 
+// Luật: Mọi ô ngày (date, datetime-local) nhận chữ dán dạng ngày/tháng/năm như ô ngày trong file Excel dữ liệu mẫu.
+// Vì sao: User 14/11/2026 thử nhập tay từ file Excel: chọn ngày bằng lịch rất lâu; Excel chép ra chữ "24/11/2026 00:00".
+// Đỏ nghĩa là: app.js mất hàm docNgayDan, thôi gắn sự kiện paste cho ô date hoặc datetime-local, hoặc mẫu ngày/tháng/năm
+//         không còn khớp chữ Excel chép ra. Bộ test PHP không chạy được JavaScript: phần đúng sai đã thử trên Chrome 14/11/2026.
+// Đừng: Đổi ô ngày thành ô chữ thường để dán được; mất lịch chọn ngày và mất kiểm tra dạng ngày của trình duyệt.
+// Nhóm: Giao diện, triển khai (Giao diện)
+function test_o_ngay_nhan_chu_dan_tu_excel(PDO $pdo): void
+{
+    $js = file_get_contents(__DIR__ . '/../public/assets/app.js');
+    kiem(str_contains($js, 'function docNgayDan('), 'app.js phải có hàm docNgayDan');
+    kiem(str_contains($js, "querySelectorAll('input[type=\"date\"], input[type=\"datetime-local\"]')")
+        && str_contains($js, "addEventListener('paste'"), 'Ô date và datetime-local phải được gắn sự kiện paste');
+    kiem(preg_match('/s\.match\((\/\^\(\\\\d\{1,2\}\).+?\$\/)\);/', $js, $m) === 1
+        && preg_match(str_replace(['\\/', '/^', '$/'], ['/', '#^', '$#'], $m[1]), '24/11/2026 00:00') === 1,
+        'Mẫu ngày/tháng/năm của docNgayDan phải khớp chữ Excel chép ra: 24/11/2026 00:00');
+}
+
 // KHÔNG phải test thường: chạy riêng bằng "php tests/chay.php --tai-lieu", lúc đồng bộ tài liệu nộp lần cuối.
 // User chốt 09/11/2026: README và docs/ chỉ tạo, đồng bộ một lần trước khi nộp; giữa chừng mỗi lần sửa chỉ cần chú
 // thích trong code và thân commit đủ rõ. Để chung bộ test thường thì nó đỏ suốt tới lúc đó, che mất lỗi thật.

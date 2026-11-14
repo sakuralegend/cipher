@@ -80,6 +80,56 @@ document.querySelectorAll('form[data-kiem-tra]').forEach(function (form) {
     });
 });
 
+// Ô ngày (type date, datetime-local) nhận chữ dán vào, ví dụ chép từ file Excel dữ liệu mẫu (user 14/11/2026: chọn ngày bằng
+// lịch rất lâu). Đọc được: ngày/tháng/năm với dấu / - . (24/11/2026, 24-11-2026), năm-tháng-ngày (2026-11-24), có hoặc
+// không có giờ:phút[:giây]; thiếu giờ thì lấy 00:00:00. Đọc không được thì để trình duyệt xử lý như thường.
+// Trả về giá trị đúng dạng của ô ('2026-11-24' hoặc '2026-11-24T00:00:00'), hoặc null.
+function docNgayDan(chu, coGio) {
+    var s = String(chu).trim();
+    var m = s.match(/^(\d{1,2})[\/.\-](\d{1,2})[\/.\-](\d{4})(?:[ T,]+(\d{1,2}):(\d{2})(?::(\d{2}))?)?$/);
+    var ngay, thang, nam;
+    if (m) {
+        ngay = +m[1];
+        thang = +m[2];
+        nam = +m[3];
+    } else {
+        m = s.match(/^(\d{4})[\/.\-](\d{1,2})[\/.\-](\d{1,2})(?:[ T,]+(\d{1,2}):(\d{2})(?::(\d{2}))?)?$/);
+        if (!m) {
+            return null;
+        }
+        nam = +m[1];
+        thang = +m[2];
+        ngay = +m[3];
+    }
+    var gio = +(m[4] || 0);
+    var phut = +(m[5] || 0);
+    var giay = +(m[6] || 0);
+    // Date tự đổi 31/02 thành 03/03: so lại từng phần để bắt ngày không có thật.
+    var d = new Date(nam, thang - 1, ngay);
+    if (d.getFullYear() !== nam || d.getMonth() !== thang - 1 || d.getDate() !== ngay || gio > 23 || phut > 59 || giay > 59) {
+        return null;
+    }
+    function hai(so) {
+        return (so < 10 ? '0' : '') + so;
+    }
+    var giaTri = nam + '-' + hai(thang) + '-' + hai(ngay);
+    return coGio ? giaTri + 'T' + hai(gio) + ':' + hai(phut) + ':' + hai(giay) : giaTri;
+}
+
+document.querySelectorAll('input[type="date"], input[type="datetime-local"]').forEach(function (o) {
+    o.addEventListener('paste', function (suKien) {
+        var giaTri = docNgayDan((suKien.clipboardData || window.clipboardData).getData('text'), o.type === 'datetime-local');
+        if (giaTri === null) {
+            return;
+        }
+        suKien.preventDefault();
+        o.value = giaTri;
+        // Báo cho phần kiểm tra form (data-sau: hết hạn phải sau bắt đầu) như khi người dùng tự chọn ngày.
+        o.dispatchEvent(new Event('input', {bubbles: true}));
+        o.dispatchEvent(new Event('change', {bubbles: true}));
+    });
+});
+
 // Form chạy lâu (Nhập hàng loạt đọc tới 50 máy chủ): <form data-dang-cho="Đang đọc…">. Bấm gửi thì khoá nút và
 // đổi chữ, để người dùng biết trang đang làm và không bấm lần hai.
 document.querySelectorAll('form[data-dang-cho]').forEach(function (form) {
