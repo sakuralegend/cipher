@@ -373,10 +373,18 @@ def main():
     ps1 = TAM / "word.ps1"
     ps1.write_text(PS1, encoding="utf-8-sig")
     docx, pdf = RA / f"{TEN_FILE}.docx", RA / f"{TEN_FILE}.pdf"
+    # Xoá bản cũ trước (user giao 15/11/2026): lần dựng hỏng thì thư mục ra không còn bản cũ trông như bản mới.
+    for cu in (docx, pdf):
+        try:
+            cu.unlink(missing_ok=True)
+        except PermissionError:
+            sys.exit(f"Không xoá được bản cũ {cu}: đóng file đó trong Word hoặc trình đọc PDF rồi chạy lại.")
     kq = subprocess.run(["powershell", "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", str(ps1), "-Vao", str(trang),
                          "-RaDocx", str(docx), "-RaPdf", str(pdf), "-Bia", str(cau_hinh)],
                         capture_output=True, text=True, encoding="utf-8", errors="replace")
     print(kq.stdout.strip(), kq.stderr.strip())
+    for tam in (mau_tam, cau_hinh):                       # Bản sao bìa đã nằm trong báo cáo, không cần giữ.
+        tam.unlink(missing_ok=True)
     if kq.returncode != 0:
         sys.exit("Word không dựng được báo cáo (đóng file Word đang mở rồi chạy lại).")
     print(docx, docx.stat().st_size // 1024, "KB")
