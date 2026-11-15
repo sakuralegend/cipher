@@ -10,6 +10,8 @@ from chup import Phien, chup, luu_html, TAM, ANH
 
 REPO = Path(r"d:\Desktop\cipher")
 PHP = r"C:\xampp\php\php.exe"
+# Lệnh là các chữ đứng trước "jpg"; sau "jpg" là tên ảnh (có ảnh tên nhat_ky, trùng tên lệnh).
+LENH = sys.argv[1:sys.argv.index("jpg")] if "jpg" in sys.argv else sys.argv[1:]
 
 
 def cua_so(ten, tieu_de, dong, rong=1180):
@@ -24,11 +26,11 @@ pre{{margin:0;padding:12px 16px 16px;color:#cccccc;font:13.5px/1.5 Consolas,'Cas
     chup(ten, luu_html(ten, trang), w=rong, h=so_dong * 21 + 70, ti_le=1.5, cho=500)
 
 
-if "test" in sys.argv:
+if "test" in LENH:
     ra = subprocess.run([PHP, "tests/chay.php"], cwd=REPO, capture_output=True).stdout.decode("utf-8").replace("\r\n", "\n").rstrip("\n").split("\n")
     cua_so("chay_test", "Command Prompt - C:\\xampp\\php\\php.exe tests\\chay.php", ["D:\\cipher> C:\\xampp\\php\\php.exe tests\\chay.php", f"... ({len(ra) - 20} dòng ✅ phía trên)"] + ra[-20:], rong=1100)
 
-if "nhat_ky" in sys.argv:
+if "nhat_ky" in LENH:
     log = (TAM / "php_s.log").read_text(encoding="utf-8", errors="replace").replace("\r\n", "\n").split("\n")
     # Đoạn thật liền mạch: từ lúc Admin đọc chứng chỉ github.com tới lần đăng nhập bị chặn; bỏ dòng tải file tĩnh nếu có.
     dau = next(i for i, d in enumerate(log) if "Doc chung chi" in d and "github.com" in d) - 3
@@ -39,12 +41,12 @@ if "nhat_ky" in sys.argv:
         doan = doan[:13] + ["        ..."] + doan[-15:]
     cua_so("cua_so_nhat_ky", "Cipher Cert", doan, rong=1180)
 
-if "header" in sys.argv:
+if "header" in LENH:
     ra = subprocess.run(["curl", "-sI", "-m", "20", "https://cert.cipher.id.vn/"], capture_output=True).stdout.decode("utf-8").replace("\r\n", "\n").strip().split("\n")
     ra = [d for d in ra if not d.lower().startswith("set-cookie")] + [d.split("=")[0].split(":")[0] + ": cipher_sid=…; path=/; secure; HttpOnly; SameSite=Lax" for d in ra if d.lower().startswith("set-cookie")]
     cua_so("header_bao_mat", "Command Prompt", ["D:\\cipher> curl -sI https://cert.cipher.id.vn/"] + ra, rong=1100)
 
-if "chup_lai" in sys.argv:
+if "chup_lai" in LENH:
     ad = Phien("admin")
 
     chup("chi_tiet_hang_f", "/admin/chung_chi_xem.php?id=5", ad, h=1400)
