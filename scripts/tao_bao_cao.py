@@ -7,11 +7,15 @@ Các bước:
   2. Sơ đồ Mermaid và file .svg thành ảnh PNG bằng Chrome chạy ngầm, vì Word không vẽ được Mermaid. File mermaid.min.js
      tải một lần về thư mục tạm của máy, không vào repo.
   3. Markdown thành HTML (đánh số hình, chú thích lấy từ chữ thay thế của ảnh).
-  4. Word mở HTML, nhúng ảnh, đặt khổ A4, lề, mục lục, số trang, rồi lưu .docx và .pdf (script PowerShell tạm).
+  4. Word dựng bìa từ docs/mau_bia.docx (giữ khung hoa văn, logo, trang Số phách; chữ lấy ở khối "bia" của BAO_CAO.md),
+     mở HTML, nhúng ảnh, đặt khổ A4, lề, mục lục, ghép bìa lên đầu, đánh số trang từ trang Mục lục, rồi lưu .docx và
+     .pdf (script PowerShell tạm).
 Sửa nội dung thì sửa các file trong docs/ rồi chạy lại script này; đừng sửa thẳng file Word, lần chạy sau sẽ ghi đè."""
 import hashlib
 import html
+import json
 import re
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -26,6 +30,7 @@ DOCS = REPO / "docs"
 RA = Path(sys.argv[1]) if len(sys.argv) > 1 else Path(r"D:\Music")
 TAM = Path(tempfile.gettempdir()) / "cipher_bao_cao"
 TEN_FILE = "BAO_CAO_De69"
+MAU_BIA = DOCS / "mau_bia.docx"  # Mẫu bìa của Học viện (user gửi 15/11/2026): lấy khung hoa văn, logo và trang Số phách.
 MERMAID = "https://cdn.jsdelivr.net/npm/mermaid@10.9.1/dist/mermaid.min.js"
 CHROME = [r"C:\Program Files\Google\Chrome\Application\chrome.exe", r"C:\Program Files (x86)\Google\Chrome\Application\chrome.exe",
           r"C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe"]
@@ -112,14 +117,11 @@ def chu_thich_so_do(ma: str, tieu_de: str) -> str:
 def ghep() -> tuple[dict, str]:
     """Đọc BAO_CAO.md: tách khối bìa, kéo các tài liệu ở dòng "chen:" vào (bỏ dòng tiêu đề cấp 1 của chúng)."""
     than = (DOCS / "BAO_CAO.md").read_text(encoding="utf-8").replace("\r\n", "\n")
-    bia = {"tv": []}
-    khoi = re.search(r"<!-- bia\n(.*?)\n-->", than, re.S)
-    for dong in khoi.group(1).split("\n"):
-        khoa, _, gia_tri = dong.partition(":")
-        if khoa.strip() == "tv":
-            bia["tv"].append(gia_tri.strip())
-        else:
-            bia[khoa.strip()] = gia_tri.strip()
+    khoi = re.search(r"<!-- bia(.*?)\n-->", than, re.S)
+    # Dòng "khoá: chữ" ở đầu dòng là một dòng trên bìa; dòng thụt vào là chú thích cho người sửa.
+    bia = dict(re.findall(r"^(\w+): (.+)$", khoi.group(1), re.M))
+    thieu = {"truong", "loai", "mon", "nhan", "ten", "phu", "noi"} - bia.keys()
+    assert not thieu, f"Khối bìa trong BAO_CAO.md thiếu {thieu}"
     than = than[:khoi.start()] + than[khoi.end():]
     than = re.sub(r"^# Báo cáo bài tập lớn.*\n", "", than, count=1)  # Tên báo cáo đã nằm trên bìa.
 
@@ -235,14 +237,6 @@ def rong_cot(m) -> str:
     return bang.replace("<table>", '<table width="100%">', 1) + '\n<p class="sau-bang">&nbsp;</p>'
 
 
-def trang_bia(bia: dict) -> str:
-    d = lambda lop, chu: f'<p class="bia {lop}">{html.escape(chu).replace(" / ", "<br>")}</p>'  # " / " trong tên là xuống dòng.
-    trong = lambda n: '<p class="bia">&nbsp;</p>' * n
-    return (d("truong", bia["truong"]) + trong(4) + d("loai", bia["loai"]) + d("mon", bia["mon"]) + trong(2)
-            + d("de", bia["de"]) + d("ten", bia["ten"]) + d("phu", bia["phu"]) + trong(4)
-            + d("nhom", bia["lop"]) + d("nhom", bia["nhom"]) + "".join(d("tv", t) for t in bia["tv"]) + trong(6) + d("noi", bia["noi"]))
-
-
 CSS = """
 body { font-family: 'Times New Roman'; font-size: 13pt; }
 p, li { font-family: 'Times New Roman'; font-size: 13pt; line-height: 130%; text-align: justify; margin: 0 0 6pt 0; }
@@ -259,27 +253,57 @@ pre { font-family: Consolas; font-size: 8.5pt; line-height: 115%; background: #f
 pre code { font-size: 8.5pt; }
 p.hinh { text-align: center; margin: 8pt 0 2pt 0; page-break-after: avoid; }
 p.chu-thich { text-align: center; font-style: italic; font-size: 11.5pt; margin: 0 0 10pt 0; }
-p.bia { text-align: center; margin: 0 0 4pt 0; font-size: 14pt; }
 p.sau-bang { font-size: 5pt; line-height: 100%; margin: 0; }
-p.tieu-de-muc-luc { font-size: 16pt; font-weight: bold; text-align: center; page-break-before: always; margin: 0 0 14pt 0; }
-p.truong { font-size: 15pt; font-weight: bold; }
-p.loai { font-size: 22pt; font-weight: bold; margin-bottom: 8pt; }
-p.mon { font-size: 15pt; }
-p.de { font-size: 15pt; font-weight: bold; }
-p.ten { font-size: 19pt; font-weight: bold; line-height: 130%; }
-p.phu { font-size: 12pt; font-style: italic; }
-p.tv { font-size: 14pt; font-weight: bold; }
-p.noi { font-size: 13pt; font-style: italic; }
+p.tieu-de-muc-luc { font-size: 16pt; font-weight: bold; text-align: center; margin: 0 0 14pt 0; }  /* Mở đầu phần thân: ngắt trang là ngắt mục ngay sau bìa. */
 """
 
 # Word: mở HTML, nhúng ảnh (mặc định ảnh chỉ là link tới file), khổ giấy, mục lục từ Heading 1-3, số trang, lưu.
 PS1 = r"""
-param([string]$Vao, [string]$RaDocx, [string]$RaPdf)
+param([string]$Vao, [string]$RaDocx, [string]$RaPdf, [string]$Bia)
 $ErrorActionPreference = 'Stop'
+$cfg = Get-Content -Raw -Encoding UTF8 $Bia | ConvertFrom-Json   # Chữ trên bìa đi qua file JSON UTF-8, không qua dòng lệnh.
 $word = New-Object -ComObject Word.Application
 $word.Visible = $false
 $word.DisplayAlerts = 0
 try {
+    # Trang bìa: bản sao của mẫu (docs/mau_bia.docx). Mục 1 của mẫu là bìa, mục 2 là trang Số phách (giữ nguyên).
+    # Giữ khung hoa văn (một nhóm hình neo ở đoạn 1, đặt theo toạ độ trang) và logo (ảnh trong dòng ở đoạn 6);
+    # bỏ chữ của mẫu (tên khoa, "Bài tiểu luận", môn học khác) rồi viết chữ của bài mình từ khối bìa trong BAO_CAO.md.
+    $b = $word.Documents.Open($cfg.mau_tam, $false, $false)
+    $b.ActiveWindow.View.Type = 3
+    $p = $b.Sections.Item(1).Range.Paragraphs
+    if ($b.Shapes.Count -ne 1 -or $p.Item(1).Range.ShapeRange.Count -ne 1 -or $p.Item(6).Range.InlineShapes.Count -ne 1) {
+        throw 'Mẫu bìa đổi bố cục: không thấy khung hoa văn ở đoạn 1 hoặc logo ở đoạn 6'
+    }
+    if ($p.Item(1).Range.Text.Trim() -ne $cfg.truong) { throw 'Dòng tên trường của mẫu khác khối bìa: sửa script trước' }
+    # Xoá từ đoạn 7 (sau logo) tới hết bìa, chừa dấu ngắt mục cuối cùng; rồi xoá đoạn 2 (tên khoa). Đoạn 1 chứa neo khung
+    # hoa văn nên không đụng vào.
+    $b.Range($p.Item(7).Range.Start, $b.Sections.Item(1).Range.End - 1).Delete()
+    $p.Item(2).Range.Delete()
+    $dong = @($cfg.loai, $cfg.mon, $cfg.nhan, $cfg.ten, $cfg.phu, $cfg.noi)
+    $dau = $b.Sections.Item(1).Range.Paragraphs.Last.Range.Start
+    $b.Range($dau, $dau).InsertBefore((($dong | ForEach-Object { $_.Replace(' / ', [string][char]11) }) -join "`r"))
+    # Mỗi dòng: cỡ chữ, đậm, nghiêng, khoảng cách phía trên (pt). Chữ màu và lề trái phải theo mẫu.
+    $kieu = @(@(24, 1, 0, 40), @(15, 1, 0, 8), @(14, 1, 0, 36), @(18, 1, 0, 8), @(13, 0, 1, 14), @(14, 1, 0, 0))
+    $ds = $b.Sections.Item(1).Range.Paragraphs
+    $n = $ds.Count
+    for ($i = 0; $i -lt 6; $i++) {
+        $q = $ds.Item($n - 5 + $i)
+        $q.Alignment = 1; $q.SpaceBefore = $kieu[$i][3]; $q.SpaceAfter = 0; $q.LineSpacingRule = 0
+        $f = $q.Range.Font
+        $f.Name = 'Times New Roman'; $f.Size = $kieu[$i][0]; $f.Bold = $kieu[$i][1]; $f.Italic = $kieu[$i][2]
+    }
+    $q = $ds.Item($n - 2); $q.LineSpacingRule = 1   # Tên đề tài hai dòng: giãn dòng 1,5 cho thoáng.
+    # Dòng "Hà Nội" đặt ở đáy khung như mẫu (cách mép trên trang 712 pt), dù tên đề tài dài một hay hai dòng.
+    $b.Repaginate()
+    $noi = $ds.Item($n)
+    $y = [double]$noi.Range.Information(6)                # wdVerticalPositionRelativeToPage
+    if ($y -lt 712) { $noi.SpaceBefore = [single](712 - $y) }
+    $b.Repaginate()
+    if ($b.Sections.Item(1).Range.Information(3) -ne 1) { throw 'Chữ trên bìa tràn sang trang thứ hai' }   # wdActiveEndPageNumber
+    $b.Save()
+    $b.Close()
+
     $doc = $word.Documents.Open($Vao, $false, $false)
     $word.ActiveWindow.View.Type = 3                      # wdPrintView: HTML mở ra ở kiểu xem web, không có trang.
     $ps = $doc.PageSetup
@@ -308,10 +332,17 @@ try {
         $bo = [Type]::Missing
         [void]$doc.TablesOfContents.Add($r, $true, 1, 3, $false, $bo, $true, $true, $bo, $true)
     }
-    $muc = $doc.Sections.Item(1)
-    $muc.PageSetup.DifferentFirstPageHeaderFooter = -1    # Trang bìa không có số trang.
-    [void]$muc.Footers.Item(1).PageNumbers.Add(1, $false) # wdAlignPageNumberCenter
-    $muc.Footers.Item(1).Range.Font.Name = 'Times New Roman'
+    # Ghép bìa vào đầu: một dấu ngắt mục sang trang, rồi chèn file bìa trước nó. Thành ba mục: bìa, Số phách, thân bài.
+    $doc.Range(0, 0).InsertBreak(2)                       # wdSectionBreakNextPage
+    $doc.Range(0, 0).InsertFile($cfg.mau_tam)
+    if ($doc.Sections.Count -ne 3) { throw ('Ghép bìa ra ' + $doc.Sections.Count + ' mục, cần 3') }
+    $than = $doc.Sections.Item(3)
+    foreach ($k in 1..3) { $than.Headers.Item($k).LinkToPrevious = $false; $than.Footers.Item($k).LinkToPrevious = $false }
+    $than.PageSetup.DifferentFirstPageHeaderFooter = 0
+    $chan = $than.Footers.Item(1)                         # Bìa và Số phách không đánh số; thân bài đếm từ 1 ở trang Mục lục.
+    $chan.PageNumbers.RestartNumberingAtSection = $true; $chan.PageNumbers.StartingNumber = 1
+    [void]$chan.PageNumbers.Add(1, $true)                 # wdAlignPageNumberCenter
+    $chan.Range.Font.Name = 'Times New Roman'
     $doc.Repaginate()
     if ($doc.TablesOfContents.Count -gt 0) { $doc.TablesOfContents.Item(1).Update() }
     $doc.SaveAs2($RaDocx, 16)                             # wdFormatDocumentDefault
@@ -319,7 +350,7 @@ try {
     'Xong: ' + $doc.ComputeStatistics(2) + ' trang'
     $doc.Close($false)
 } finally {
-    $word.Quit()
+    $word.Quit([ref]0)                                       # wdDoNotSaveChanges: lỗi giữa chừng thì Word vẫn thoát, không giữ file.
     [void][System.Runtime.InteropServices.Marshal]::ReleaseComObject($word)
 }
 """
@@ -331,13 +362,20 @@ def main():
     bia, than = ghep()
     than_html = thanh_html(than)
     trang = TAM / "bao_cao.html"
-    trang.write_text(f'<!doctype html><html lang="vi"><head><meta charset="utf-8"><title>{html.escape(bia["ten"])}</title>'
-                     f"<style>{CSS}</style></head><body>{trang_bia(bia)}{than_html}</body></html>", encoding="utf-8")
+    ten = bia["ten"].replace(" / ", " ")
+    trang.write_text(f'<!doctype html><html lang="vi"><head><meta charset="utf-8"><title>{html.escape(ten)}</title>'
+                     f"<style>{CSS}</style></head><body>{than_html}</body></html>", encoding="utf-8")
+    # Word sửa bản sao của mẫu bìa, không sửa docs/mau_bia.docx.
+    mau_tam = TAM / "bia.docx"
+    shutil.copyfile(MAU_BIA, mau_tam)
+    cau_hinh = TAM / "bia.json"
+    cau_hinh.write_text(json.dumps({**bia, "mau_tam": str(mau_tam)}, ensure_ascii=False), encoding="utf-8")
     ps1 = TAM / "word.ps1"
     ps1.write_text(PS1, encoding="utf-8-sig")
     docx, pdf = RA / f"{TEN_FILE}.docx", RA / f"{TEN_FILE}.pdf"
     kq = subprocess.run(["powershell", "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", str(ps1), "-Vao", str(trang),
-                         "-RaDocx", str(docx), "-RaPdf", str(pdf)], capture_output=True, text=True, encoding="utf-8", errors="replace")
+                         "-RaDocx", str(docx), "-RaPdf", str(pdf), "-Bia", str(cau_hinh)],
+                        capture_output=True, text=True, encoding="utf-8", errors="replace")
     print(kq.stdout.strip(), kq.stderr.strip())
     if kq.returncode != 0:
         sys.exit("Word không dựng được báo cáo (đóng file Word đang mở rồi chạy lại).")

@@ -1,6 +1,6 @@
 # Báo cáo kiểm thử: Hệ thống quản lý chứng chỉ số và thời hạn sử dụng
 
-## 1. Kết quả
+## 1. Tổng hợp kết quả kiểm thử
 
 | Hạng mục | Kết quả |
 |---|---|
@@ -14,7 +14,7 @@
 
 ![Bộ test tự động chạy xong: mỗi test một dòng, dòng cuối ghi XANH kèm số test](anh/chay_test.jpg)
 
-## 2. Cách kiểm thử
+## 2. Phương pháp kiểm thử
 
 Hệ thống được kiểm ở 4 lớp:
 
@@ -40,7 +40,7 @@ Hệ thống được kiểm ở 4 lớp:
 bật MySQL nếu chưa bật, tạo CSDL `cipher_test` nếu chưa có, chạy `tests\chay.php`, rồi dừng chờ bấm phím để kịp
 đọc kết quả. Mỗi test in ✅ hoặc ❌ kèm lý do; dòng cuối là `XANH: 136 test` hoặc `ĐỎ: số test đỏ/136 test`.
 
-## 3. Danh sách test theo chức năng
+## 3. Kiểm thử tự động theo nhóm chức năng
 
 Tên test viết không dấu, bỏ tiền tố `test_`; tìm đúng tên đó trong `tests/chay.php` để xem code của test.
 Cột phải là câu Luật của test. Cả 136 test đều **đạt** ngày 15/11/2026. Nguyễn Đức Trung phụ trách
@@ -63,7 +63,9 @@ Cột phải là câu Luật của test. Cả 136 test đều **đạt** ngày 1
 | Giao diện, triển khai | 26 | Giao diện | Nguyễn Chí Kiên |
 | **Tổng** | **136** | | |
 
-### Đăng nhập, phiên, phân quyền (12 test, Nguyễn Đức Trung)
+### 3.1. Đăng nhập, phiên, phân quyền
+
+Số ca kiểm thử: 12. Người phụ trách: Nguyễn Đức Trung.
 
 | Test | Quy tắc được kiểm |
 |---|---|
@@ -80,7 +82,9 @@ Cột phải là câu Luật của test. Cả 136 test đều **đạt** ngày 1
 | `dang_xuat_xong_ve_landing` | Đăng xuất xong thì về landing (index.php), không về trang đăng nhập. |
 | `doi_mat_khau_dang_xuat_phien_khac_giu_phien_dang_doi` | Đổi mật khẩu thì các phiên khác của người đó bị đăng xuất; phiên đang đổi giữ nguyên. |
 
-### Người dùng (11 test, Nguyễn Đức Trung)
+### 3.2. Người dùng
+
+Số ca kiểm thử: 11. Người phụ trách: Nguyễn Đức Trung.
 
 | Test | Quy tắc được kiểm |
 |---|---|
@@ -96,7 +100,9 @@ Cột phải là câu Luật của test. Cả 136 test đều **đạt** ngày 1
 | `trang_quan_ly_nguoi_dung_chi_danh_cho_admin` | Mọi trang quản lý người dùng đều gọi yeuCauAdmin(), không chỉ yeuCauDangNhap(). |
 | `mat_khau_moi_phai_co_ca_chu_va_so` | Mật khẩu mới phải đủ 8 ký tự và có cả chữ lẫn số. |
 
-### CSDL, ràng buộc, dữ liệu mẫu (12 test, Nguyễn Đức Trung)
+### 3.3. CSDL, ràng buộc, dữ liệu mẫu
+
+Số ca kiểm thử: 12. Người phụ trách: Nguyễn Đức Trung.
 
 | Test | Quy tắc được kiểm |
 |---|---|
@@ -113,7 +119,9 @@ Cột phải là câu Luật của test. Cả 136 test đều **đạt** ngày 1
 | `chay_bat_dung_khi_chay_trong_file_nen_hoac_nap_hong` | CHAY_WEB.bat dừng và bảo giải nén khi không thấy database\ và public\ cạnh nó, và dừng khi một file SQL nạp hỏng. |
 | `chay_test_bat_chay_bo_test_roi_dung_cho_doc` | CHAY_TEST.bat chỉ chạy bộ test: chuẩn bị XAMPP, MySQL bằng database\chuan_bi.bat (CHAY_WEB.bat dùng chung), tạo cipher_test nếu thiếu, chạy tests\chay.php rồi dừng chờ bấm phím. |
 
-### Nhật ký hoạt động (mở rộng 1) (7 test, Nguyễn Đức Trung)
+### 3.4. Nhật ký hoạt động (mở rộng 1)
+
+Số ca kiểm thử: 7. Người phụ trách: Nguyễn Đức Trung.
 
 | Test | Quy tắc được kiểm |
 |---|---|
@@ -125,7 +133,9 @@ Cột phải là câu Luật của test. Cả 136 test đều **đạt** ngày 1
 | `nhat_ky_moi_hanh_dong_mot_trong_ba_muc` | Mỗi hành động trong nhật ký có đúng một trong ba mức Thông tin, Cảnh báo, Nguy hiểm; Nguy hiểm là xoá và hai dấu hiệu tấn công. |
 | `nhat_ky_tach_ma_dau_hieu_tan_cong_va_loc_theo_muc` | Đọc địa chỉ nội bộ ghi doc_chung_chi_chan, đọc tên miền không có ghi doc_chung_chi_loi, đăng nhập khi đang bị tạm chặn ghi dang_nhap_bi_chan; lọc theo mức ra đúng các dòng đó. |
 
-### Chấm hạng an toàn (mở rộng 3) (4 test, Nguyễn Đức Trung)
+### 3.5. Chấm hạng an toàn (mở rộng 3)
+
+Số ca kiểm thử: 4. Người phụ trách: Nguyễn Đức Trung.
 
 | Test | Quy tắc được kiểm |
 |---|---|
@@ -134,7 +144,9 @@ Cột phải là câu Luật của test. Cả 136 test đều **đạt** ngày 1
 | `cham_hang_ten_mien_khong_lien_quan` | Không tên nào trong chứng chỉ (tên chính, tên phụ) thuộc tên miền quản lý thì là C; tên miền con hay wildcard phủ một tầng vẫn tính là thuộc; wildcard chỉ là ghi chú, không hạ hạng. |
 | `cham_hang_nhan_dien_gost_va_khong_tron_trang_thai` | Chứng chỉ GOST là B (chỉ dùng được ở Nga), không phải F; hạng không xét hết hạn hay thu hồi. |
 
-### Chứng chỉ: thêm, sửa, thu hồi, xoá (12 test, Phan Tuấn Anh)
+### 3.6. Chứng chỉ: thêm, sửa, thu hồi, xoá
+
+Số ca kiểm thử: 12. Người phụ trách: Phan Tuấn Anh.
 
 | Test | Quy tắc được kiểm |
 |---|---|
@@ -151,7 +163,9 @@ Cột phải là câu Luật của test. Cả 136 test đều **đạt** ngày 1
 | `o_go_ten_mien_to_chuc_cap_chi_nhan_ten_co_trong_danh_muc` | Ô gõ Tên miền, Tổ chức cấp chỉ nhận tên có trong danh mục (không phân biệt hoa thường); tên lạ không lưu được. |
 | `them_chung_chi_hai_tab_thu_cong_mo_truoc` | Trang Thêm chứng chỉ có hai tab, Nhập thủ công (mở trước) và Nhập tự động (đọc một địa chỉ ở trên, nhập hàng loạt ở dưới); menu Chứng chỉ còn Danh sách và Thêm. |
 
-### Gia hạn (5 test, Phan Tuấn Anh)
+### 3.7. Gia hạn
+
+Số ca kiểm thử: 5. Người phụ trách: Phan Tuấn Anh.
 
 | Test | Quy tắc được kiểm |
 |---|---|
@@ -161,7 +175,9 @@ Cột phải là câu Luật của test. Cả 136 test đều **đạt** ngày 1
 | `han_moi_phai_sau_han_cu_va_sau_hien_tai` | Hạn mới phải sau cả hạn hiện tại lẫn thời điểm gia hạn; dữ liệu sai bị từ chối đúng ô. |
 | `gia_han_loi_giua_chung_thi_khong_doi_gi` | Gia hạn lỗi giữa chừng thì không bước nào có hiệu lực. |
 
-### Đọc chứng chỉ thật (mở rộng 2) (12 test, Phan Tuấn Anh)
+### 3.8. Đọc chứng chỉ thật (mở rộng 2)
+
+Số ca kiểm thử: 12. Người phụ trách: Phan Tuấn Anh.
 
 | Test | Quy tắc được kiểm |
 |---|---|
@@ -178,7 +194,9 @@ Cột phải là câu Luật của test. Cả 136 test đều **đạt** ngày 1
 | `xem_truoc_nhap_hang_loat_danh_dau_trung_khi_doc_tung_dia_chi` | Bảng xem trước của nhập hàng loạt đánh dấu dòng cùng chứng chỉ với một dòng phía trên, kể cả khi các địa chỉ được đọc lần lượt. |
 | `doc_chung_chi_cho_du_lau_cho_may_chu_o_xa` | Đọc chứng chỉ từ máy chủ chờ kết nối và bắt tay TLS ít nhất 10 giây trước khi báo "không trả lời". |
 
-### Danh sách, tìm kiếm, lọc, sắp xếp (10 test, Phan Tuấn Anh)
+### 3.9. Danh sách, tìm kiếm, lọc, sắp xếp
+
+Số ca kiểm thử: 10. Người phụ trách: Phan Tuấn Anh.
 
 | Test | Quy tắc được kiểm |
 |---|---|
@@ -193,7 +211,9 @@ Cột phải là câu Luật của test. Cả 136 test đều **đạt** ngày 1
 | `sap_xep_gan_day_theo_thu_tu_them_hai_chieu` | Sắp xếp "gần đây" theo thứ tự thêm: mới thêm trước (giam) hoặc thêm lâu nhất trước (tang); ô "Sắp xếp theo" gửi xep = "cột.chiều". |
 | `sap_xep_an_toan_chia_trang_khong_sot_khong_lap` | Sắp theo độ an toàn chia trang không sót, không lặp, đúng thứ tự hạng (kém trước: F, C, B, A; hoặc ngược lại). |
 
-### Danh mục: tên miền, máy chủ, tổ chức cấp (8 test, Nguyễn Chí Kiên)
+### 3.10. Danh mục: tên miền, máy chủ, tổ chức cấp
+
+Số ca kiểm thử: 8. Người phụ trách: Nguyễn Chí Kiên.
 
 | Test | Quy tắc được kiểm |
 |---|---|
@@ -206,7 +226,9 @@ Cột phải là câu Luật của test. Cả 136 test đều **đạt** ngày 1
 | `danh_muc_khong_con_du_lieu_con_thi_xoa_duoc` | Danh mục không còn dữ liệu con thì xoá được. |
 | `chi_admin_xoa_duoc_may_chu_ten_mien_to_chuc_cap` | Chỉ Admin xoá được máy chủ, tên miền, tổ chức cấp; Nhân viên gửi lệnh thẳng cũng bị từ chối. |
 
-### Cảnh báo (8 test, Nguyễn Chí Kiên)
+### 3.11. Cảnh báo
+
+Số ca kiểm thử: 8. Người phụ trách: Nguyễn Chí Kiên.
 
 | Test | Quy tắc được kiểm |
 |---|---|
@@ -219,7 +241,9 @@ Cột phải là câu Luật của test. Cả 136 test đều **đạt** ngày 1
 | `danh_dau_da_xem_lam_giam_so_canh_bao_moi` | Đánh dấu đã xem làm giảm số cảnh báo mới, cảnh báo vẫn còn trong danh sách. |
 | `moi_chung_chi_chi_hien_mot_canh_bao_la_moc_gap_nhat` | Trang Cảnh báo và chuông chỉ tính một cảnh báo cho mỗi chứng chỉ: mốc gấp nhất trong chu kỳ hiện tại. |
 
-### Dashboard, thống kê, báo cáo (9 test, Nguyễn Chí Kiên)
+### 3.12. Dashboard, thống kê, báo cáo
+
+Số ca kiểm thử: 9. Người phụ trách: Nguyễn Chí Kiên.
 
 | Test | Quy tắc được kiểm |
 |---|---|
@@ -233,7 +257,9 @@ Cột phải là câu Luật của test. Cả 136 test đều **đạt** ngày 1
 | `bieu_do_thong_ke_giu_tran_truc_khi_loc` | Bốn biểu đồ Thống kê giữ trần trục theo toàn bộ chứng chỉ; lọc thì cột ngắn lại trên cùng một thước. |
 | `nut_xuat_bao_cao_o_dong_tieu_de` | Nút Xuất CSV, Bản in nằm ở dòng tiêu đề của Danh sách và Thống kê, mang theo bộ lọc và cách xếp đang xem. |
 
-### Giao diện, triển khai (26 test, Nguyễn Chí Kiên)
+### 3.13. Giao diện, triển khai
+
+Số ca kiểm thử: 26. Người phụ trách: Nguyễn Chí Kiên.
 
 | Test | Quy tắc được kiểm |
 |---|---|
@@ -264,7 +290,7 @@ Cột phải là câu Luật của test. Cả 136 test đều **đạt** ngày 1
 | `o_ngay_nhan_chu_dan_tu_excel` | Mọi ô ngày (date, datetime-local) nhận chữ dán dạng ngày/tháng/năm như ô ngày trong file Excel dữ liệu mẫu. |
 | `nhat_ky_man_hinh_chi_in_khi_chay_bang_php_s` | Nhật ký ra màn hình chỉ in khi web chạy bằng php -S (CHAY_WEB.bat), mỗi lần một dòng có giờ, chữ bỏ dấu; CHAY_WEB.bat chạy php -S với -q. |
 
-## 4. Kiểm tay theo kịch bản: file Excel dữ liệu mẫu
+## 4. Kiểm thử thủ công theo kịch bản dữ liệu mẫu
 
 File `DU_LIEU_NHAP_TAY.xlsx` (nằm trong gói nộp) có 7 trang tính, mỗi trang là một form của web, cột xếp theo
 đúng thứ tự ô trên form. Mỗi dòng ghi rõ là dòng **Đúng** (phải lưu được) hay dòng **Sai** (phải bị chặn), kết quả
@@ -291,7 +317,7 @@ trang Gia hạn làm chứng chỉ rời trang Cảnh báo và để lại một
 
 ![Dòng sai của trang Nhập tự động: địa chỉ nội bộ 127.0.0.1 bị từ chối](anh/doc_noi_bo.jpg)
 
-## 5. Kiểm trên bản chạy thật
+## 5. Kiểm thử trên môi trường triển khai thực tế
 
 Ngày 14/11/2026, kiểm từ máy ở ngoài, gửi yêu cầu tới <https://cert.cipher.id.vn> khi chưa đăng nhập.
 
@@ -342,7 +368,7 @@ hổng; các điểm cần sửa về chức năng tìm ra trong đợt này đ�
 
 ![Lọc Nhật ký theo mức Nguy hiểm: các lần đọc địa chỉ nội bộ và đăng nhập khi đang bị chặn hiện ra ngay](anh/nhat_ky_nguy_hiem.jpg)
 
-## 7. Lỗi phát hiện trong quá trình làm
+## 7. Các lỗi phát hiện và khắc phục trong quá trình phát triển
 
 Mỗi lỗi khi sửa đều kèm đúng một test bắt lỗi đó, để lỗi không quay lại.
 
@@ -360,7 +386,7 @@ Mỗi lỗi khi sửa đều kèm đúng một test bắt lỗi đó, để lỗ
 | 13/11/2026 | Bấm `CHAY_WEB.bat` ngay trong file nén thì báo "Xong" rồi web không chạy | Chương trình nén chỉ bung riêng file đó ra thư mục tạm | `chay_bat_dung_khi_chay_trong_file_nen_hoac_nap_hong` |
 | 14/11/2026 | Máy chủ ở xa bị báo "không trả lời" dù vẫn chạy | Chỉ chờ 5 giây, trong khi bắt tay TLS có lúc mất đúng 5 giây | `doc_chung_chi_cho_du_lau_cho_may_chu_o_xa` |
 
-## 8. Giới hạn, chưa kiểm
+## 8. Phạm vi chưa được kiểm thử
 
 - **Phần JavaScript** (kiểm tra form trên trình duyệt, biểu đồ, thanh tiến trình, dán ngày) không có test tự động
   chạy trong trình duyệt; test chỉ kiểm rằng đoạn xử lý có mặt, còn hành vi thì kiểm bằng tay. Mọi quy tắc dữ liệu

@@ -3,26 +3,22 @@
 <!-- File này là khung của báo cáo nộp. scripts/tao_bao_cao.py ghép nó với SPEC.md, ERD.md, USECASE.md, KIEM_THU.md
      (các dòng "chen:") thành một file Word và một file PDF. Khối "bia" là trang bìa; "muc-luc" là chỗ đặt mục lục. -->
 
-<!-- bia
+<!-- bia: chữ trên trang bìa. Khung hoa văn và logo lấy từ docs/mau_bia.docx (mẫu bìa của Học viện), trang 2 của mẫu
+     là trang Số phách. Bìa không ghi tên thành viên vì bài chấm qua số phách (user chốt 15/11/2026). " / " là xuống dòng.
 truong: HỌC VIỆN AN NINH NHÂN DÂN
-loai: BÁO CÁO BÀI TẬP LỚN
-mon: Môn học: Lập trình máy tính
-de: ĐỀ TÀI 69
+loai: BÀI TẬP LỚN
+mon: MÔN: LẬP TRÌNH MÁY TÍNH
+nhan: TÊN ĐỀ TÀI:
 ten: XÂY DỰNG HỆ THỐNG QUẢN LÝ CHỨNG CHỈ SỐ / VÀ THỜI HẠN SỬ DỤNG
-phu: Sản phẩm: Cipher Cert · https://cert.cipher.id.vn
-lop: Lớp: B12D57
-nhom: Nhóm thực hiện:
-tv: Nguyễn Đức Trung
-tv: Phan Tuấn Anh
-tv: Nguyễn Chí Kiên
+phu: Đề tài số 69 · Sản phẩm: Cipher Cert
 noi: Hà Nội, tháng 11 năm 2026
 -->
 
 <!-- muc-luc -->
 
-# Phần I. Giới thiệu
+# Phần I. Tổng quan đề tài
 
-## 1. Đề tài và mục tiêu
+## 1. Bối cảnh, bài toán và mục tiêu
 
 Mỗi website dùng HTTPS đều cần một **chứng chỉ số SSL/TLS**: tấm "giấy chứng nhận" do một tổ chức cấp chứng chỉ ký,
 xác nhận máy chủ đúng là chủ của tên miền. Chứng chỉ nào cũng có hạn, và hạn ngày càng ngắn: từ 15/03/2026 chứng
@@ -45,7 +41,7 @@ Mục tiêu nhóm đặt ra:
   an toàn chứng chỉ.
 - Bảo mật làm thật, vì web chạy thật trên internet.
 
-## 2. Sản phẩm nộp
+## 2. Các sản phẩm bàn giao
 
 | Yêu cầu bàn giao của đề | Nằm ở đâu |
 |---|---|
@@ -59,7 +55,7 @@ Mục tiêu nhóm đặt ra:
 | Dữ liệu để người chấm tự nhập thử | `DU_LIEU_NHAP_TAY.xlsx` trong file nén: 7 trang tính, 34 dòng đúng và sai |
 | Bản chạy thật trên mạng | <https://cert.cipher.id.vn>, cùng dữ liệu mẫu và tài khoản như file nén trong thời gian chấm |
 
-## 3. Công nghệ sử dụng
+## 3. Công nghệ và công cụ phát triển
 
 | Lớp | Công nghệ | Ghi chú |
 |---|---|---|
@@ -80,7 +76,7 @@ Mục tiêu nhóm đặt ra:
 Phần cốt lõi (đăng nhập, phân quyền, kiểm tra dữ liệu, tính trạng thái, cảnh báo, gia hạn, thống kê, xuất báo cáo,
 đọc chứng chỉ) đều do nhóm tự viết bằng PHP và SQL; thư viện chỉ lo phần trình bày và vẽ biểu đồ.
 
-## 4. Tổng quan chức năng
+## 4. Tổng quan chức năng của hệ thống
 
 | Nhóm | Chức năng |
 |---|---|
@@ -95,21 +91,21 @@ Phần cốt lõi (đăng nhập, phân quyền, kiểm tra dữ liệu, tính t
 | **Mở rộng 2** | Đọc chứng chỉ thật từ máy chủ: gõ tên miền (hoặc dán tối đa 50 địa chỉ), hệ thống kết nối tới máy chủ, đọc chứng chỉ, tự điền form và tự tạo tên miền, máy chủ, tổ chức cấp còn thiếu |
 | **Mở rộng 3** | Chấm hạng an toàn A, B, C, F cho từng chứng chỉ theo quy định quốc tế, mỗi phát hiện kèm nguồn |
 
-# Phần II. Phân tích yêu cầu và mô tả chức năng
+# Phần II. Phân tích và đặc tả yêu cầu
 
 <!-- chen: SPEC.md -->
 
-# Phần III. Thiết kế cơ sở dữ liệu (ERD)
+# Phần III. Thiết kế cơ sở dữ liệu
 
 <!-- chen: ERD.md -->
 
-# Phần IV. Use Case
+# Phần IV. Mô hình hoá ca sử dụng (Use Case)
 
 <!-- chen: USECASE.md -->
 
-# Phần V. Thiết kế và hiện thực
+# Phần V. Thiết kế kiến trúc và cài đặt hệ thống
 
-## 1. Kiến trúc tổng thể
+## 1. Kiến trúc tổng thể của hệ thống
 
 Hệ thống có ba lớp. Trình duyệt chỉ hiển thị và báo lỗi nhanh; mọi quy tắc nằm ở PHP phía máy chủ; CSDL là lớp chặn
 cuối cùng. Không tin bất cứ thứ gì gửi từ trình duyệt: dữ liệu nào cũng được PHP kiểm lại.
@@ -124,7 +120,7 @@ flowchart TB
     S -.->|"TLS, chỉ khi đọc chứng chỉ"| MC["Máy chủ bên ngoài"]
 ```
 
-## 2. Cấu trúc thư mục
+## 2. Tổ chức mã nguồn
 
 ```
 cipher/
@@ -167,11 +163,11 @@ Ngoài gói nộp, nhóm còn giữ các tài liệu gốc của báo cáo này 
 - Dữ liệu được kiểm tra ở 3 lớp: JavaScript báo lỗi nhanh trên form (`public/assets/app.js`), PHP kiểm
   tra lại tất cả (`src/`), CSDL chặn lần cuối bằng `UNIQUE`, `CHECK`, khoá ngoại (`database/schema.sql`).
 
-## 3. Sổ tay: mỗi luồng chính chạy qua đâu
+## 3. Luồng xử lý của các chức năng chính
 
 Đọc mục nào thì mở đúng file, đúng hàm ghi ở đó.
 
-### 3.1. Mọi trang quản trị: kiểm tra đăng nhập, quyền, CSRF
+### 3.1. Cơ chế kiểm soát truy cập chung: xác thực, phân quyền và chống CSRF
 
 1. Dòng đầu mọi file trong `public/admin/` nạp `src/khoi_dong.php`: mở kết nối, bắt đầu
    phiên bằng `batDauPhien()` (cookie `HttpOnly`, `SameSite=Lax`).
@@ -186,7 +182,7 @@ Ngoài gói nộp, nhóm còn giữ các tài liệu gốc của báo cáo này 
 Có test bắt quy tắc này cho **mọi** file: `moi_trang_quan_tri_deu_kiem_tra_dang_nhap`,
 `moi_trang_nhan_post_deu_kiem_tra_csrf`. Thêm trang mới mà quên một trong hai là test đỏ.
 
-### 3.2. Đăng nhập, đăng xuất
+### 3.2. Xác thực người dùng: đăng nhập và đăng xuất
 
 | Bước | File | Hàm |
 |---|---|---|
@@ -201,7 +197,7 @@ Sai tên, sai mật khẩu hay đang bị tạm chặn đều báo **cùng một
 `password_verify` trên một mã băm giả, để kẻ dò không biết tên đăng nhập nào có thật. Phiên nhớ một "dấu mật khẩu"
 (mã băm SHA-256 của mã băm mật khẩu): đổi mật khẩu thì dấu đổi, các phiên cũ không khớp nữa và bị đẩy ra.
 
-### 3.3. Thêm, sửa chứng chỉ
+### 3.3. Thêm mới và cập nhật chứng chỉ
 
 | Bước | File | Hàm |
 |---|---|---|
@@ -215,7 +211,7 @@ Sai tên, sai mật khẩu hay đang bị tạm chặn đều báo **cùng một
 
 Form sửa chỉ để sửa thông tin nhập sai, không ghi lịch sử. Chứng chỉ được cấp lại thì dùng Gia hạn (3.6).
 
-### 3.4. Đọc chứng chỉ thật từ máy chủ (mở rộng 2)
+### 3.4. Thu thập chứng chỉ trực tiếp từ máy chủ (chức năng mở rộng 2)
 
 | Bước | Hàm trong `src/chung_chi.php` |
 |---|---|
@@ -236,13 +232,13 @@ Vì sao chặn địa chỉ nội bộ: web chạy chung máy với các dịch 
 nhờ web kết nối tới `127.0.0.1` hoặc mạng nội bộ để dò xem có gì (kiểu tấn công này gọi là SSRF). Kết nối tới
 đúng IP đã kiểm, không tra DNS lần hai, để kẻ xấu không kịp đổi tên miền sang `127.0.0.1` giữa hai lần tra.
 
-### 3.5. Trạng thái và số ngày còn lại
+### 3.5. Xác định trạng thái và thời hạn hiệu lực còn lại
 
 Không lưu trong bảng. View `v_certificates` (`database/schema.sql`) tính lại mỗi lần đọc
 bằng `DATEDIFF(valid_to, NOW())` và một câu `CASE`: đã thu hồi → chưa hiệu lực → đã hết hạn → sắp hết hạn (còn
 tối đa 30 ngày) → còn hiệu lực. Nhờ vậy trạng thái không bao giờ bị cũ. Mọi danh sách đều đọc từ view này.
 
-### 3.6. Gia hạn
+### 3.6. Gia hạn chứng chỉ
 
 | Bước | File | Hàm |
 |---|---|---|
@@ -254,7 +250,7 @@ tối đa 30 ngày) → còn hiệu lực. Nhờ vậy trạng thái không bao 
 
 Cả chuỗi nằm trong **một giao dịch**: lỗi ở bước nào thì không bước nào có hiệu lực.
 
-### 3.7. Cảnh báo
+### 3.7. Sinh và xử lý cảnh báo hết hạn
 
 | Bước | File | Hàm |
 |---|---|---|
@@ -268,7 +264,7 @@ mốc chỉ tạo một lần trong một chu kỳ, nên chạy lại bao nhiêu
 `valid_to`, nên các mốc được tính lại từ đầu. Khi hiện, mỗi chứng chỉ chỉ lấy mốc gấp nhất của chu kỳ. Không cần
 chạy lịch nền (cron), vì cảnh báo chỉ hiện trong web.
 
-### 3.8. Thu hồi, xoá chứng chỉ
+### 3.8. Thu hồi và xoá chứng chỉ
 
 Cả hai đi qua `public/admin/chung_chi_thao_tac.php`:
 
@@ -277,7 +273,7 @@ Cả hai đi qua `public/admin/chung_chi_thao_tac.php`:
 - `xoaChungChi()`: chỉ Admin. Quyền kiểm tra **ngay trong hàm**, nên nhân viên gửi lệnh thẳng tới trang cũng bị
   từ chối. Xoá kèm cảnh báo và lịch sử gia hạn (`ON DELETE CASCADE`).
 
-### 3.9. Danh sách, tìm kiếm, lọc, sắp xếp
+### 3.9. Truy vấn danh sách: tìm kiếm, lọc và sắp xếp
 
 `public/admin/chung_chi.php` → trong `src/chung_chi.php`:
 `docBoLoc()` đọc bộ lọc từ địa chỉ trang (giá trị sai coi như chưa chọn) → `dieuKienLoc()` dựng điều kiện SQL
@@ -287,7 +283,7 @@ chưa hiệu lực, đã thu hồi. Hàng nút trạng thái có số đếm l�
 lấy hết dòng đã lọc, chấm hạng bằng `chamDiem()`, xếp bằng `sapTheoAnToan()` rồi mới cắt trang, để luật chấm
 hạng chỉ nằm ở một nơi.
 
-### 3.10. Thống kê và xuất báo cáo
+### 3.10. Thống kê và kết xuất báo cáo
 
 - `public/admin/thong_ke.php`: 5 biểu đồ dùng chung bộ lọc với danh sách:
   `demTheoTrangThai()`, `hetHanTheoThang()` (12 tháng tới), `demTheoNhom()` (theo tổ chức cấp, theo thuật
@@ -300,7 +296,7 @@ hạng chỉ nằm ở một nơi.
 - `public/admin/bao_cao_in.php`: bản in cùng bộ lọc, ghi rõ bộ lọc đã chọn.
 - Hai nút Xuất CSV, Bản in ở dòng tiêu đề của Danh sách và Thống kê dựng bằng `nutXuatBaoCao()`.
 
-### 3.11. Nhật ký hoạt động (mở rộng 1)
+### 3.11. Ghi nhật ký hoạt động (chức năng mở rộng 1)
 
 - Ghi: các hàm thêm, sửa, xoá trong `src/` tự gọi `ghiNhatKy()` (`src/nhat_ky.php`) ngay sau khi
   thành công, nên không trang nào quên ghi. Xoá đi qua `xoaVaGhiNhatKy()` để kịp lưu tên đối tượng trước khi
@@ -311,7 +307,7 @@ hạng chỉ nằm ở một nơi.
 - Xem: `public/admin/nhat_ky.php`, chỉ Admin; `docLocNhatKy()`, `layNhatKy()`.
 - In ra cửa sổ lệnh khi chạy bằng `CHAY_WEB.bat`: `inRaManHinh()`.
 
-### 3.12. Người dùng, tài khoản của tôi
+### 3.12. Quản lý người dùng và tài khoản cá nhân
 
 - `public/admin/nguoi_dung.php`, `nguoi_dung_form.php`, `nguoi_dung_thao_tac.php`: chỉ Admin. Hàm trong
   `src/nguoi_dung.php`: `kiemTraNguoiDung()`, `kiemTraMatKhauMoi()`, `themNguoiDung()`, `suaNguoiDung()`,
@@ -321,14 +317,14 @@ hạng chỉ nằm ở một nơi.
 - `public/admin/tai_khoan.php`: ai cũng dùng được; `suaHoTen()`, `doiMatKhau()`
   (phải nhập đúng mật khẩu cũ). Mật khẩu luôn lưu dạng băm bằng `password_hash()`.
 
-### 3.13. Chấm hạng an toàn (mở rộng 3)
+### 3.13. Đánh giá xếp hạng an toàn (chức năng mở rộng 3)
 
 `chamDiem()` trong `src/chung_chi.php` nhận một dòng chứng chỉ, trả về hạng và danh sách phát hiện, mỗi phát hiện
 có mức, nội dung và nguồn. Thời hạn tối đa theo ngày cấp lấy từ `thoiHanToiDa()`; tên trong chứng chỉ có thuộc tên
 miền quản lý không do `tenLienQuanTenMien()` xét. Không lưu gì vào CSDL: trang chi tiết, danh sách và Thống kê
 (`demTheoHang()`) đều gọi hàm này lúc hiển thị.
 
-## 4. Bảo mật trên máy chủ thật
+## 4. Biện pháp bảo mật ở môi trường triển khai
 
 Ngoài các lớp bảo vệ trong code (Phần II mục 7), máy chủ web của bản chạy thật gửi kèm mọi trang 5 header bảo mật.
 Ảnh dưới là header thật đọc từ <https://cert.cipher.id.vn> ngày 14/11/2026.
@@ -348,7 +344,7 @@ thẳng `/src/auth.php`, `/config/db.php`, `/database/schema.sql` đều nhận 
 header này không có, vì chúng do máy chủ web của bản chạy thật thêm vào; có một test giữ cho mã băm trong
 Content-Security-Policy luôn khớp đoạn script nhúng của web.
 
-## 5. Câu hay được hỏi
+## 5. Giải trình một số quyết định thiết kế
 
 | Câu hỏi | Trả lời ngắn | Xem ở |
 |---|---|---|
@@ -370,7 +366,7 @@ Có hai cách chạy trên máy Windows đã cài [XAMPP](https://www.apachefrie
 **Cách 1** bấm một file là chạy; **Cách 2** cài tay từng bước theo kiểu quen thuộc của XAMPP. Không muốn cài thì
 dùng bản chạy thật tại <https://cert.cipher.id.vn>.
 
-## 1. Cách 1: bấm đúp `CHAY_WEB.bat` (nhanh nhất)
+## 1. Cài đặt tự động bằng tệp CHAY_WEB.bat
 
 1. **Giải nén** file nén ra một thư mục bất kỳ: bấm chuột phải vào file nén → **Extract All** (Giải nén).
    Không cần chép vào `htdocs`. Bấm `CHAY_WEB.bat` ngay bên trong file nén sẽ không chạy, vì chương trình nén
@@ -408,7 +404,7 @@ tiếng Việt có dấu.
 CSDL `cipher_test` (riêng cho test, không đụng dữ liệu của web), chạy 136 test trong khoảng 40 giây rồi dừng chờ
 bấm phím. Dòng cuối `XANH: 136 test` là mọi test đều đạt; kết quả chi tiết ở Phần VII.
 
-## 2. Cách 2: cài tay từng bước
+## 2. Cài đặt thủ công
 
 **Bước 1. Bật Apache và MySQL.** Mở **XAMPP Control Panel**, bấm **Start** ở dòng **Apache** và dòng
 **MySQL**. Cả hai chuyển sang nền xanh là được.
@@ -441,7 +437,7 @@ Anh hay tiếng Việt là theo ngôn ngữ của trình duyệt; vị trí các
 **Bước 5. Mở web.** Vào <http://localhost/cipher/public/>. Nhớ có `/public/` ở cuối: các trang web nằm trong
 thư mục này, còn cấu hình và mã xử lý để ngoài (trên máy chủ thật, chúng không mở được từ trình duyệt).
 
-## 3. Tài khoản
+## 3. Tài khoản khởi tạo sẵn
 
 | Tài khoản | Mật khẩu | Vai trò |
 |---|---|---|
@@ -453,7 +449,7 @@ chấm bài.
 
 ![Trang đăng nhập: gõ tài khoản admin hoặc nhanvien](anh/dang_nhap.jpg)
 
-## 4. Cấu hình và lỗi thường gặp
+## 4. Cấu hình và xử lý sự cố thường gặp
 
 | Gặp | Làm |
 |---|---|
@@ -466,7 +462,7 @@ chấm bài.
 | Đọc chứng chỉ thật từ máy chủ không được | Cần máy có mạng ra internet. XAMPP bật sẵn tiện ích `openssl` của PHP |
 | Múi giờ | Không cần chỉnh: code tự đặt giờ Việt Nam cho PHP và CSDL, vì XAMPP mặc định dùng giờ Đức |
 
-## 5. Sử dụng hệ thống
+## 5. Hướng dẫn sử dụng
 
 Menu bên trái có hai tầng: thanh biểu tượng là các khu, bấm một khu thì bảng bên cạnh hiện các trang của khu đó.
 
@@ -510,7 +506,7 @@ trang trước.
 
 Ảnh màn hình và luồng chi tiết của từng việc nằm ở Phần IV, đặc tả use case.
 
-# Phần VII. Báo cáo kiểm thử
+# Phần VII. Kiểm thử hệ thống
 
 <!-- chen: KIEM_THU.md -->
 
@@ -537,7 +533,7 @@ cùng nắm luồng chung ở Phần V mục 3.1 và 3.5.
 - Hệ thống chạy thật trên internet qua HTTPS tại <https://cert.cipher.id.vn>, dùng được trên máy tính và điện thoại.
 - Người chấm chạy được trên máy bằng một lần bấm `CHAY_WEB.bat`, hoặc cài tay theo cách quen của XAMPP.
 
-## 2. Hạn chế
+## 2. Hạn chế còn tồn tại
 
 - Cảnh báo chỉ hiện trong web, chưa gửi qua email hay tin nhắn.
 - Đọc chứng chỉ thật chưa hỗ trợ giao thức phải nói trước khi bắt tay TLS (STARTTLS ở cổng 25, 587).

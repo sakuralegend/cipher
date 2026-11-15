@@ -7,14 +7,14 @@ thời hạn, cảnh báo trước khi hết hạn, lưu lịch sử gia hạn, 
 dùng trên logo, menu và tab trình duyệt.
 
 **Người dùng:** quản trị viên trong tổ chức, xem [USECASE.md](USECASE.md). **Dữ liệu:** xem [ERD.md](ERD.md).
-**Code thực hiện từng luồng:** xem sổ tay luồng chính trong [BAO_CAO.md](BAO_CAO.md).
+**Code thực hiện từng luồng:** xem mục Luồng xử lý của các chức năng chính trong [BAO_CAO.md](BAO_CAO.md).
 
 Đề yêu cầu 19 chức năng: 9 chức năng riêng của đề (mã D) và 10 chức năng nền tảng (mã N). Hệ thống làm đủ 19
 và thêm 3 chức năng mở rộng (mục 8).
 
 ![Dashboard của Cipher Cert: số chứng chỉ theo trạng thái, việc cần xử lý ngay và hai biểu đồ](anh/dashboard.jpg)
 
-## 1. Chức năng riêng của đề
+## 1. Yêu cầu chức năng nghiệp vụ
 
 | Mã | Chức năng | Người dùng | Đầu vào | Kiểm tra | Kết quả |
 |---|---|---|---|---|---|
@@ -38,7 +38,7 @@ và thêm 3 chức năng mở rộng (mục 8).
 
 ![Danh sách chứng chỉ: hàng nút trạng thái có số đếm, ô tìm kiếm, bộ lọc và ô Sắp xếp theo; cột An toàn là hạng A, B, C, F](anh/danh_sach_loc.jpg)
 
-## 2. Chức năng nền tảng
+## 2. Yêu cầu chức năng nền tảng
 
 | Mã | Chức năng | Cách đáp ứng |
 |---|---|---|
@@ -53,9 +53,9 @@ và thêm 3 chức năng mở rộng (mục 8).
 | Ni | Bảo mật | Xem mục 7 |
 | Nj | Dữ liệu mẫu | `database/seed.sql` có 2 tài khoản và 9 chứng chỉ, đủ mọi trạng thái và mốc cảnh báo; `database/seed_demo.sql` nạp nối tiếp để đủ 50 chứng chỉ. Chứng chỉ mẫu của tổ chức cấp công khai có thời hạn tối đa 200 ngày, đúng luật hiện hành; phân bố hạng an toàn là A 25, B 15, C 7, F 3, trong đó C và F là các ví dụ cố ý. Kèm file Excel `DU_LIEU_NHAP_TAY.xlsx` để người chấm tự nhập tay |
 
-## 3. Quy tắc kiểm tra dữ liệu
+## 3. Ràng buộc và quy tắc kiểm tra dữ liệu
 
-### 3.1. Chứng chỉ
+### 3.1. Dữ liệu chứng chỉ
 
 | Trường | Quy tắc |
 |---|---|
@@ -74,14 +74,14 @@ và thêm 3 chức năng mở rộng (mục 8).
 
 ![Form thêm chứng chỉ báo lỗi ngay dưới từng ô sai và giữ nguyên những gì đã nhập](anh/them_loi.jpg)
 
-### 3.2. Tên miền, máy chủ, tổ chức cấp
+### 3.2. Dữ liệu tên miền, máy chủ và tổ chức cấp
 
 - IP phải là IPv4 hoặc IPv6 hợp lệ. Cổng từ 1 đến 65535. Môi trường là `production`, `staging` hoặc `development`.
 - Tên miền đúng định dạng (được dùng dạng `*.congty.vn`), lưu chữ thường và không trùng. Tên tổ chức cấp không trùng.
 - Máy chủ còn tên miền, tên miền hay tổ chức cấp còn chứng chỉ thì không xoá được; hệ thống báo rõ lý do.
 - Chỉ Admin xoá được máy chủ, tên miền, tổ chức cấp. Nhân viên không thấy nút Xoá, tự gửi lệnh xoá cũng bị từ chối với câu "Chỉ Admin được xoá danh mục. Bạn vẫn có thể sửa."
 
-### 3.3. Người dùng
+### 3.3. Dữ liệu người dùng
 
 - Tên đăng nhập bắt buộc, 3–50 ký tự gồm chữ không dấu, số, dấu chấm, gạch dưới, gạch ngang; không trùng giữa các tài khoản còn dùng (không phân biệt hoa thường).
 - Mật khẩu mới phải có ít nhất 8 ký tự, gồm cả chữ và số, tối đa 72 ký tự. Luật này áp cho mật khẩu đặt mới. Admin đặt lại được mật khẩu cho người khác mà không cần mật khẩu cũ, vì hệ thống không có chức năng quên mật khẩu.
@@ -90,7 +90,7 @@ và thêm 3 chức năng mở rộng (mục 8).
 - Xoá người dùng là đánh dấu đã xoá: tài khoản không đăng nhập được nữa, biến khỏi danh sách, phiên đang mở bị đẩy ra. Nhật ký, chứng chỉ, lịch sử gia hạn vẫn giữ tên người đó kèm chữ "(đã xoá)". Tên đăng nhập của tài khoản đã xoá dùng lại được cho tài khoản mới.
 - Admin không tự khoá, tự xoá, hay tự đổi vai trò của mình, để hệ thống luôn còn ít nhất một Admin.
 
-## 4. Trạng thái chứng chỉ
+## 4. Mô hình trạng thái của chứng chỉ
 
 Hệ thống xét lần lượt từ trên xuống và lấy dòng đầu tiên đúng:
 
@@ -138,7 +138,7 @@ stateDiagram-v2
 Gia hạn mà hạn mới vẫn còn tối đa 30 ngày thì chứng chỉ ở lại Sắp hết hạn. Đã thu hồi là trạng thái cuối:
 không gia hạn, không sửa, không hoàn tác được.
 
-## 5. Cảnh báo
+## 5. Quy tắc cảnh báo hết hạn
 
 - Chỉ tạo cảnh báo cho chứng chỉ ở trạng thái **Sắp hết hạn**.
 - Tạo theo **mốc gần nhất** đã chạm: còn tối đa 7 ngày là mốc 7, tối đa 15 ngày là mốc 15, tối đa 30 ngày là mốc 30. Ví dụ thêm một chứng chỉ còn 5 ngày thì chỉ tạo cảnh báo mốc 7.
@@ -150,7 +150,7 @@ không gia hạn, không sửa, không hoàn tác được.
 
 ![Trang Cảnh báo: mỗi chứng chỉ một dòng ở mốc gấp nhất, có nút Gia hạn và Đã xem](anh/canh_bao.jpg)
 
-## 6. Gia hạn
+## 6. Quy tắc gia hạn
 
 - Chặn gia hạn chứng chỉ đã thu hồi; muốn dùng lại thì thêm chứng chỉ mới.
 - Ngày hết hạn mới phải sau ngày hết hạn hiện tại và sau thời điểm gia hạn. Được gia hạn chứng chỉ đã hết hạn.
@@ -158,7 +158,7 @@ không gia hạn, không sửa, không hoàn tác được.
 - Gia hạn không đổi ngày cấp. Cần sửa ngày này thì dùng form Sửa; thay đổi đó không ghi vào lịch sử gia hạn.
 - Lưu lịch sử và cập nhật chứng chỉ nằm trong một giao dịch: lỗi ở bước nào thì không bước nào có hiệu lực.
 
-## 7. Yêu cầu bảo mật và vận hành
+## 7. Yêu cầu phi chức năng: bảo mật và vận hành
 
 | Nội dung | Cách làm |
 |---|---|
@@ -175,7 +175,7 @@ không gia hạn, không sửa, không hoàn tác được.
 | Báo cáo CSV | Có BOM UTF-8 để Excel hiển thị đúng tiếng Việt; ô bắt đầu bằng `=`, `+`, `-`, `@` được vô hiệu hoá để không chạy thành công thức |
 | Múi giờ | `Asia/Ho_Chi_Minh` cho PHP và `+07:00` cho CSDL, đặt trong code |
 
-## 8. Chức năng mở rộng
+## 8. Các chức năng mở rộng
 
 Ngoài yêu cầu của đề, làm sau khi đủ 19 chức năng.
 
@@ -204,7 +204,7 @@ Ngoài yêu cầu của đề, làm sau khi đủ 19 chức năng.
 
 ![Trang Nhật ký: cột Mức ở đầu bảng, lọc được theo người làm, mức độ, hành động, khoảng ngày](anh/nhat_ky.jpg)
 
-### 8.2. Đọc chứng chỉ thật từ máy chủ
+### 8.2. Thu thập chứng chỉ trực tiếp từ máy chủ
 
 - **Ở đâu:** trang Thêm chứng chỉ có 2 tab. Tab **Nhập thủ công** mở trước, là form trống. Tab **Nhập tự động** có
   khung **Đọc một địa chỉ** ở trên và khung **Nhập hàng loạt** ở dưới. Form Sửa chỉ có nhập thủ công. Đọc một địa
@@ -243,7 +243,7 @@ Ngoài yêu cầu của đề, làm sau khi đủ 19 chức năng.
 
 ![Đọc chứng chỉ thật của github.com: thẻ tóm tắt ghi số ngày còn lại, IP, tổ chức cấp và những gì sẽ tạo mới](anh/doc_ket_qua.jpg)
 
-### 8.3. Chấm hạng an toàn
+### 8.3. Đánh giá xếp hạng an toàn
 
 - **Hạng chữ theo lỗi nặng nhất**, không cộng trừ điểm: F nguy hiểm, C cần xử lý, B lưu ý, không vướng gì là A.
   Hạng chữ thay cho điểm 0–100 vì cộng trừ điểm không biện minh được ("vì sao lỗi này trừ 10?"). Thang lấy theo
@@ -270,7 +270,7 @@ Ngoài yêu cầu của đề, làm sau khi đủ 19 chức năng.
 
 ![Thẻ Đánh giá an toàn của một chứng chỉ hạng F: khoá RSA 1024 bit và chữ ký SHA-1, mỗi phát hiện kèm nguồn](anh/chi_tiet_hang_f.jpg)
 
-## 9. Giao diện
+## 9. Yêu cầu giao diện người dùng
 
 - **Chỉ có giao diện tối.** Khu quản trị nền xám xanh, dịu mắt khi dùng cả ngày; trang giới thiệu và trang đăng
   nhập nền đen xanh. Bản in luôn nền trắng chữ tối.

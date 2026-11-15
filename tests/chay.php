@@ -3042,7 +3042,9 @@ function kiemTaiLieuKhopCode(): void
     }
     $dongTest = [];
     foreach (preg_split('/^### /m', $kt) as $phan) {
-        if (preg_match('/^(.+?) \((\d+) test,/', $phan, $nhom) !== 1) {
+        // Mỗi nhóm: "### 3.k. Tên nhóm", dòng trống, "Số ca kiểm thử: N. Người phụ trách: ..." (từ 15/11/2026, tiêu đề
+        // mục lục báo cáo không còn kèm số test và tên người).
+        if (preg_match('/^(?:\d+\.\d+\. )?(.+)\n\nSố ca kiểm thử: (\d+)\./', $phan, $nhom) !== 1) {
             continue;
         }
         preg_match_all('/^\| `(\w+)` \| (.+) \|$/m', $phan, $dong, PREG_SET_ORDER);

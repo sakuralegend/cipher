@@ -2,7 +2,7 @@
 
 Tài liệu gồm: tác nhân và phân quyền (mục 1), sơ đồ use case (mục 2), đặc tả từng use case kèm ảnh màn hình
 (mục 3), sơ đồ trình tự của 4 luồng chính (mục 4). Quy tắc chi tiết của từng chức năng nằm ở [SPEC.md](SPEC.md);
-file và hàm thực hiện từng luồng nằm ở sổ tay luồng chính trong [BAO_CAO.md](BAO_CAO.md).
+file và hàm thực hiện từng luồng nằm ở mục Luồng xử lý của các chức năng chính trong [BAO_CAO.md](BAO_CAO.md).
 
 ## 1. Tác nhân và phân quyền
 
@@ -27,7 +27,7 @@ và trang đăng nhập.
 Quyền được kiểm tra trong PHP ở mọi yêu cầu, không chỉ bằng cách ẩn nút: Nhân viên tự gõ địa chỉ trang của
 Admin thì nhận lỗi 403, tự gửi lệnh xoá thì bị từ chối.
 
-## 2. Sơ đồ use case
+## 2. Sơ đồ use case tổng quát
 
 ![Sơ đồ use case UML của hệ thống Cipher Cert](usecase.svg)
 
@@ -592,7 +592,7 @@ sequenceDiagram
     end
 ```
 
-### 4.2. Thêm chứng chỉ bằng cách đọc từ máy chủ (UC05, UC05a)
+### 4.2. Thêm chứng chỉ bằng thu thập tự động từ máy chủ (UC05, UC05a)
 
 ```mermaid
 sequenceDiagram
@@ -631,7 +631,7 @@ sequenceDiagram
     end
 ```
 
-### 4.3. Gia hạn (UC07)
+### 4.3. Gia hạn chứng chỉ (UC07)
 
 ```mermaid
 sequenceDiagram
@@ -660,7 +660,7 @@ sequenceDiagram
     end
 ```
 
-### 4.4. Cảnh báo (UC03, UC09)
+### 4.4. Sinh và xử lý cảnh báo (UC03, UC09)
 
 Dashboard (`index.php`) chạy đúng bước 2 như trang Cảnh báo. Nút Đã xem gửi tới `chung_chi_thao_tac.php`.
 

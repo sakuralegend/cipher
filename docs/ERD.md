@@ -3,7 +3,7 @@
 Nguồn sự thật là [`database/schema.sql`](../database/schema.sql). CSDL có 9 bảng, 1 view và 2 trigger. Mục 1 tóm tắt
 vai trò của từng bảng, mục 2 là sơ đồ ERD, các mục sau nói về ràng buộc, quy tắc khi xoá, trigger và dữ liệu tính ra.
 
-## 1. Chín bảng và vai trò
+## 1. Các thực thể và vai trò
 
 | Bảng | Lưu gì | Quan hệ chính |
 |---|---|---|
@@ -17,7 +17,7 @@ vai trò của từng bảng, mục 2 là sơ đồ ERD, các mục sau nói v�
 | `alerts` | Cảnh báo theo mốc 30, 15, 7 ngày; trạng thái mới hoặc đã xem | Mỗi dòng thuộc một chứng chỉ, trong một chu kỳ hạn |
 | `audit_logs` | Nhật ký hoạt động: ai, làm gì, với đối tượng nào, lúc nào, từ IP nào | Người làm được trống (đăng nhập sai) |
 
-## 2. Sơ đồ ERD
+## 2. Sơ đồ thực thể – liên kết (ERD)
 
 Sơ đồ dưới đây **sinh từ chính CSDL** vừa nạp `schema.sql` (lệnh `php tests/chay.php --erd`), không vẽ tay, nên lúc
 nào cũng đúng bằng code. Chữ trong ngoặc kép cạnh một cột là chú thích của cột đó trong `schema.sql`; bản in của báo cáo
@@ -121,7 +121,7 @@ erDiagram
     }
 ```
 
-## 3. Ràng buộc đáng chú ý
+## 3. Các ràng buộc toàn vẹn
 
 | Ràng buộc | Ở đâu | Để làm gì |
 |---|---|---|
@@ -133,7 +133,7 @@ erDiagram
 | `UNIQUE (username_dang_dung)` | `users` | Cột tự tính: bằng tên đăng nhập khi tài khoản còn dùng, trống khi đã xoá. Hai tài khoản đang dùng không trùng tên, còn tên của tài khoản đã xoá thì dùng lại được |
 | `CHECK` cổng từ 1 đến 65535 | `servers` | Lớp chặn cuối sau JavaScript và PHP |
 
-## 4. Khi xoá bản ghi cha
+## 4. Toàn vẹn tham chiếu khi xoá bản ghi cha
 
 | Quan hệ | Khi xoá cha | Vì sao |
 |---|---|---|
@@ -145,7 +145,7 @@ Vì khoá ngoại chặn xoá người dùng đã có dấu vết, chức năng 
 
 Cột `object_id` của `audit_logs` cố ý không có khoá ngoại: xoá chứng chỉ thì vết trong nhật ký vẫn còn.
 
-## 5. Trigger
+## 5. Trigger cơ sở dữ liệu
 
 | Trigger | Bảng | Làm gì |
 |---|---|---|
@@ -155,7 +155,7 @@ Cột `object_id` của `audit_logs` cố ý không có khoá ngoại: xoá ch�
 Nhờ hai trigger này, nhật ký chỉ thêm được, kể cả khi ai đó gõ lệnh thẳng vào CSDL. `TRUNCATE TABLE audit_logs`
 vẫn dọn được cả bảng, nhưng bảng trống trơn thì nhìn là biết đã bị dọn.
 
-## 6. Dữ liệu tính ra, không lưu
+## 6. Thuộc tính dẫn xuất
 
 View `v_certificates` gồm mọi cột của `certificates`, cộng thêm:
 
