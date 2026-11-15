@@ -305,7 +305,7 @@ cap_nhat() {
     la_cipher git -C "$THU_MUC" log --oneline -1
 }
 
-# Đưa CSDL trên VPS về đúng dữ liệu của bản nộp: cùng 3 file, cùng thứ tự với CHAY.bat. User chốt 14/11/2026: web thật
+# Đưa CSDL trên VPS về đúng dữ liệu của bản nộp: cùng 3 file, cùng thứ tự với CHAY_WEB.bat. User chốt 14/11/2026: web thật
 # đồng nhất với file nén, kể cả mật khẩu mẫu Cipher@2026 ghi trong README, tới khi chấm xong (nợ đổi mật khẩu ở SONO.md).
 # schema.sql xoá sạch bảng (QD-14) nên luôn sao lưu trước; set -e dừng ngay nếu sao lưu hay một file nạp hỏng.
 nap_mau() {

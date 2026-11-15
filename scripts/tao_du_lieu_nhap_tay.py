@@ -171,7 +171,7 @@ TRANG = [
 HUONG_DAN = [
     "Dữ liệu mẫu để thử nhập tay: Hệ thống quản lý chứng chỉ số và thời hạn sử dụng",
     "",
-    "1. Chạy web theo README (Cách 1: bấm CHAY.bat; Cách 2: cài tay), đăng nhập admin / Cipher@2026.",
+    "1. Chạy web theo README (Cách 1: bấm CHAY_WEB.bat; Cách 2: cài tay), đăng nhập admin / Cipher@2026.",
     "2. Nhập lần lượt từng trang tính, theo đúng số thứ tự: trang sau dùng dữ liệu trang trước tạo ra",
     "   (chứng chỉ chọn tên miền, tổ chức cấp phải có sẵn trong danh mục).",
     "3. Mỗi trang tính ghi form cần mở ở dòng đầu. Chép từng ô của một dòng vào form, bấm nút lưu, so với cột Kết quả mong đợi.",
@@ -180,8 +180,8 @@ HUONG_DAN = [
     "",
     "Ngày tự tính theo hôm nay (công thức =TODAY()+N): mở file ngày nào cũng ra đúng số ngày còn lại và đúng mốc cảnh báo.",
     "Ô ngày trên web dán được chữ ngày/tháng/năm: chép ô ngày trong file rồi dán thẳng vào ô ngày của form.",
-    "Chạy bằng CHAY.bat thì cửa sổ đen ghi từng thao tác kèm mức [THONG TIN] / [CANH BAO] / [NGUY HIEM]; lần bị từ chối là [CANH BAO] kèm lý do.",
-    "Muốn nhập lại từ đầu: bấm CHAY.bat và chọn C để nạp lại dữ liệu mẫu (xoá mọi thứ đã nhập).",
+    "Chạy bằng CHAY_WEB.bat thì cửa sổ đen ghi từng thao tác kèm mức [THONG TIN] / [CANH BAO] / [NGUY HIEM]; lần bị từ chối là [CANH BAO] kèm lý do.",
+    "Muốn nhập lại từ đầu: bấm CHAY_WEB.bat và chọn C để nạp lại dữ liệu mẫu (xoá mọi thứ đã nhập).",
     "Trang 7 cần máy có internet. badssl.com là máy chủ thử nghiệm ở Mỹ, đôi khi chậm vài giây: nếu một dòng báo không trả lời thì đọc lại.",
 ]
 

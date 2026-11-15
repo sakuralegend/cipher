@@ -102,7 +102,7 @@ def cai_dat():
     Giao diện tiếng Anh (cookie pma_lang=en) cho khớp chữ trong hướng dẫn. Ảnh tạo CSDL vẽ lại trạng thái máy người chấm
     lúc CHƯA có cipher_dev: ẩn các CSDL có sẵn trên máy chụp (AN) khỏi cây bên trái và bảng, sửa dòng Total theo số dòng
     còn lại; không bấm Create, không đụng CSDL nào. Ba ảnh còn lại của phần cài đặt chụp bằng chup_cua_so.ps1:
-      - chay_bat: conhost.exe cmd.exe /c "<bản giải nén>\\CHAY.bat", chờ 17 giây (10 giây của câu hỏi nạp lại), rồi
+      - chay_bat: conhost.exe cmd.exe /c "<bản giải nén>\\CHAY_WEB.bat", chờ 17 giây (10 giây của câu hỏi nạp lại), rồi
         -TieuDe "Cipher Cert" -Lop ConsoleWindowClass; đóng cửa sổ là tắt web.
       - xampp_control: chạy C:\\xampp\\apache\\bin\\httpd.exe và C:\\xampp\\xampp-control.exe, -MaTienTrinh <mã của
         xampp-control>; ứng dụng này không theo tỉ lệ màn hình nên ảnh ra có phần thừa, cắt còn 663x433; xong thì tắt cả hai.

@@ -12,12 +12,12 @@ thống tự cảnh báo theo các mốc 30, 15, 7 ngày, có thống kê bằng
 Có hai cách chạy trên máy Windows đã cài [XAMPP](https://www.apachefriends.org) (đã thử với XAMPP 8.2.12):
 **Cách 1** bấm một file là chạy; **Cách 2** cài tay từng bước theo kiểu quen thuộc của XAMPP.
 
-## Cách 1: bấm đúp `CHAY.bat` (nhanh nhất)
+## Cách 1: bấm đúp `CHAY_WEB.bat` (nhanh nhất)
 
 1. **Giải nén** file nén ra một thư mục bất kỳ: bấm chuột phải vào file nén → **Extract All** (Giải nén).
-   Không cần chép vào `htdocs`. Bấm `CHAY.bat` ngay bên trong file nén sẽ không chạy, vì chương trình nén
+   Không cần chép vào `htdocs`. Bấm `CHAY_WEB.bat` ngay bên trong file nén sẽ không chạy, vì chương trình nén
    chỉ bung riêng file đó ra thư mục tạm.
-2. Bấm đúp **`CHAY.bat`**. Không cần mở XAMPP Control Panel trước.
+2. Bấm đúp **`CHAY_WEB.bat`**. Không cần mở XAMPP Control Panel trước.
 3. Trình duyệt tự mở trang giới thiệu. Bấm **Đăng nhập**, dùng tài khoản ở [mục Tài khoản](#tài-khoản).
 
 Cửa sổ đen làm thay bạn: tìm XAMPP, bật MySQL nếu chưa bật, lần đầu tự tạo CSDL `cipher_dev` và nạp dữ liệu
@@ -29,6 +29,10 @@ mẫu (50 chứng chỉ, 2 tài khoản), rồi chạy web ở <http://localhost
 - **Windows hiện "Windows protected your PC":** bấm **More info → Run anyway**. File chỉ chạy PHP và MySQL
   của XAMPP; mở bằng Notepad để đọc từng bước, mỗi bước có chú thích.
 - **Cửa sổ báo LỖI:** đọc dòng LỖI, làm theo hướng dẫn trong đó, hoặc chuyển sang Cách 2.
+
+**Chạy bộ test tự động:** bấm đúp **`CHAY_TEST.bat`** (cùng thư mục). File tự bật MySQL, tạo CSDL `cipher_test`
+(riêng cho test, không đụng dữ liệu của web), chạy 136 test trong khoảng 40 giây rồi dừng chờ bấm phím.
+Dòng cuối `XANH: 136 test` là mọi test đều đạt.
 
 ## Cách 2: cài tay từng bước
 

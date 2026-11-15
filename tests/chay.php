@@ -2731,11 +2731,11 @@ function test_nhat_ky_hien_ip_o_moi_do_rong_man_hinh(PDO $pdo): void
     kiem(str_contains($trang, 'o-xuong-dong'), 'Ô mô tả dài phải được xuống dòng (o-xuong-dong)');
 }
 
-// Luật: CHAY.bat, hướng dẫn cài tay trong README và bước nạp dữ liệu mẫu trên máy chủ thật nạp đúng mọi file SQL có thật, theo thứ tự schema → seed → seed_demo.
-// Vì sao: User 13/11/2026 chốt hai đường chạy cho người chấm: bấm CHAY.bat, hoặc làm tay theo README (bảng Bước 4);
+// Luật: CHAY_WEB.bat, hướng dẫn cài tay trong README và bước nạp dữ liệu mẫu trên máy chủ thật nạp đúng mọi file SQL có thật, theo thứ tự schema → seed → seed_demo.
+// Vì sao: User 13/11/2026 chốt hai đường chạy cho người chấm: bấm CHAY_WEB.bat, hoặc làm tay theo README (bảng Bước 4);
 //         14/11/2026 chốt web thật có dữ liệu y như bản nộp (bước nap_mau trong deploy/dung_vps.sh).
 //         Sai thứ tự là hỏng: seed cần bảng của schema, seed_demo cần danh mục và tài khoản của seed.
-// Đỏ nghĩa là: Đổi tên, thêm, bớt file trong database/ mà quên sửa vòng for của CHAY.bat, bảng Bước 4 của README hoặc
+// Đỏ nghĩa là: Đổi tên, thêm, bớt file trong database/ mà quên sửa vòng for của CHAY_WEB.bat, bảng Bước 4 của README hoặc
 //         vòng for của nap_mau, hoặc ba nơi ghi thứ tự khác nhau.
 // Đừng: Ghép ba file thành một trong repo: schema.sql còn dùng nạp CSDL test, seed_demo tách riêng vì test dựa vào đúng 9 chứng chỉ của seed.
 // Nhóm: CSDL, ràng buộc, dữ liệu mẫu (Ng, Nj)
@@ -2743,22 +2743,22 @@ function test_chay_bat_va_readme_nap_du_file_sql_dung_thu_tu(PDO $pdo): void
 {
     $goc = __DIR__ . '/..';
     $coThat = array_map(fn(string $f): string => basename($f, '.sql'), glob("$goc/database/*.sql"));
-    kiem(preg_match('/for %%F in \(([^)]+)\) do/', file_get_contents("$goc/CHAY.bat"), $m) === 1, 'CHAY.bat phải nạp SQL bằng vòng "for %%F in (...)"');
+    kiem(preg_match('/for %%F in \(([^)]+)\) do/', file_get_contents("$goc/CHAY_WEB.bat"), $m) === 1, 'CHAY_WEB.bat phải nạp SQL bằng vòng "for %%F in (...)"');
     $thuTuBat = preg_split('/\s+/', trim($m[1]));
     preg_match_all('/^\| \d \| `database\\\\(\w+)\.sql` \|/m', file_get_contents("$goc/README.md"), $m);
     $thuTuReadme = $m[1];
-    kiem($thuTuBat === ['schema', 'seed', 'seed_demo'], 'CHAY.bat nạp theo thứ tự ' . implode(', ', $thuTuBat) . ', phải là schema, seed, seed_demo');
-    kiem($thuTuReadme === $thuTuBat, 'README Bước 4 ghi ' . implode(', ', $thuTuReadme) . ', khác CHAY.bat');
+    kiem($thuTuBat === ['schema', 'seed', 'seed_demo'], 'CHAY_WEB.bat nạp theo thứ tự ' . implode(', ', $thuTuBat) . ', phải là schema, seed, seed_demo');
+    kiem($thuTuReadme === $thuTuBat, 'README Bước 4 ghi ' . implode(', ', $thuTuReadme) . ', khác CHAY_WEB.bat');
     if (is_file("$goc/deploy/dung_vps.sh")) { // Gói nộp không có deploy/.
         kiem(preg_match('/for tep in ([\w ]+); do/', file_get_contents("$goc/deploy/dung_vps.sh"), $m) === 1
-            && preg_split('/\s+/', trim($m[1])) === $thuTuBat, 'Bước nap_mau trong deploy/dung_vps.sh phải nạp đúng thứ tự như CHAY.bat');
+            && preg_split('/\s+/', trim($m[1])) === $thuTuBat, 'Bước nap_mau trong deploy/dung_vps.sh phải nạp đúng thứ tự như CHAY_WEB.bat');
     }
     $thieu = array_diff($coThat, $thuTuBat);
     kiem($thieu === [], 'database/ có file không được nạp: ' . implode(', ', $thieu));
 }
 
-// Luật: CHAY.bat dừng và bảo giải nén khi không thấy database\ và public\ cạnh nó, và dừng khi một file SQL nạp hỏng.
-// Vì sao: Lỗi user gặp 13/11/2026: bấm CHAY.bat ngay trong file nén bằng WinRAR, WinRAR chỉ bung riêng file bat vào
+// Luật: CHAY_WEB.bat dừng và bảo giải nén khi không thấy database\ và public\ cạnh nó, và dừng khi một file SQL nạp hỏng.
+// Vì sao: Lỗi user gặp 13/11/2026: bấm CHAY_WEB.bat ngay trong file nén bằng WinRAR, WinRAR chỉ bung riêng file bat vào
 //         Temp\Rar$DIa..., cả 3 file SQL "cannot find the path" mà bat vẫn báo Xong, rồi web báo thiếu thư mục public.
 // Đỏ nghĩa là: Bỏ bước kiểm đủ file trước bước tìm XAMPP, hoặc lệnh nạp SQL quay về "if errorlevel 1" (mở file thất bại
 //         thì lệnh không chạy, errorlevel không đổi, nên lỗi bị nuốt).
@@ -2766,13 +2766,37 @@ function test_chay_bat_va_readme_nap_du_file_sql_dung_thu_tu(PDO $pdo): void
 // Nhóm: CSDL, ràng buộc, dữ liệu mẫu (Ng, Nj)
 function test_chay_bat_dung_khi_chay_trong_file_nen_hoac_nap_hong(PDO $pdo): void
 {
-    $bat = file_get_contents(__DIR__ . '/../CHAY.bat');
-    $timXampp = strpos($bat, '---------- 1. Tim XAMPP'); // Dòng tiêu đề bước 1, không phải dòng tóm tắt đầu file.
+    $bat = file_get_contents(__DIR__ . '/../CHAY_WEB.bat');
+    $timXampp = strpos($bat, 'call "database\chuan_bi.bat"'); // Bước tìm XAMPP nằm ở file chung, gọi từ dòng này.
     foreach (['database\schema.sql', 'public\index.php'] as $tep) {
         $kiemTep = strpos($bat, 'if not exist "' . $tep . '" goto loi_chua_giai_nen');
-        kiem($kiemTep !== false && $kiemTep < $timXampp, "CHAY.bat phải kiểm $tep trước khi tìm XAMPP");
+        kiem($kiemTep !== false && $timXampp !== false && $kiemTep < $timXampp,"CHAY_WEB.bat phải kiểm $tep trước khi tìm XAMPP");
     }
     kiem(preg_match('/< "database\\\\%%F\.sql" \|\| goto loi_nap/', $bat) === 1, 'Lệnh nạp SQL phải dừng bằng "|| goto loi_nap"');
+}
+
+// Luật: CHAY_TEST.bat chỉ chạy bộ test: chuẩn bị XAMPP, MySQL bằng database\chuan_bi.bat (CHAY_WEB.bat dùng chung), tạo cipher_test nếu thiếu, chạy tests\chay.php rồi dừng chờ bấm phím.
+// Vì sao: User 15/11/2026: bấm đúp tests\chay.php thì cửa sổ đóng ngay khi chạy xong, không kịp xem kết quả; tên CHAY.bat
+//         (chạy web) và tests\chay.php dễ nhầm nên đổi thành CHAY_WEB.bat, CHAY_TEST.bat; phần tìm XAMPP, bật MySQL tách ra một file chung.
+// Đỏ nghĩa là: CHAY_TEST.bat thiếu pause (cửa sổ lại tự đóng), thôi tạo cipher_test, hoặc một trong hai file bat tự chép lại phần tìm XAMPP.
+// Đừng: Gộp chạy test vào CHAY_WEB.bat; mỗi file bat làm đúng một việc, nhìn tên là biết.
+// Nhóm: CSDL, ràng buộc, dữ liệu mẫu (Ng, Nj)
+function test_chay_test_bat_chay_bo_test_roi_dung_cho_doc(PDO $pdo): void
+{
+    $goc = __DIR__ . '/..';
+    kiem(!is_file("$goc/CHAY.bat"), 'CHAY.bat đã đổi tên thành CHAY_WEB.bat');
+    kiem(is_file("$goc/database/chuan_bi.bat"), 'Thiếu database\chuan_bi.bat');
+    $chung = (string) @file_get_contents("$goc/database/chuan_bi.bat");
+    kiem(str_contains($chung, 'Tim XAMPP') && str_contains($chung, 'mysqld.exe'), 'chuan_bi.bat phải tìm XAMPP và bật MySQL');
+    foreach (['CHAY_WEB.bat', 'CHAY_TEST.bat'] as $ten) {
+        $bat = (string) @file_get_contents("$goc/$ten");
+        kiem(str_contains($bat, 'call "database\chuan_bi.bat"'), "$ten phải gọi database\\chuan_bi.bat");
+        kiem(!str_contains($bat, 'mysqld.exe') && !str_contains($bat, ':\xampp\php\php.exe'), "$ten không được tự chép phần tìm XAMPP, bật MySQL");
+    }
+    $test = (string) @file_get_contents("$goc/CHAY_TEST.bat");
+    kiem(str_contains($test, 'CREATE DATABASE IF NOT EXISTS cipher_test'), 'CHAY_TEST.bat phải tạo cipher_test nếu thiếu');
+    kiem(preg_match('/"%PHP%" "?tests\\\\chay\.php"?\r?\n(.*\r?\n){0,5}pause/', $test) === 1, 'CHAY_TEST.bat phải chạy tests\chay.php rồi pause');
+    kiem(!str_contains($test, '-S localhost'), 'CHAY_TEST.bat không được chạy web');
 }
 
 // Luật: Mọi ô ngày (date, datetime-local) nhận chữ dán dạng ngày/tháng/năm như ô ngày trong file Excel dữ liệu mẫu.
@@ -2792,10 +2816,10 @@ function test_o_ngay_nhan_chu_dan_tu_excel(PDO $pdo): void
         'Mẫu ngày/tháng/năm của docNgayDan phải khớp chữ Excel chép ra: 24/11/2026 00:00');
 }
 
-// Luật: Nhật ký ra màn hình chỉ in khi web chạy bằng php -S (CHAY.bat), mỗi lần một dòng có giờ, chữ bỏ dấu; CHAY.bat chạy php -S với -q.
-// Vì sao: User 14/11/2026: cửa sổ CHAY.bat chỉ toàn dòng Accepted/Closing vô nghĩa, cần biết từng thao tác. Trên VPS
+// Luật: Nhật ký ra màn hình chỉ in khi web chạy bằng php -S (CHAY_WEB.bat), mỗi lần một dòng có giờ, chữ bỏ dấu; CHAY_WEB.bat chạy php -S với -q.
+// Vì sao: User 14/11/2026: cửa sổ CHAY_WEB.bat chỉ toàn dòng Accepted/Closing vô nghĩa, cần biết từng thao tác. Trên VPS
 //         (PHP-FPM) không có cửa sổ nào để in, và in vào bộ test thì làm rối kết quả test.
-// Đỏ nghĩa là: inRaManHinh in cả khi không phải cli-server, in chữ có dấu (cửa sổ lệnh Windows vỡ chữ), hoặc CHAY.bat
+// Đỏ nghĩa là: inRaManHinh in cả khi không phải cli-server, in chữ có dấu (cửa sổ lệnh Windows vỡ chữ), hoặc CHAY_WEB.bat
 //         bỏ -q làm các dòng Accepted/Closing quay lại.
 // Đừng: Lọc dòng của PHP bằng findstr: đo 14/11/2026 findstr dồn dữ liệu, nhật ký không hiện kịp.
 // Nhóm: Giao diện, triển khai (Giao diện)
@@ -2810,7 +2834,7 @@ function test_nhat_ky_man_hinh_chi_in_khi_chay_bang_php_s(PDO $pdo): void
     $dong = file_get_contents($tep);
     unlink($tep);
     kiem(preg_match('/^\d{2}:\d{2}:\d{2}  \* admin: Them chung chi - Duong\R$/D', $dong) === 1, "Dòng in ra sai: $dong");
-    kiem(str_contains(file_get_contents(__DIR__ . '/../CHAY.bat'), '"%PHP%" -q -S localhost:'), 'CHAY.bat phải chạy php -S với -q');
+    kiem(str_contains(file_get_contents(__DIR__ . '/../CHAY_WEB.bat'), '"%PHP%" -q -S localhost:'), 'CHAY_WEB.bat phải chạy php -S với -q');
 }
 
 // Luật: Nút Xuất CSV, Bản in nằm ở dòng tiêu đề của Danh sách và Thống kê, mang theo bộ lọc và cách xếp đang xem.

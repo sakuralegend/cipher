@@ -1141,7 +1141,7 @@ xét theo thứ tự nào, cảnh báo tạo khi nào, gia hạn chặn trườn
 ### G5. Bước 5: test viết cùng lúc với code
 
 **Test** là đoạn code tự kiểm tra code khác: "gọi hàm này với dữ liệu này, kết quả phải là thế này". Bộ test của Cipher
-Cert ở [tests/chay.php](../tests/chay.php), hiện có 135 test, chạy mất khoảng 40 giây.
+Cert ở [tests/chay.php](../tests/chay.php), hiện có 136 test, chạy mất khoảng 40 giây.
 
 Vài cách làm đáng học:
 

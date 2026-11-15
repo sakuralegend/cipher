@@ -4,8 +4,8 @@
 
 | Hạng mục | Kết quả |
 |---|---|
-| **Ngày chạy** | 14/11/2026 |
-| **Bộ test tự động** | **135/135 đạt**, chạy mất 41 giây |
+| **Ngày chạy** | 15/11/2026 |
+| **Bộ test tự động** | **136/136 đạt**, chạy mất 41 giây |
 | **Kiểm tra cú pháp** | Mọi file `.php` qua `php -l`, không lỗi |
 | **Kiểm tay theo kịch bản** | 34/34 dòng của file `DU_LIEU_NHAP_TAY.xlsx` cho đúng kết quả mong đợi (mục 4) |
 | **Kiểm trên bản chạy thật** | 14/14 ca đạt, đủ 5 header bảo mật (mục 5) |
@@ -36,21 +36,21 @@ Hệ thống được kiểm ở 4 lớp:
 4. **Kiểm trên bản chạy thật** qua internet (mục 5, 6), và xem giao diện bằng mắt: mọi thay đổi giao diện đều
    được chụp màn hình ở khổ máy tính và khổ điện thoại 390px trước khi giao.
 
-**Chạy lại bộ test:** cần MySQL đang bật và CSDL `cipher_test` đã tạo, rồi chạy `C:\xampp\php\php.exe tests\chay.php`
-từ thư mục đã giải nén của gói nộp. Mỗi test in ✅ hoặc ❌ kèm lý do; dòng
-cuối là `XANH: 135 test` hoặc `ĐỎ: số test đỏ/135 test`.
+**Chạy lại bộ test:** trong thư mục đã giải nén của gói nộp, bấm đúp **`CHAY_TEST.bat`**. File này tìm XAMPP,
+bật MySQL nếu chưa bật, tạo CSDL `cipher_test` nếu chưa có, chạy `tests\chay.php`, rồi dừng chờ bấm phím để kịp
+đọc kết quả. Mỗi test in ✅ hoặc ❌ kèm lý do; dòng cuối là `XANH: 136 test` hoặc `ĐỎ: số test đỏ/136 test`.
 
 ## 3. Danh sách test theo chức năng
 
 Tên test viết không dấu, bỏ tiền tố `test_`; tìm đúng tên đó trong `tests/chay.php` để xem code của test.
-Cột phải là câu Luật của test. Cả 135 test đều **đạt** ngày 14/11/2026. Nguyễn Đức Trung phụ trách
-45 test, Phan Tuấn Anh 39 test, Nguyễn Chí Kiên 51 test.
+Cột phải là câu Luật của test. Cả 136 test đều **đạt** ngày 15/11/2026. Nguyễn Đức Trung phụ trách
+46 test, Phan Tuấn Anh 39 test, Nguyễn Chí Kiên 51 test.
 
 | Nhóm | Số test | Mã chức năng | Phụ trách |
 |---|---|---|---|
 | Đăng nhập, phiên, phân quyền | 12 | Na, Ni | Nguyễn Đức Trung |
 | Người dùng | 11 | Nb | Nguyễn Đức Trung |
-| CSDL, ràng buộc, dữ liệu mẫu | 11 | Ng, Nj | Nguyễn Đức Trung |
+| CSDL, ràng buộc, dữ liệu mẫu | 12 | Ng, Nj | Nguyễn Đức Trung |
 | Nhật ký hoạt động (mở rộng 1) | 7 | Mở rộng 1 | Nguyễn Đức Trung |
 | Chấm hạng an toàn (mở rộng 3) | 4 | Mở rộng 3 | Nguyễn Đức Trung |
 | Chứng chỉ: thêm, sửa, thu hồi, xoá | 12 | D1, D4, D5, Nf | Phan Tuấn Anh |
@@ -61,7 +61,7 @@ Cột phải là câu Luật của test. Cả 135 test đều **đạt** ngày 1
 | Cảnh báo | 8 | D6 | Nguyễn Chí Kiên |
 | Dashboard, thống kê, báo cáo | 9 | D8, D9, Ne, Nh | Nguyễn Chí Kiên |
 | Giao diện, triển khai | 26 | Giao diện | Nguyễn Chí Kiên |
-| **Tổng** | **135** | | |
+| **Tổng** | **136** | | |
 
 ### Đăng nhập, phiên, phân quyền (12 test, Nguyễn Đức Trung)
 
@@ -96,7 +96,7 @@ Cột phải là câu Luật của test. Cả 135 test đều **đạt** ngày 1
 | `trang_quan_ly_nguoi_dung_chi_danh_cho_admin` | Mọi trang quản lý người dùng đều gọi yeuCauAdmin(), không chỉ yeuCauDangNhap(). |
 | `mat_khau_moi_phai_co_ca_chu_va_so` | Mật khẩu mới phải đủ 8 ký tự và có cả chữ lẫn số. |
 
-### CSDL, ràng buộc, dữ liệu mẫu (11 test, Nguyễn Đức Trung)
+### CSDL, ràng buộc, dữ liệu mẫu (12 test, Nguyễn Đức Trung)
 
 | Test | Quy tắc được kiểm |
 |---|---|
@@ -109,8 +109,9 @@ Cột phải là câu Luật của test. Cả 135 test đều **đạt** ngày 1
 | `o_form_sai_ma_hoa_hoac_la_mang_duoc_coi_la_trong` | Ô form không phải chuỗi UTF-8 hợp lệ được coi là trống, nên báo lỗi đúng ô thay vì làm chết trang. |
 | `du_lieu_demo_du_50_chung_chi_du_trang_thai_va_khong_nap_trung` | seed_demo.sql nạp được sau seed.sql, đủ 50 chứng chỉ, đủ mọi trạng thái và ba mốc cảnh báo; chạy lần hai không thêm gì. |
 | `du_lieu_mau_chi_chung_chi_co_y_moi_ra_hang_c_hoac_f` | Trong 50 chứng chỉ mẫu, chỉ những chứng chỉ cố ý làm ví dụ mới ra hạng C hoặc F. |
-| `chay_bat_va_readme_nap_du_file_sql_dung_thu_tu` | CHAY.bat, hướng dẫn cài tay trong README và bước nạp dữ liệu mẫu trên máy chủ thật nạp đúng mọi file SQL có thật, theo thứ tự schema → seed → seed_demo. |
-| `chay_bat_dung_khi_chay_trong_file_nen_hoac_nap_hong` | CHAY.bat dừng và bảo giải nén khi không thấy database\ và public\ cạnh nó, và dừng khi một file SQL nạp hỏng. |
+| `chay_bat_va_readme_nap_du_file_sql_dung_thu_tu` | CHAY_WEB.bat, hướng dẫn cài tay trong README và bước nạp dữ liệu mẫu trên máy chủ thật nạp đúng mọi file SQL có thật, theo thứ tự schema → seed → seed_demo. |
+| `chay_bat_dung_khi_chay_trong_file_nen_hoac_nap_hong` | CHAY_WEB.bat dừng và bảo giải nén khi không thấy database\ và public\ cạnh nó, và dừng khi một file SQL nạp hỏng. |
+| `chay_test_bat_chay_bo_test_roi_dung_cho_doc` | CHAY_TEST.bat chỉ chạy bộ test: chuẩn bị XAMPP, MySQL bằng database\chuan_bi.bat (CHAY_WEB.bat dùng chung), tạo cipher_test nếu thiếu, chạy tests\chay.php rồi dừng chờ bấm phím. |
 
 ### Nhật ký hoạt động (mở rộng 1) (7 test, Nguyễn Đức Trung)
 
@@ -261,7 +262,7 @@ Cột phải là câu Luật của test. Cả 135 test đều **đạt** ngày 1
 | `csp_chi_cho_script_cua_web_va_dung_ma_bam_script_nhung` | CSP của web trên máy chủ thật chỉ cho chạy script là file của chính web và đúng một đoạn script nhúng (views/dau_trang.php), nhận theo mã băm. |
 | `vach_thanh_thoi_gian_dung_ti_le_so_ngay` | Vạch 30, 15, 7 và "Hết hạn" trên thanh thời gian của thẻ minh hoạ nằm đúng tỉ lệ số ngày; HTML và app.js dùng chung một thang (data-ld-ngay-dau). |
 | `o_ngay_nhan_chu_dan_tu_excel` | Mọi ô ngày (date, datetime-local) nhận chữ dán dạng ngày/tháng/năm như ô ngày trong file Excel dữ liệu mẫu. |
-| `nhat_ky_man_hinh_chi_in_khi_chay_bang_php_s` | Nhật ký ra màn hình chỉ in khi web chạy bằng php -S (CHAY.bat), mỗi lần một dòng có giờ, chữ bỏ dấu; CHAY.bat chạy php -S với -q. |
+| `nhat_ky_man_hinh_chi_in_khi_chay_bang_php_s` | Nhật ký ra màn hình chỉ in khi web chạy bằng php -S (CHAY_WEB.bat), mỗi lần một dòng có giờ, chữ bỏ dấu; CHAY_WEB.bat chạy php -S với -q. |
 
 ## 4. Kiểm tay theo kịch bản: file Excel dữ liệu mẫu
 
@@ -304,7 +305,7 @@ Ngày 14/11/2026, kiểm từ máy ở ngoài, gửi yêu cầu tới <https://c
 | Mở thẳng file code `/src/auth.php` | Không tìm thấy | 404 | ✅ |
 | Mở thẳng file cấu hình `/config/db.php` | Không tìm thấy | 404 | ✅ |
 | Mở thẳng `/database/schema.sql` | Không tìm thấy | 404 | ✅ |
-| Mở thẳng `/README.md`, `/CHAY.bat` | Không tìm thấy | 404, 404 | ✅ |
+| Mở thẳng `/README.md`, `/CHAY_WEB.bat` | Không tìm thấy | 404, 404 | ✅ |
 | Đăng xuất bằng đường link (GET) | Từ chối, chỉ nhận nút trên trang | 405 | ✅ |
 | Gửi form đăng nhập không có mã CSRF | Từ chối | 403 | ✅ |
 | Mở địa chỉ `http://` | Chuyển sang `https://` | 301 → `https://cert.cipher.id.vn/` | ✅ |
@@ -317,7 +318,7 @@ Bản chạy thật dùng cùng dữ liệu mẫu và cùng hai tài khoản nh�
 thấy cùng một thứ ở máy mình và ở trên mạng. Ngày 14/11/2026 đã rà lại trên bản này: đủ 9 chức năng của đề 69,
 3 tiêu chí và 10 chức năng nền tảng.
 
-Hai cách cài trong hướng dẫn cũng đã được chạy thử trên máy sạch dữ liệu: bấm `CHAY.bat` (kể cả trường hợp bấm
+Hai cách cài trong hướng dẫn cũng đã được chạy thử trên máy sạch dữ liệu: bấm `CHAY_WEB.bat` (kể cả trường hợp bấm
 ngay trong file nén, file sẽ dừng và bảo giải nén), và cài tay vào `htdocs` bằng Apache với phpMyAdmin. Nạp xong
 có 2 tài khoản, 50 chứng chỉ đủ 5 trạng thái (6 đã hết hạn, 13 sắp hết hạn, 22 còn hiệu lực, 3 chưa hiệu lực, 6 đã
 thu hồi). Số chứng chỉ theo trạng thái sẽ đổi dần theo ngày nạp.
@@ -356,7 +357,7 @@ Mỗi lỗi khi sửa đều kèm đúng một test bắt lỗi đó, để lỗ
 | 12/11/2026 | Mật khẩu "abcdefgh" được chấp nhận | Chỉ kiểm độ dài | `mat_khau_moi_phai_co_ca_chu_va_so` |
 | 12/11/2026 | Đổi mật khẩu xong, phiên ở máy khác vẫn dùng tiếp được | Phiên chỉ nhớ mã người dùng | `doi_mat_khau_dang_xuat_phien_khac_giu_phien_dang_doi` |
 | 12/11/2026 | 20/50 chứng chỉ mẫu ra hạng C | Dữ liệu mẫu đặt thời hạn 365–730 ngày, trái luật 200 ngày | `du_lieu_mau_chi_chung_chi_co_y_moi_ra_hang_c_hoac_f` |
-| 13/11/2026 | Bấm `CHAY.bat` ngay trong file nén thì báo "Xong" rồi web không chạy | Chương trình nén chỉ bung riêng file đó ra thư mục tạm | `chay_bat_dung_khi_chay_trong_file_nen_hoac_nap_hong` |
+| 13/11/2026 | Bấm `CHAY_WEB.bat` ngay trong file nén thì báo "Xong" rồi web không chạy | Chương trình nén chỉ bung riêng file đó ra thư mục tạm | `chay_bat_dung_khi_chay_trong_file_nen_hoac_nap_hong` |
 | 14/11/2026 | Máy chủ ở xa bị báo "không trả lời" dù vẫn chạy | Chỉ chờ 5 giây, trong khi bắt tay TLS có lúc mất đúng 5 giây | `doc_chung_chi_cho_du_lau_cho_may_chu_o_xa` |
 
 ## 8. Giới hạn, chưa kiểm

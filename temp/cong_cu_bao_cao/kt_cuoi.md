@@ -39,7 +39,7 @@ Ngày 14/11/2026, kiểm từ máy ở ngoài, gửi yêu cầu tới <https://c
 | Mở thẳng file code `/src/auth.php` | Không tìm thấy | 404 | ✅ |
 | Mở thẳng file cấu hình `/config/db.php` | Không tìm thấy | 404 | ✅ |
 | Mở thẳng `/database/schema.sql` | Không tìm thấy | 404 | ✅ |
-| Mở thẳng `/README.md`, `/CHAY.bat` | Không tìm thấy | 404, 404 | ✅ |
+| Mở thẳng `/README.md`, `/CHAY_WEB.bat` | Không tìm thấy | 404, 404 | ✅ |
 | Đăng xuất bằng đường link (GET) | Từ chối, chỉ nhận nút trên trang | 405 | ✅ |
 | Gửi form đăng nhập không có mã CSRF | Từ chối | 403 | ✅ |
 | Mở địa chỉ `http://` | Chuyển sang `https://` | 301 → `https://cert.cipher.id.vn/` | ✅ |
@@ -52,7 +52,7 @@ Bản chạy thật dùng cùng dữ liệu mẫu và cùng hai tài khoản nh�
 thấy cùng một thứ ở máy mình và ở trên mạng. Ngày 14/11/2026 đã rà lại trên bản này: đủ 9 chức năng của đề 69,
 3 tiêu chí và 10 chức năng nền tảng.
 
-Hai cách cài trong hướng dẫn cũng đã được chạy thử trên máy sạch dữ liệu: bấm `CHAY.bat` (kể cả trường hợp bấm
+Hai cách cài trong hướng dẫn cũng đã được chạy thử trên máy sạch dữ liệu: bấm `CHAY_WEB.bat` (kể cả trường hợp bấm
 ngay trong file nén, file sẽ dừng và bảo giải nén), và cài tay vào `htdocs` bằng Apache với phpMyAdmin. Nạp xong
 có 2 tài khoản, 50 chứng chỉ đủ 5 trạng thái (6 đã hết hạn, 13 sắp hết hạn, 22 còn hiệu lực, 3 chưa hiệu lực, 6 đã
 thu hồi). Số chứng chỉ theo trạng thái sẽ đổi dần theo ngày nạp.
@@ -91,7 +91,7 @@ Mỗi lỗi khi sửa đều kèm đúng một test bắt lỗi đó, để lỗ
 | 12/11/2026 | Mật khẩu "abcdefgh" được chấp nhận | Chỉ kiểm độ dài | `mat_khau_moi_phai_co_ca_chu_va_so` |
 | 12/11/2026 | Đổi mật khẩu xong, phiên ở máy khác vẫn dùng tiếp được | Phiên chỉ nhớ mã người dùng | `doi_mat_khau_dang_xuat_phien_khac_giu_phien_dang_doi` |
 | 12/11/2026 | 20/50 chứng chỉ mẫu ra hạng C | Dữ liệu mẫu đặt thời hạn 365–730 ngày, trái luật 200 ngày | `du_lieu_mau_chi_chung_chi_co_y_moi_ra_hang_c_hoac_f` |
-| 13/11/2026 | Bấm `CHAY.bat` ngay trong file nén thì báo "Xong" rồi web không chạy | Chương trình nén chỉ bung riêng file đó ra thư mục tạm | `chay_bat_dung_khi_chay_trong_file_nen_hoac_nap_hong` |
+| 13/11/2026 | Bấm `CHAY_WEB.bat` ngay trong file nén thì báo "Xong" rồi web không chạy | Chương trình nén chỉ bung riêng file đó ra thư mục tạm | `chay_bat_dung_khi_chay_trong_file_nen_hoac_nap_hong` |
 | 14/11/2026 | Máy chủ ở xa bị báo "không trả lời" dù vẫn chạy | Chỉ chờ 5 giây, trong khi bắt tay TLS có lúc mất đúng 5 giây | `doc_chung_chi_cho_du_lau_cho_may_chu_o_xa` |
 
 ## 8. Giới hạn, chưa kiểm

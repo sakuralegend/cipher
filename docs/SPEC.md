@@ -200,7 +200,7 @@ Ngoài yêu cầu của đề, làm sau khi đủ 19 chức năng.
 - **Ghi ở đâu:** ngay trong các hàm xử lý dữ liệu, sau khi thao tác thành công; gia hạn ghi trong cùng giao dịch. Nhờ vậy không trang nào quên ghi.
 - **Ai xem:** chỉ Admin, ở trang Nhật ký: lọc theo người làm (kể cả người đã xoá), mức độ, hành động, khoảng ngày; 50 dòng một trang; đối tượng còn tồn tại thì có link tới nó.
 - **Không sửa, xoá được:** web không có chức năng này, và CSDL có trigger từ chối mọi lệnh `UPDATE`, `DELETE` trên bảng nhật ký, kể cả lệnh gõ thẳng vào CSDL. Giới hạn: người quản trị CSDL vẫn dọn được cả bảng bằng `TRUNCATE` hoặc gỡ trigger; bảng trống trơn thì nhìn là biết đã bị dọn.
-- **Bản in ra màn hình:** khi chạy trên máy bằng `CHAY.bat`, cửa sổ đen in mỗi trang được mở một dòng (giờ, cách gửi, địa chỉ, mã trả về, thời gian xử lý, người dùng) và mỗi thao tác một dòng mở đầu bằng `[THONG TIN]`, `[CANH BAO]` hoặc `[NGUY HIEM]`. Trên máy chủ thật không in gì ra màn hình.
+- **Bản in ra màn hình:** khi chạy trên máy bằng `CHAY_WEB.bat`, cửa sổ đen in mỗi trang được mở một dòng (giờ, cách gửi, địa chỉ, mã trả về, thời gian xử lý, người dùng) và mỗi thao tác một dòng mở đầu bằng `[THONG TIN]`, `[CANH BAO]` hoặc `[NGUY HIEM]`. Trên máy chủ thật không in gì ra màn hình.
 
 ![Trang Nhật ký: cột Mức ở đầu bảng, lọc được theo người làm, mức độ, hành động, khoảng ngày](anh/nhat_ky.jpg)
 

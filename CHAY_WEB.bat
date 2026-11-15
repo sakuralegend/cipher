@@ -1,10 +1,10 @@
 @echo off
 rem Bam dup file nay de chay thu Cipher Cert bang PHP va MySQL cua XAMPP, khong can Apache, khong can phpMyAdmin.
-rem   1. Tim XAMPP (C:\xampp, D:\xampp, E:\xampp, F:\xampp; khong thay thi hoi duong dan).
-rem   2. Bat MySQL neu chua bat.
+rem   1-2. Tim XAMPP, bat MySQL: phan chung voi CHAY_TEST.bat, nam o database\chuan_bi.bat.
 rem   3. Chua co CSDL cipher_dev thi tao va nap database\schema.sql, seed.sql, seed_demo.sql theo thu tu do.
 rem      Co roi thi hoi co nap lai khong; 10 giay khong tra loi la giu nguyen du lieu dang co.
 rem   4. Chay web bang PHP (cong 8000, ban thi thu toi 8005) roi mo trinh duyet.
+rem Chay bo test thi bam CHAY_TEST.bat (ten cu cua file nay la CHAY.bat, doi 15/11/2026 cho khoi nham voi bo test).
 rem Loi nhan khong dau vi cua so lenh Windows hay vo chu tieng Viet co dau.
 rem File nay khong chay duoc (may chan file .bat, MySQL dat mat khau root...) thi lam tay theo README.md, Cach 2.
 setlocal EnableExtensions
@@ -20,48 +20,16 @@ echo ============================================================
 echo.
 
 rem ---------- 0. Du file chua ----------
-rem Bam CHAY.bat ngay trong file nen thi chuong trinh nen chi bung rieng file nay ra thu muc tam, khong co
+rem Bam CHAY_WEB.bat ngay trong file nen thi chuong trinh nen chi bung rieng file nay ra thu muc tam, khong co
 rem database\ va public\ (do 13/11/2026: WinRAR bung vao Temp\Rar$DIa...). Dung ngay va bao giai nen truoc.
 if not exist "database\schema.sql" goto loi_chua_giai_nen
 if not exist "public\index.php" goto loi_chua_giai_nen
 
-rem ---------- 1. Tim XAMPP ----------
-set "XAMPP="
-for %%D in (C D E F) do if not defined XAMPP if exist "%%D:\xampp\php\php.exe" set "XAMPP=%%D:\xampp"
-if defined XAMPP goto co_xampp
-echo Khong tim thay XAMPP o C:\xampp, D:\xampp, E:\xampp, F:\xampp.
-set /p "XAMPP=Nhap thu muc cai XAMPP, vi du C:\xampp roi bam Enter: "
-rem Bo dau nhay neu nguoi dung keo tha thu muc vao cua so.
-set "XAMPP=%XAMPP:"=%"
-:co_xampp
-set "PHP=%XAMPP%\php\php.exe"
-set "MYSQL=%XAMPP%\mysql\bin\mysql.exe"
-set "MYSQLADMIN=%XAMPP%\mysql\bin\mysqladmin.exe"
-if not exist "%PHP%" goto loi_xampp
-if not exist "%MYSQL%" goto loi_xampp
-echo [1/4] XAMPP: %XAMPP%
-
-rem ---------- 2. MySQL ----------
-rem mysqladmin ping tra 0 khi MySQL dang chay, ke ca khi bi tu choi mat khau (loi do bat o buoc 3).
-"%MYSQLADMIN%" -u root --connect-timeout=2 ping >nul 2>&1
-if not errorlevel 1 goto mysql_san_sang
-echo [2/4] MySQL chua bat, dang bat...
-start "MySQL - dong cua so nay la tat MySQL" /min "%XAMPP%\mysql\bin\mysqld.exe" --defaults-file="%XAMPP%\mysql\bin\my.ini" --standalone
-set /a CHO=0
-:cho_mysql
-ping -n 2 127.0.0.1 >nul
-"%MYSQLADMIN%" -u root --connect-timeout=2 ping >nul 2>&1
-if not errorlevel 1 goto mysql_san_sang
-set /a CHO+=1
-if %CHO% LSS 20 goto cho_mysql
-goto loi_mysql
-:mysql_san_sang
-echo [2/4] MySQL dang chay.
+rem ---------- 1-2. XAMPP, MySQL ----------
+call "database\chuan_bi.bat"
+if errorlevel 1 goto dung
 
 rem ---------- 3. CSDL ----------
-rem Web doc CSDL cipher_dev bang tai khoan root khong mat khau (mac dinh cua XAMPP, xem config\db.php).
-"%MYSQL%" -u root -e "SELECT 1" >nul 2>&1
-if errorlevel 1 goto loi_mat_khau
 rem Co bang users moi coi la da nap: CSDL tao roi ma chua nap file nao thi van nap tu dau.
 "%MYSQL%" -u root cipher_dev -e "SELECT 1 FROM users LIMIT 1" >nul 2>&1
 if errorlevel 1 goto nap_du_lieu
@@ -132,25 +100,9 @@ exit /b 0
 :loi_chua_giai_nen
 echo LOI: Khong thay thu muc database va public canh file nay:
 echo      %~dp0
-echo Co le ban dang bam CHAY.bat ngay trong file nen .zip, nen chi rieng file nay duoc bung ra thu muc tam.
+echo Co le ban dang bam CHAY_WEB.bat ngay trong file nen .zip, nen chi rieng file nay duoc bung ra thu muc tam.
 echo Hay giai nen ca file .zip truoc: bam chuot phai vao file nen, chon Extract All hoac Giai nen,
-echo roi bam dup CHAY.bat trong thu muc vua giai nen.
-goto dung
-:loi_xampp
-echo.
-echo LOI: Khong thay PHP hoac MySQL trong "%XAMPP%".
-echo Cai XAMPP tu https://www.apachefriends.org roi chay lai file nay, hoac lam tay theo README.md, Cach 2.
-goto dung
-:loi_mysql
-echo.
-echo LOI: Bat MySQL khong len sau 40 giay.
-echo Mo XAMPP Control Panel, bam Start o dong MySQL, xem loi o do, roi chay lai file nay.
-goto dung
-:loi_mat_khau
-echo.
-echo LOI: MySQL tu choi tai khoan root khong mat khau.
-echo May nay da dat mat khau cho root. Lam theo README.md: Cach 2, muc Cau hinh,
-echo de khai bao mat khau cho web, roi nap CSDL bang phpMyAdmin.
+echo roi bam dup CHAY_WEB.bat trong thu muc vua giai nen.
 goto dung
 :loi_nap
 echo.

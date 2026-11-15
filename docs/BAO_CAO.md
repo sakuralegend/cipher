@@ -68,7 +68,7 @@ Mục tiêu nhóm đặt ra:
 | Xử lý phía máy chủ | PHP 8 thuần, mỗi trang một file | Không dùng framework PHP, để mọi dòng code đều do nhóm viết và hiểu |
 | Truy cập CSDL | PDO với Prepared Statements | Một cửa duy nhất: hàm `ketNoiCsdl()` |
 | CSDL | MySQL/MariaDB của XAMPP | XAMPP thực chất cài MariaDB 10.4; bản chạy thật dùng MariaDB 10.11 |
-| Chạy trên máy | XAMPP 8.2.12 (PHP 8.2.12) | Bấm `CHAY.bat` hoặc chép vào `htdocs` |
+| Chạy trên máy | XAMPP 8.2.12 (PHP 8.2.12) | Bấm `CHAY_WEB.bat` hoặc chép vào `htdocs` |
 | Bản chạy thật | Ubuntu 24.04, Caddy, PHP-FPM, HTTPS | <https://cert.cipher.id.vn> |
 
 | Thư viện | Dùng cho | Giấy phép |
@@ -128,12 +128,14 @@ flowchart TB
 
 ```
 cipher/
-├── CHAY.bat                Bấm đúp là chạy: bật MySQL, nạp CSDL, chạy web, mở trình duyệt
+├── CHAY_WEB.bat            Bấm đúp là chạy web: bật MySQL, nạp CSDL, chạy web, mở trình duyệt
+├── CHAY_TEST.bat           Bấm đúp là chạy bộ test, dừng lại cho đọc kết quả
 ├── README.md               Hướng dẫn cài đặt và sử dụng cho người chấm
 ├── DU_LIEU_NHAP_TAY.xlsx   Dữ liệu mẫu để tự nhập tay, có dòng đúng và dòng sai
 ├── config/db.php           Cửa duy nhất tới CSDL: ketNoiCsdl(), múi giờ, chế độ strict
-├── database/               schema.sql (bảng, view, trigger), seed.sql, seed_demo.sql
-├── tests/chay.php          Bộ test tự động: 135 test, lệnh --erd sinh sơ đồ ERD
+├── database/               schema.sql (bảng, view, trigger), seed.sql, seed_demo.sql;
+│                           chuan_bi.bat: tìm XAMPP, bật MySQL, phần chung của hai file .bat
+├── tests/chay.php          Bộ test tự động: 136 test, lệnh --erd sinh sơ đồ ERD
 ├── src/                    Toàn bộ quy tắc nghiệp vụ, không in HTML
 │   ├── khoi_dong.php       Mọi trang gọi đầu tiên: nạp CSDL, phiên, nhật ký; hàm e(), ô form
 │   ├── auth.php            Đăng nhập, đăng xuất, phiên, phân quyền, mã CSRF
@@ -307,7 +309,7 @@ hạng chỉ nằm ở một nơi.
 - Chặn sửa, xoá: 2 trigger `nhat_ky_cam_sua`, `nhat_ky_cam_xoa` trong `database/schema.sql` từ chối
   mọi lệnh `UPDATE`, `DELETE` trên `audit_logs`, kể cả lệnh gõ thẳng vào CSDL.
 - Xem: `public/admin/nhat_ky.php`, chỉ Admin; `docLocNhatKy()`, `layNhatKy()`.
-- In ra cửa sổ lệnh khi chạy bằng `CHAY.bat`: `inRaManHinh()`.
+- In ra cửa sổ lệnh khi chạy bằng `CHAY_WEB.bat`: `inRaManHinh()`.
 
 ### 3.12. Người dùng, tài khoản của tôi
 
@@ -368,21 +370,21 @@ Có hai cách chạy trên máy Windows đã cài [XAMPP](https://www.apachefrie
 **Cách 1** bấm một file là chạy; **Cách 2** cài tay từng bước theo kiểu quen thuộc của XAMPP. Không muốn cài thì
 dùng bản chạy thật tại <https://cert.cipher.id.vn>.
 
-## 1. Cách 1: bấm đúp `CHAY.bat` (nhanh nhất)
+## 1. Cách 1: bấm đúp `CHAY_WEB.bat` (nhanh nhất)
 
 1. **Giải nén** file nén ra một thư mục bất kỳ: bấm chuột phải vào file nén → **Extract All** (Giải nén).
-   Không cần chép vào `htdocs`. Bấm `CHAY.bat` ngay bên trong file nén sẽ không chạy, vì chương trình nén
+   Không cần chép vào `htdocs`. Bấm `CHAY_WEB.bat` ngay bên trong file nén sẽ không chạy, vì chương trình nén
    chỉ bung riêng file đó ra thư mục tạm; khi đó file tự dừng và nhắc giải nén.
-2. Bấm đúp **`CHAY.bat`**. Không cần mở XAMPP Control Panel trước.
+2. Bấm đúp **`CHAY_WEB.bat`**. Không cần mở XAMPP Control Panel trước.
 3. Trình duyệt tự mở trang giới thiệu. Bấm **Đăng nhập**, dùng tài khoản ở mục 3.
 
-![Thư mục sau khi giải nén: bấm đúp CHAY, file có biểu tượng bánh răng (Windows thường ẩn đuôi .bat)](anh/thu_muc_giai_nen.jpg)
+![Thư mục sau khi giải nén: bấm đúp CHAY_WEB để chạy web, CHAY_TEST để chạy bộ test; hai file có biểu tượng bánh răng (Windows thường ẩn đuôi .bat)](anh/thu_muc_giai_nen.jpg)
 
 Cửa sổ đen làm thay người dùng 4 bước, mỗi bước in một dòng `[1/4]` … `[4/4]`: tìm XAMPP, bật MySQL nếu chưa bật,
 lần đầu tự tạo CSDL `cipher_dev` và nạp dữ liệu mẫu (50 chứng chỉ, 2 tài khoản), rồi chạy web ở
 <http://localhost:8000> (cổng bận thì dùng 8001, 8002...). **Đóng cửa sổ đen là tắt web.**
 
-![Cửa sổ của CHAY.bat: bốn bước từ 1/4 đến 4/4, địa chỉ web, hai tài khoản, rồi nhật ký từng trang được mở. Ảnh chụp ở lần bấm thứ hai nên bước 3/4 hỏi có nạp lại dữ liệu mẫu không](anh/chay_bat.jpg)
+![Cửa sổ của CHAY_WEB.bat: bốn bước từ 1/4 đến 4/4, địa chỉ web, hai tài khoản, rồi nhật ký từng trang được mở. Ảnh chụp ở lần bấm thứ hai nên bước 3/4 hỏi có nạp lại dữ liệu mẫu không](anh/chay_bat.jpg)
 
 Lần bấm đầu tiên, bước `[3/4]` không hỏi mà ghi `Dang tao CSDL cipher_dev va nap du lieu mau...`, kèm tên ba file
 được nạp và dòng `Xong: 50 chung chi mau, 2 tai khoan.` Chữ `admin`, `khach` ở cuối mỗi dòng nhật ký là người mở trang
@@ -400,7 +402,11 @@ việc bình thường; `[CANH BAO]` là đăng nhập sai, thu hồi, khoá, đ
 `[NGUY HIEM]` là xoá, dấu hiệu dò mật khẩu hay dò mạng nội bộ. Chữ không dấu vì cửa sổ lệnh của Windows hay vỡ chữ
 tiếng Việt có dấu.
 
-![Nhật ký web in ra cửa sổ lệnh khi chạy bằng php -S, cách chạy mà CHAY.bat dùng: mỗi trang một dòng, mỗi thao tác một dòng có mức](anh/cua_so_nhat_ky.jpg)
+![Nhật ký web in ra cửa sổ lệnh khi chạy bằng php -S, cách chạy mà CHAY_WEB.bat dùng: mỗi trang một dòng, mỗi thao tác một dòng có mức](anh/cua_so_nhat_ky.jpg)
+
+**Chạy bộ test tự động:** bấm đúp **`CHAY_TEST.bat`** (cùng thư mục với `CHAY_WEB.bat`). File tự bật MySQL, tạo
+CSDL `cipher_test` (riêng cho test, không đụng dữ liệu của web), chạy 136 test trong khoảng 40 giây rồi dừng chờ
+bấm phím. Dòng cuối `XANH: 136 test` là mọi test đều đạt; kết quả chi tiết ở Phần VII.
 
 ## 2. Cách 2: cài tay từng bước
 
@@ -476,7 +482,7 @@ Menu bên trái có hai tầng: thanh biểu tượng là các khu, bấm một 
 
 ![Sau khi đăng nhập: Dashboard và menu hai tầng](anh/dashboard.jpg)
 
-**Thử nhập tay:** mở **`DU_LIEU_NHAP_TAY.xlsx`** (cùng thư mục với `CHAY.bat`). Mỗi trang tính là một form, có dòng
+**Thử nhập tay:** mở **`DU_LIEU_NHAP_TAY.xlsx`** (cùng thư mục với `CHAY_WEB.bat`). Mỗi trang tính là một form, có dòng
 nhập đúng, dòng cố ý sai và kết quả mong đợi; ngày tự tính theo hôm nay. Ô ngày trên web dán được chữ ngày/tháng/năm
 chép từ file. Nên nhập theo thứ tự trang tính 1 đến 7, vì trang Chứng chỉ dùng tên miền và tổ chức cấp vừa tạo ở các
 trang trước.
@@ -518,7 +524,7 @@ cùng nắm luồng chung ở Phần V mục 3.1 và 3.5.
 | **Phần phụ trách** | Nền tảng và bảo mật | Chứng chỉ | Danh mục, cảnh báo, báo cáo |
 | **Chức năng** | Na Đăng nhập · Nb Người dùng · Ng CSDL, khoá, quan hệ · Ni Bảo mật · Nj Dữ liệu mẫu · Mở rộng 1 Nhật ký · Mở rộng 3 Chấm hạng an toàn | D1 Danh sách chứng chỉ · D4 Ngày cấp, hết hạn · D5 Trạng thái · D7 Gia hạn · Nd Tìm kiếm, lọc · Nf Kiểm tra JS + PHP · Mở rộng 2 Đọc chứng chỉ thật | D2 Tên miền, máy chủ · D3 Tổ chức cấp · D6 Cảnh báo · D8 Thống kê · D9 Xuất báo cáo · Nh Dashboard · Giao diện |
 | **Use case** | UC01, UC02, UC12, UC13 | UC04, UC05, UC05a, UC06, UC07, UC11 | UC03, UC08, UC09, UC10 |
-| **File chính** | `config/db.php`, `src/auth.php`, `src/nguoi_dung.php`, `src/nhat_ky.php`, `database/`, `login.php`, `logout.php`, trang Người dùng, Nhật ký, Tài khoản, phần chấm hạng trong `src/chung_chi.php`, `CHAY.bat` | `src/chung_chi.php` (phần chứng chỉ, lọc, sắp xếp, gia hạn, đọc chứng chỉ), các trang `chung_chi*.php`, `views/bo_loc.php`, `public/assets/app.js` (kiểm tra form) | `src/danh_muc.php`, `src/chung_chi.php` (phần cảnh báo, thống kê, CSV), Dashboard, `canh_bao.php`, `thong_ke.php`, `bao_cao_*.php`, trang danh mục, trang giới thiệu, `views/`, `app.css` |
+| **File chính** | `config/db.php`, `src/auth.php`, `src/nguoi_dung.php`, `src/nhat_ky.php`, `database/`, `login.php`, `logout.php`, trang Người dùng, Nhật ký, Tài khoản, phần chấm hạng trong `src/chung_chi.php`, `CHAY_WEB.bat` | `src/chung_chi.php` (phần chứng chỉ, lọc, sắp xếp, gia hạn, đọc chứng chỉ), các trang `chung_chi*.php`, `views/bo_loc.php`, `public/assets/app.js` (kiểm tra form) | `src/danh_muc.php`, `src/chung_chi.php` (phần cảnh báo, thống kê, CSV), Dashboard, `canh_bao.php`, `thong_ke.php`, `bao_cao_*.php`, trang danh mục, trang giới thiệu, `views/`, `app.css` |
 | **Số test phụ trách** | 45 | 39 | 51 |
 | **Tài liệu** | ERD, hướng dẫn cài đặt, phần bảo mật | Đặc tả use case phần chứng chỉ, sơ đồ trình tự Thêm và Gia hạn | Đặc tả chức năng phần thống kê, cảnh báo, giao diện; báo cáo kiểm thử |
 
@@ -527,9 +533,9 @@ cùng nắm luồng chung ở Phần V mục 3.1 và 3.5.
 ## 1. Kết quả đạt được
 
 - Đủ 19 chức năng của đề (D1–D9, Na–Nj) và 3 tiêu chí; thêm 3 chức năng mở rộng.
-- 135 test tự động đều đạt; 34 dòng kịch bản nhập tay đều cho đúng kết quả; kiểm thử bảo mật không tìm thấy lỗ hổng.
+- 136 test tự động đều đạt; 34 dòng kịch bản nhập tay đều cho đúng kết quả; kiểm thử bảo mật không tìm thấy lỗ hổng.
 - Hệ thống chạy thật trên internet qua HTTPS tại <https://cert.cipher.id.vn>, dùng được trên máy tính và điện thoại.
-- Người chấm chạy được trên máy bằng một lần bấm `CHAY.bat`, hoặc cài tay theo cách quen của XAMPP.
+- Người chấm chạy được trên máy bằng một lần bấm `CHAY_WEB.bat`, hoặc cài tay theo cách quen của XAMPP.
 
 ## 2. Hạn chế
 

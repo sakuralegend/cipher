@@ -7,7 +7,7 @@ const NHAT_KY_MOI_TRANG = 50;
 
 // Ba mức của nhật ký (user chốt 14/11/2026), theo cách nhật ký người dùng xem thường chia (Windows Event Viewer;
 // OWASP khuyên đánh dấu riêng đăng nhập sai, thao tác rủi ro cao, dấu hiệu tấn công). Không có mức Lỗi hay Debug:
-// nhật ký này ghi việc người dùng làm, lỗi chương trình nằm ở log của PHP. Nhãn trên trang và chữ in ra cửa sổ CHAY.bat.
+// nhật ký này ghi việc người dùng làm, lỗi chương trình nằm ở log của PHP. Nhãn trên trang và chữ in ra cửa sổ CHAY_WEB.bat.
 const MUC_DO = [
     'thong_tin' => ['nhan' => 'Thông tin', 'mau' => 'secondary', 'man_hinh' => 'THONG TIN'],
     'canh_bao' => ['nhan' => 'Cảnh báo', 'mau' => 'yellow', 'man_hinh' => 'CANH BAO'],
@@ -79,10 +79,10 @@ function ghiNhatKy(PDO $pdo, string $hanhDong, ?string $loai = null, ?int $idDoi
     }
 }
 
-// Nhật ký ra cửa sổ dòng lệnh (user 14/11/2026: cửa sổ CHAY.bat phải cho biết hệ thống đang làm gì, thay cho các dòng
+// Nhật ký ra cửa sổ dòng lệnh (user 14/11/2026: cửa sổ CHAY_WEB.bat phải cho biết hệ thống đang làm gì, thay cho các dòng
 // Accepted/Closing vô nghĩa của PHP). Hai nguồn: ghiNhatKy() in mỗi thao tác, mở đầu bằng mức ([THONG TIN], [CANH BAO],
-// [NGUY HIEM]); khoi_dong.php in mỗi trang mở, và mỗi lần gửi form bị từ chối thành dòng [CANH BAO] kèm lý do. Chỉ in khi web chạy bằng máy chủ có sẵn của PHP (php -S, tức CHAY.bat); trên VPS (PHP-FPM) và trong bộ test (cli)
-// không in gì. Chữ bỏ dấu vì cửa sổ lệnh Windows hay vỡ chữ có dấu, như lời nhắn trong CHAY.bat. Ghi hỏng (cửa sổ đã
+// [NGUY HIEM]); khoi_dong.php in mỗi trang mở, và mỗi lần gửi form bị từ chối thành dòng [CANH BAO] kèm lý do. Chỉ in khi web chạy bằng máy chủ có sẵn của PHP (php -S, tức CHAY_WEB.bat); trên VPS (PHP-FPM) và trong bộ test (cli)
+// không in gì. Chữ bỏ dấu vì cửa sổ lệnh Windows hay vỡ chữ có dấu, như lời nhắn trong CHAY_WEB.bat. Ghi hỏng (cửa sổ đã
 // đóng) thì bỏ qua: nhật ký màn hình không được làm hỏng thao tác. $sapi, $dich chỉ để test thay được.
 function inRaManHinh(string $noiDung, string $sapi = PHP_SAPI, string $dich = 'php://stderr'): void
 {

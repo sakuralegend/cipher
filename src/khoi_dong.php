@@ -8,7 +8,7 @@ require_once __DIR__ . '/nhat_ky.php';
 
 batDauPhien();
 
-// Chạy bằng php -S (CHAY.bat): mỗi trang mở in một dòng ra cửa sổ (inRaManHinh ở nhat_ky.php): cách gửi, địa chỉ, mã trả về,
+// Chạy bằng php -S (CHAY_WEB.bat): mỗi trang mở in một dòng ra cửa sổ (inRaManHinh ở nhat_ky.php): cách gửi, địa chỉ, mã trả về,
 // thời gian xử lý, người. In lúc trang chạy xong để có mã trả về thật (302 khi chuyển hướng, 403 khi không đủ quyền).
 if (PHP_SAPI === 'cli-server') {
     register_shutdown_function(function (): void {

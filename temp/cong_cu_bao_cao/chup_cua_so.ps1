@@ -1,5 +1,5 @@
 # Chụp MỘT cửa sổ của ứng dụng Windows (không phải trình duyệt chạy ngầm) ra file PNG, cho các ảnh hướng dẫn cài đặt:
-# XAMPP Control Panel, cửa sổ đen của CHAY.bat, thư mục vừa giải nén. Chỉ chụp đúng cửa sổ được chỉ định (PrintWindow),
+# XAMPP Control Panel, cửa sổ đen của CHAY_WEB.bat, thư mục vừa giải nén. Chỉ chụp đúng cửa sổ được chỉ định (PrintWindow),
 # không chụp màn hình, nên các cửa sổ khác của người dùng không lọt vào ảnh.
 #   powershell -File chup_cua_so.ps1 -MaTienTrinh 1234 -Ra D:\anh\a.png          cửa sổ của tiến trình đó
 #       (cửa sổ lệnh thì Windows báo mã của cmd.exe chạy bên trong, không phải conhost.exe: tìm bằng
