@@ -1,5 +1,7 @@
 """Chụp toàn bộ ảnh giao diện cho báo cáo. Chạy: python -I chup_het.py [nhom ...]
-Nhóm: cong_khai, xem, nhan_vien, nhap_lieu, doc, nhat_ky. Không ghi nhóm thì chạy hết theo thứ tự."""
+Nhóm: cong_khai, xem, nhan_vien, nhap_lieu, doc, nhat_ky. Không ghi nhóm thì chạy hết theo thứ tự.
+Nhóm landing (chỉ chạy khi gọi tên): chụp lại 9 ảnh public/assets/landing/*.webp; chạy TRƯỚC nhóm nhap_lieu, vì nhóm
+đó gia hạn CERT-013 là chứng chỉ của hai ảnh thẻ Chi tiết và Gia hạn."""
 import sys
 from pathlib import Path
 
@@ -92,6 +94,32 @@ def nhat_ky():
         Phien().post("/login.php", {"username": "nhanvien", "password": "doan-mo"})
     chup("nhat_ky", "/admin/nhat_ky.php", ad, h=1000)
     chup("nhat_ky_nguy_hiem", "/admin/nhat_ky.php?muc=nguy_hiem", ad, h=620)
+
+
+def landing():
+    """9 ảnh của trang giới thiệu, cùng kích thước $anhGiaoDien trong public/index.php: 'may' 1600x1000 (cửa sổ 1440x900,
+    có menu), 'dt' 780x1688 (390x844, hệ số 2), 'the' 1200x900 (chỉ phần nội dung, ẩn menu)."""
+    from PIL import Image
+    from chup import ANH
+    dich = Path(r"d:\Desktop\cipher\public\assets\landing")
+    ad = Phien("admin")
+    viec = [
+        ("dashboard-may", "/admin/index.php", dict(w=1440, h=900, ti_le=2), (1600, 1000)),
+        ("can-xu-ly", "/admin/chung_chi.php?trang_thai=expiring", dict(w=1440, h=900, ti_le=2), (1600, 1000)),
+        ("dashboard-dt", "/admin/index.php", dict(h=844, dt=True), (780, 1688)),
+        ("the-danh-sach", "/admin/chung_chi.php", dict(w=1200, h=900, ti_le=1, an_menu=True), (1200, 900)),
+        ("the-canh-bao", "/admin/canh_bao.php", dict(w=1200, h=900, ti_le=1, an_menu=True), (1200, 900)),
+        ("the-thong-ke", "/admin/thong_ke.php", dict(w=1200, h=900, ti_le=1, an_menu=True), (1200, 900)),
+        ("the-them", "/admin/chung_chi_form.php", dict(w=1200, h=900, ti_le=1, an_menu=True), (1200, 900)),
+        ("the-chi-tiet", "/admin/chung_chi_xem.php?id=13", dict(w=1200, h=900, ti_le=1, an_menu=True), (1200, 900)),
+        ("the-gia-han", "/admin/chung_chi_gia_han.php?id=13", dict(w=1200, h=900, ti_le=1, an_menu=True), (1200, 900)),
+    ]
+    for ten, duong, tham_so, co in viec:
+        anh = Image.open(chup("ld_" + ten, duong, ad, **tham_so)).convert("RGB")
+        if anh.size != co:
+            anh = anh.resize(co, Image.LANCZOS)
+        anh.save(dich / f"{ten}.webp", "WEBP", quality=82, method=6)
+        print("   ->", ten + ".webp", co, (dich / f"{ten}.webp").stat().st_size // 1024, "KB")
 
 
 for ten in NHOM:

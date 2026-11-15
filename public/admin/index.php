@@ -74,7 +74,8 @@ require __DIR__ . '/../../views/tieu_de_trang.php';
                                         <td class="ma-so text-nowrap">
                                             <a href="<?= e(url('admin/chung_chi_xem.php?id=' . (int) $dong['id'])) ?>"><?= e($dong['cert_code']) ?></a>
                                         </td>
-                                        <td><?= tenMienNgatDong($dong['subject_cn']) ?></td>
+                                        <?php // Không xuống dòng: ở khoảng 1280px cột này hẹp, tên dài gãy hai dòng còn tên ngắn một dòng (rà 15/11/2026). ?>
+                                        <td class="text-nowrap"><?= tenMienNgatDong($dong['subject_cn']) ?></td>
                                         <td class="text-nowrap"><?= e(moTaSoNgay($dong)) ?></td>
                                         <td><?= e(date('d/m/Y', strtotime($dong['valid_to']))) ?></td>
                                         <td>

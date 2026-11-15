@@ -60,11 +60,15 @@ def them_sid(duong, sid):
     return duong + ("&" if "?" in duong else "?") + "__sid=" + sid
 
 
-def chup(ten, duong, phien=None, w=1280, h=800, dt=False, ti_le=1.5, cho=3000):
-    """Chụp GOC+duong thành anh/<ten>.png. dt=True: khổ điện thoại 390px qua /__khung."""
+def chup(ten, duong, phien=None, w=1280, h=800, dt=False, ti_le=1.5, cho=3000, an_menu=False):
+    """Chụp GOC+duong thành anh/<ten>.png. dt=True: khổ điện thoại 390px qua /__khung.
+    an_menu=True: chụp qua /__khung đúng cỡ w x h với hai tầng menu bị ẩn (ảnh thẻ của landing)."""
     sid = phien.sid if phien else ""
     dich = them_sid(duong, sid)
-    if dt:
+    if an_menu:
+        url = GOC + "/__khung?" + urllib.parse.urlencode({"u": dich, "w": w, "h": h, "an": 1})
+        cua_so = f"{w},{h}"
+    elif dt:
         w_khung, h_khung = 390, h
         url = GOC + "/__khung?" + urllib.parse.urlencode({"u": dich, "w": w_khung, "h": h_khung})
         w, ti_le = 390, 2

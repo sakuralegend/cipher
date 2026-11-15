@@ -132,6 +132,12 @@
         padding-left: 1rem;
         padding-right: 1rem;
     }
+
+    /* Tiêu đề trang 18px thay cho 20px: "Danh sách chứng chỉ", "Thống kê và báo cáo" đứng cùng dòng với hai nút
+       Xuất CSV, Bản in mà không gãy hai dòng ở 390px (chụp 15/11/2026, sau khi đổi tên trang cho trùng menu). */
+    .qt-trang .page-title {
+        font-size: 1.125rem;
+    }
 }
 
 /* Luôn giữ chỗ thanh cuộn: trang dài có thanh cuộn, trang ngắn không, nên chuyển trang làm cả đầu trang
@@ -202,15 +208,17 @@
     border-radius: 12px;
 }
 
-/* Bảng kéo ngang (danh sách chứng chỉ): dưới 992px hiện đủ cột, chữ không xuống dòng; bảng rộng hơn màn hình thì
-   .table-responsive cho kéo ngang (user 09/11/2026: "khi tràn thông tin thì phải được quyền kéo sang trái để xem"). */
-@media (max-width: 991.98px) {
+/* Bảng kéo ngang (danh sách chứng chỉ): dưới 1200px hiện đủ cột, chữ không xuống dòng; bảng rộng hơn màn hình thì
+   .table-responsive cho kéo ngang (user 09/11/2026: "khi tràn thông tin thì phải được quyền kéo sang trái để xem").
+   Mốc 1200px chứ không phải 992px: ở 1024px còn bảng phụ bên trái, phần nội dung chỉ khoảng 700px, tên chính và
+   "Quá hạn 120 ngày" gãy ba dòng (rà 15/11/2026). */
+@media (max-width: 1199.98px) {
     .bang-keo-ngang td,
     .bang-keo-ngang th {
         white-space: nowrap;
     }
 
-    /* tenMienNgatDong() chèn <wbr> sau dấu chấm (cho Dashboard), và Chrome vẫn ngắt ở <wbr> dù đã nowrap: ẩn nó đi
+    /* tenMienNgatDong() chèn <wbr> sau dấu chấm, và Chrome vẫn ngắt ở <wbr> dù đã nowrap: ẩn nó đi
        thì mất chỗ ngắt, tên miền nằm một dòng (chụp 390px 09/11/2026). */
     .bang-keo-ngang wbr {
         display: none;
@@ -226,6 +234,11 @@
     .table-responsive td[colspan] {
         text-align: left !important;
     }
+}
+
+/* Ô đã đánh dấu text-nowrap (tên chính ở bảng Cần xử lý ngay của Dashboard) thì không ngắt ở <wbr> ở mọi cỡ màn hình. */
+.bang-keo-ngang td.text-nowrap wbr {
+    display: none;
 }
 
 /* Bảng rộng hơn khung: mép phía còn cột bị che mờ dần, để biết kéo ngang được (kiểm thử 12/11/2026: cột Còn lại và nút

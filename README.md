@@ -80,16 +80,17 @@ chấm bài.
 
 ## Dùng hệ thống
 
-Menu dọc bên trái chia 4 nhóm:
+Menu bên trái có hai tầng: thanh biểu tượng là các khu, bấm một khu thì bảng bên cạnh hiện các trang của khu đó.
 
-| Nhóm | Mục | Ai thấy |
+| Khu | Trang | Ai thấy |
 |---|---|---|
-| Tổng quan | Dashboard, Cảnh báo (kèm số cảnh báo mới) | Mọi người |
-| Chứng chỉ | Danh sách chứng chỉ, Thống kê và báo cáo | Mọi người |
+| Tổng quan | Dashboard, Thống kê và báo cáo | Mọi người |
+| Cảnh báo | Cảnh báo (số đỏ trên chuông là số cảnh báo mới) | Mọi người |
+| Chứng chỉ | Danh sách chứng chỉ, Thêm chứng chỉ | Mọi người |
 | Hạ tầng | Tên miền, Máy chủ, Tổ chức cấp | Mọi người |
 | Hệ thống | Người dùng, Nhật ký | Chỉ Admin |
 
-Đổi mật khẩu, sửa họ tên ở biểu tượng người dùng cuối menu → **Tài khoản và mật khẩu**.
+Đổi mật khẩu, sửa họ tên, đăng xuất ở biểu tượng người dùng cuối menu → **Tài khoản và mật khẩu**, **Đăng xuất**.
 
 **Thử nhập tay:** mở **`DU_LIEU_NHAP_TAY.xlsx`** (cùng thư mục với file này). Mỗi trang tính là một form, có dòng
 nhập đúng, dòng cố ý sai và kết quả mong đợi; ngày tự tính theo hôm nay. Ô ngày trên web dán được chữ ngày/tháng/năm

@@ -31,24 +31,25 @@ require __DIR__ . '/../../views/tieu_de_trang.php';
     <div class="container-xl">
         <form class="card mb-3 d-print-none" method="get" action="<?= e(url('admin/nhat_ky.php')) ?>">
             <div class="card-body pb-0">
+                <?php // Ba ô một hàng tới dưới 1200px (rà 15/11/2026: chia năm ô ở 1024px thì "Tất c", "dd/mm" bị cắt). ?>
                 <div class="row">
-                    <div class="col-sm-6 col-lg-3"><?= oChon('nguoi', 'Người làm', $cacNguoi, $loc['nguoi'], [], '', false) ?></div>
+                    <div class="col-sm-6 col-lg-4 col-xl-3"><?= oChon('nguoi', 'Người làm', $cacNguoi, $loc['nguoi'], [], '', false) ?></div>
                     <?php // Mức độ (MUC_DO, user chốt 14/11/2026): lọc nhanh các dòng Cảnh báo, Nguy hiểm. ?>
-                    <div class="col-sm-6 col-lg-2"><?= oChon('muc', 'Mức độ', $cacMuc, $loc['muc'], [], '', false) ?></div>
-                    <div class="col-sm-6 col-lg-3"><?= oChon('hanh_dong', 'Hành động', $cacHanhDong, $loc['hanh_dong'], [], '', false) ?></div>
-                    <div class="col-sm-6 col-lg-2">
+                    <div class="col-sm-6 col-lg-4 col-xl-2"><?= oChon('muc', 'Mức độ', $cacMuc, $loc['muc'], [], '', false) ?></div>
+                    <div class="col-sm-6 col-lg-4 col-xl-3"><?= oChon('hanh_dong', 'Hành động', $cacHanhDong, $loc['hanh_dong'], [], '', false) ?></div>
+                    <div class="col-6 col-lg-4 col-xl-2">
                         <div class="mb-3">
                             <label class="form-label" for="tu_ngay">Từ ngày</label>
                             <input class="form-control" type="date" id="tu_ngay" name="tu_ngay" value="<?= e($loc['tu_ngay']) ?>">
                         </div>
                     </div>
-                    <div class="col-sm-6 col-lg-2">
+                    <div class="col-6 col-lg-4 col-xl-2">
                         <div class="mb-3">
                             <label class="form-label" for="den_ngay">Đến ngày</label>
                             <input class="form-control" type="date" id="den_ngay" name="den_ngay" value="<?= e($loc['den_ngay']) ?>">
                         </div>
                     </div>
-                    <div class="col-sm-6 col-lg-2 d-flex align-items-end gap-2 mb-3">
+                    <div class="col-sm-6 col-lg-4 col-xl-2 d-flex align-items-end gap-2 mb-3">
                         <button class="btn btn-primary flex-fill" type="submit">Lọc</button>
                         <a class="btn flex-fill" href="<?= e(url('admin/nhat_ky.php')) ?>">Bỏ lọc</a>
                     </div>

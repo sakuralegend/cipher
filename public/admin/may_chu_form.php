@@ -50,14 +50,25 @@ require __DIR__ . '/../../views/tieu_de_trang.php';
                         <?= oNhap('hostname', 'Tên máy chủ', $giaTri['hostname'], $loi,
                             'required maxlength="255" pattern="[A-Za-z0-9._\-]+" autocomplete="off"',
                             'Gồm chữ không dấu, số, dấu chấm, gạch dưới, gạch ngang.') ?>
-                        <?= oNhap('ip_address', 'Địa chỉ IP', $giaTri['ip_address'], $loi,
-                            'required maxlength="45" pattern="[0-9A-Fa-f:.]+" autocomplete="off"',
-                            'Địa chỉ IP không hợp lệ.', 'IPv4 hoặc IPv6, ví dụ 192.0.2.10') ?>
-                        <?= oNhap('port', 'Cổng', (string) $giaTri['port'], $loi,
-                            'required type="number" min="1" max="65535"', 'Cổng phải là số từ 1 đến 65535.') ?>
-                        <?= oChon('environment', 'Môi trường', MOI_TRUONG, $giaTri['environment'], $loi, 'Hãy chọn môi trường.') ?>
-                        <?= oNhap('owner', 'Người phụ trách', $giaTri['owner'], $loi,
-                            'required maxlength="100" autocomplete="off"', 'Người phụ trách là bắt buộc.') ?>
+                        <?php // IP và Cổng chung một hàng (8/4): cổng tối đa 5 chữ số, để rộng bằng ô tên thì lệch cỡ (rà 15/11/2026). ?>
+                        <div class="row">
+                            <div class="col-sm-8">
+                                <?= oNhap('ip_address', 'Địa chỉ IP', $giaTri['ip_address'], $loi,
+                                    'required maxlength="45" pattern="[0-9A-Fa-f:.]+" autocomplete="off"',
+                                    'Địa chỉ IP không hợp lệ.', 'IPv4 hoặc IPv6, ví dụ 192.0.2.10') ?>
+                            </div>
+                            <div class="col-sm-4">
+                                <?= oNhap('port', 'Cổng', (string) $giaTri['port'], $loi,
+                                    'required type="number" min="1" max="65535"', 'Cổng phải là số từ 1 đến 65535.') ?>
+                            </div>
+                            <div class="col-sm-6">
+                                <?= oChon('environment', 'Môi trường', MOI_TRUONG, $giaTri['environment'], $loi, 'Hãy chọn môi trường.') ?>
+                            </div>
+                            <div class="col-sm-6">
+                                <?= oNhap('owner', 'Người phụ trách', $giaTri['owner'], $loi,
+                                    'required maxlength="100" autocomplete="off"', 'Người phụ trách là bắt buộc.') ?>
+                            </div>
+                        </div>
                     </div>
                     <div class="card-footer text-end">
                         <a class="btn" href="<?= e(url('admin/may_chu.php')) ?>">Huỷ</a>

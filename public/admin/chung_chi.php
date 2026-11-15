@@ -34,7 +34,7 @@ $tieuDeCot = function (string $cot, string $nhan, string $lop = '') use ($sapXep
         . '">' . e($nhan) . $muiTen . '</a></th>';
 };
 
-$tieuDe = 'Chứng chỉ';
+$tieuDe = 'Danh sách chứng chỉ'; // Trùng tên mục trong menu (rà 15/11/2026).
 $trangHienTai = 'chung_chi';
 $nutPhu = nutXuatBaoCao($loc, $sapXep);
 require __DIR__ . '/../../views/dau_trang.php';

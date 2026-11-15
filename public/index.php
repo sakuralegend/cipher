@@ -157,7 +157,7 @@ $anhGiaoDien = function (string $tep, string $moTa, string $loai = 'may', bool $
                     </div>
                 </li>
                 <li class="ld-buoc ld-the-tinh">
-                    <?= $anhGiaoDien('the-chi-tiet', 'Chi tiết chứng chỉ còn 7 ngày, kèm đánh giá an toàn và lịch sử gia hạn', 'the') ?>
+                    <?= $anhGiaoDien('the-chi-tiet', 'Chi tiết chứng chỉ còn 9 ngày, kèm đánh giá an toàn và lịch sử gia hạn', 'the') ?>
                     <div class="ld-the-tinh-chu">
                         <h3 class="ld-the-tinh-ten"><span class="ld-so-buoc">2</span>Theo dõi tự động</h3>
                         <p class="text-secondary mb-0">Hệ thống tính số ngày còn lại và báo khi chứng chỉ chạm mốc cảnh báo.</p>

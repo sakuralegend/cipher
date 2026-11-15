@@ -32,12 +32,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-$tieuDe = 'Tài khoản của tôi';
+$tieuDe = 'Tài khoản và mật khẩu'; // Trùng tên mục trong menu (rà 15/11/2026).
 require __DIR__ . '/../../views/dau_trang.php';
 ?>
 <div class="page-header d-print-none">
     <div class="container-xl">
-        <h1 class="page-title">Tài khoản của tôi</h1>
+        <h1 class="page-title"><?= e($tieuDe) ?></h1>
     </div>
 </div>
 <div class="page-body">

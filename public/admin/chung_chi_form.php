@@ -203,6 +203,9 @@ $o = [
         . '<div class="invalid-feedback">' . e($loi['san'] ?? 'Tên phụ tối đa 5000 ký tự.') . '</div>'
         . '<small class="form-hint">Không bắt buộc. Các tên miền phụ mà chứng chỉ cũng bảo vệ.</small></div>',
 ];
+// Thuật toán khoá và Độ dài khoá chung nửa trái, Thuật toán ký nửa phải: mép ô thẳng với các hàng hai cột phía trên
+// (rà 15/11/2026: chia ba cột giữa các hàng hai cột thì mép ô so le).
+$o['khoa'] = '<div class="row"><div class="col-6">' . $o['thuat_toan'] . '</div><div class="col-6">' . $o['do_dai'] . '</div></div>';
 // Tab đọc: ô nào đã đọc được thì gom vào phần thu gọn; có lỗi ở một trong số đó, hoặc thuật toán khoá
 // không đọc ra được (Ed25519, GOST) thì mở sẵn để người dùng thấy ô cần điền.
 $moChiTiet = array_intersect_key($loi, array_flip(['subject_cn', 'valid_from', 'valid_to', 'key_algorithm', 'key_size',
@@ -327,9 +330,8 @@ require __DIR__ . '/../../views/tieu_de_trang.php';
                                     <div class="col-12"><?= $o['ten_chinh'] ?></div>
                                     <div class="col-md-6"><?= $o['bat_dau'] ?></div>
                                     <div class="col-md-6"><?= $o['het_han'] ?></div>
-                                    <div class="col-md-4"><?= $o['thuat_toan'] ?></div>
-                                    <div class="col-md-4"><?= $o['do_dai'] ?></div>
-                                    <div class="col-md-4"><?= $o['ky'] ?></div>
+                                    <div class="col-md-6"><?= $o['khoa'] ?></div>
+                                    <div class="col-md-6"><?= $o['ky'] ?></div>
                                     <div class="col-12"><?= $o['fingerprint'] ?></div>
                                     <div class="col-12"><?= $o['serial'] ?></div>
                                     <div class="col-12"><?= $o['san'] ?></div>
@@ -343,9 +345,8 @@ require __DIR__ . '/../../views/tieu_de_trang.php';
                                 <div class="col-md-6"><?= $o['to_chuc'] ?></div>
                                 <div class="col-md-6"><?= $o['bat_dau'] ?></div>
                                 <div class="col-md-6"><?= $o['het_han'] ?></div>
-                                <div class="col-md-4"><?= $o['thuat_toan'] ?></div>
-                                <div class="col-md-4"><?= $o['do_dai'] ?></div>
-                                <div class="col-md-4"><?= $o['ky'] ?></div>
+                                <div class="col-md-6"><?= $o['khoa'] ?></div>
+                                <div class="col-md-6"><?= $o['ky'] ?></div>
                                 <div class="col-12"><?= $o['fingerprint'] ?></div>
                                 <div class="col-12"><?= $o['serial'] ?></div>
                                 <div class="col-12"><?= $o['san'] ?></div>

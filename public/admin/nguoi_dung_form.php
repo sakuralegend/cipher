@@ -95,9 +95,8 @@ require __DIR__ . '/../../views/dau_trang.php';
                             <?php endif; ?>
                         </div>
                         <div class="mb-3">
-                            <label class="form-label <?= $id === null ? 'required' : '' ?>" for="password">
-                                <?= $id === null ? 'Mật khẩu' : 'Đặt lại mật khẩu' ?>
-                            </label>
+                            <?php // Nhãn viết liền một dòng: xuống dòng trong thẻ label để lại một dấu cách trước dấu sao bắt buộc. ?>
+                            <label class="form-label <?= $id === null ? 'required' : '' ?>" for="password"><?= $id === null ? 'Mật khẩu' : 'Đặt lại mật khẩu' ?></label>
                             <input class="form-control <?= isset($loi['password']) ? 'is-invalid' : '' ?>" id="password" name="password"
                                    type="password" minlength="8" pattern="<?= e(MAU_MAT_KHAU) ?>" autocomplete="new-password" <?= $id === null ? 'required' : '' ?>>
                             <div class="invalid-feedback"><?= e($loi['password'] ?? LUAT_MAT_KHAU) ?></div>

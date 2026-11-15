@@ -30,7 +30,7 @@ $tran = tranBieuDoThongKe($pdo);
 // '2026-11' thành '11/2026' để đọc theo kiểu Việt Nam.
 $nhanThang = array_map(fn(string $thang): string => substr($thang, 5) . '/' . substr($thang, 0, 4), array_keys($theoThang));
 
-$tieuDe = 'Thống kê';
+$tieuDe = 'Thống kê và báo cáo'; // Trùng tên mục trong menu (rà 15/11/2026).
 $trangHienTai = 'thong_ke';
 $nutPhu = nutXuatBaoCao($loc, $sapXep);
 $coBieuDo = true;

@@ -1678,9 +1678,9 @@ function test_chu_quan_trong_trong_quan_tri_la_chu_trang(PDO $pdo): void
     kiem(str_contains($css, '--tblr-body-color: var(--qt-chu-than)'), 'Chữ thân khu quản trị phải dùng --qt-chu-than (trắng ngà)');
 }
 
-// Luật: Mọi bảng của khu quản trị hiện đủ cột ở mọi cỡ màn hình; dưới 992px chữ không xuống dòng (trừ ô dài đánh dấu o-xuong-dong) và bảng tràn thì kéo ngang. Trang danh sách chứng chỉ không có nút Thêm riêng.
-// Vì sao: User 09/11/2026: "trên điện thoại bị cắt nhiều thông tin. Tôi muốn khi tràn thông tin thì phải được quyền kéo sang trái để xem", rồi "áp cùng" cho mọi bảng; nút Thêm chứng chỉ đã có trong bảng phụ.
-// Đỏ nghĩa là: Một cột lại ẩn theo cỡ màn hình (d-none ... -table-cell), một bảng card-table thiếu lớp bang-keo-ngang, hoặc chung_chi.php đặt lại $nutThem.
+// Luật: Mọi bảng của khu quản trị hiện đủ cột ở mọi cỡ màn hình; dưới 1200px chữ không xuống dòng (trừ ô dài đánh dấu o-xuong-dong) và bảng tràn thì kéo ngang; tên chính ở bảng Cần xử lý ngay của Dashboard không xuống dòng ở mọi cỡ. Trang danh sách chứng chỉ không có nút Thêm riêng.
+// Vì sao: User 09/11/2026: "trên điện thoại bị cắt nhiều thông tin. Tôi muốn khi tràn thông tin thì phải được quyền kéo sang trái để xem", rồi "áp cùng" cho mọi bảng; nút Thêm chứng chỉ đã có trong bảng phụ. Rà 15/11/2026: ở 1024px còn bảng phụ bên trái nên bảng Danh sách gãy tên chính ba dòng, mốc nâng từ 992px lên 1200px.
+// Đỏ nghĩa là: Một cột lại ẩn theo cỡ màn hình (d-none ... -table-cell), một bảng card-table thiếu lớp bang-keo-ngang, chung_chi.php đặt lại $nutThem, mốc không xuống dòng trong app.css tụt khỏi 1200px, hoặc ô tên chính của Dashboard mất text-nowrap.
 // Đừng: Ẩn cột hay dồn thông tin xuống dòng phụ chỉ hiện trên điện thoại cho "vừa màn hình"; người dùng muốn kéo để xem đủ.
 // Nhóm: Giao diện, triển khai (Giao diện)
 function test_moi_bang_quan_tri_keo_ngang_tren_dien_thoai(PDO $pdo): void
@@ -1696,7 +1696,9 @@ function test_moi_bang_quan_tri_keo_ngang_tren_dien_thoai(PDO $pdo): void
     }
     kiem(!str_contains(codeKhongChuThich(__DIR__ . '/../public/admin/chung_chi.php'), '$nutThem'), 'Trang danh sách không còn nút Thêm chứng chỉ riêng');
     $css = file_get_contents(__DIR__ . '/../public/assets/app.css');
-    kiem(preg_match('/\.bang-keo-ngang[^{]*\{[^}]*white-space: nowrap/', $css) === 1, 'Ô của bảng kéo ngang không được xuống dòng');
+    kiem(preg_match('/@media \(max-width: 1199\.98px\) \{\s*\.bang-keo-ngang td,\s*\.bang-keo-ngang th \{\s*white-space: nowrap/', $css) === 1, 'Dưới 1200px ô của bảng kéo ngang không được xuống dòng');
+    kiem(str_contains(file_get_contents(__DIR__ . '/../public/admin/index.php'), '<td class="text-nowrap"><?= tenMienNgatDong($dong[\'subject_cn\']) ?></td>'), 'Tên chính ở bảng Cần xử lý ngay phải là ô text-nowrap');
+    kiem(preg_match('/^\.bang-keo-ngang td\.text-nowrap wbr \{\s*display: none/m', $css) === 1, 'Ô text-nowrap của bảng kéo ngang phải ẩn <wbr> (Chrome vẫn ngắt ở <wbr> dù nowrap)');
 }
 
 // Luật: Web chỉ có giao diện tối: thẻ <html> luôn data-bs-theme="dark", không nạp tabler-theme.min.js, không còn nút hay mục đổi giao diện.
