@@ -304,7 +304,9 @@ try {
     $r = $doc.Content
     if ($r.Find.Execute('[[MUC_LUC]]')) {
         $r.Text = ''
-        [void]$doc.TablesOfContents.Add($r, $true, 1, 3)
+        # Tham số thứ 10 UseHyperlinks: mỗi dòng mục lục là link tới tiêu đề (khoá \h), bấm được cả trong Word lẫn PDF.
+        $bo = [Type]::Missing
+        [void]$doc.TablesOfContents.Add($r, $true, 1, 3, $false, $bo, $true, $true, $bo, $true)
     }
     $muc = $doc.Sections.Item(1)
     $muc.PageSetup.DifferentFirstPageHeaderFooter = -1    # Trang bìa không có số trang.
