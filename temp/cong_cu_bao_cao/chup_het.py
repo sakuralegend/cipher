@@ -1,5 +1,6 @@
 """Chụp toàn bộ ảnh giao diện cho báo cáo. Chạy: python -I chup_het.py [nhom ...]
 Nhóm: cong_khai, xem, nhan_vien, nhap_lieu, doc, nhat_ky. Không ghi nhóm thì chạy hết theo thứ tự.
+Nhóm cai_dat (chỉ chạy khi gọi tên): hai ảnh phpMyAdmin của hướng dẫn cài đặt, cần Apache của XAMPP đang bật.
 Nhóm landing (chỉ chạy khi gọi tên): chụp lại 9 ảnh public/assets/landing/*.webp; chạy TRƯỚC nhóm nhap_lieu, vì nhóm
 đó gia hạn CERT-013 là chứng chỉ của hai ảnh thẻ Chi tiết và Gia hạn."""
 import sys
@@ -94,6 +95,63 @@ def nhat_ky():
         Phien().post("/login.php", {"username": "nhanvien", "password": "doan-mo"})
     chup("nhat_ky", "/admin/nhat_ky.php", ad, h=1000)
     chup("nhat_ky_nguy_hiem", "/admin/nhat_ky.php?muc=nguy_hiem", ad, h=620)
+
+
+def cai_dat():
+    """Hai ảnh phpMyAdmin cho Phần VI của báo cáo (Cách 2). Cần Apache của XAMPP đang bật (http://localhost/phpmyadmin).
+    Giao diện tiếng Anh (cookie pma_lang=en) cho khớp chữ trong hướng dẫn. Ảnh tạo CSDL vẽ lại trạng thái máy người chấm
+    lúc CHƯA có cipher_dev: ẩn các CSDL có sẵn trên máy chụp (AN) khỏi cây bên trái và bảng, sửa dòng Total theo số dòng
+    còn lại; không bấm Create, không đụng CSDL nào. Ba ảnh còn lại của phần cài đặt chụp bằng chup_cua_so.ps1:
+      - chay_bat: conhost.exe cmd.exe /c "<bản giải nén>\\CHAY.bat", chờ 17 giây (10 giây của câu hỏi nạp lại), rồi
+        -TieuDe "Cipher Cert" -Lop ConsoleWindowClass; đóng cửa sổ là tắt web.
+      - xampp_control: chạy C:\\xampp\\apache\\bin\\httpd.exe và C:\\xampp\\xampp-control.exe, -MaTienTrinh <mã của
+        xampp-control>; ứng dụng này không theo tỉ lệ màn hình nên ảnh ra có phần thừa, cắt còn 663x433; xong thì tắt cả hai.
+      - thu_muc_giai_nen: explorer.exe <bản giải nén>, -TieuDe "cipher" -Lop CabinetWClass -VungCon UIItemsView."""
+    from chup import Cdp
+    pma = "http://localhost/phpmyadmin/"
+    an = ["cipher_dev", "cipher_test", "cipher_baocao", "demo_xampp"]
+    js_an = """
+    (function (an, anNhom) {
+        var n = 0;
+        document.querySelectorAll('#pma_navigation_tree li').forEach(function (li) {
+            var a = li.querySelector(':scope > a, :scope > a.hover_show_full');
+            var ten = a ? a.textContent.trim() : '';
+            if (an.indexOf(ten) >= 0 || (anNhom && li.className.indexOf('navGroup') >= 0 && li.textContent.trim().indexOf(anNhom) === 0)) {
+                li.style.display = 'none'; n++;
+            }
+        });
+        document.querySelectorAll('table tbody tr').forEach(function (tr) {
+            var co = false;
+            tr.querySelectorAll('a').forEach(function (a) { if (an.indexOf(a.textContent.trim()) >= 0) co = true; });
+            if (co) { tr.style.display = 'none'; n++; }
+        });
+        return n;
+    })(%s, %s)
+    """
+    js_dien = """
+    (function () {
+        document.querySelector('#text_create_db').value = 'cipher_dev';
+        document.querySelector('select[name=db_collation]').value = 'utf8mb4_unicode_ci';
+        var dem = document.getElementById('filter-rows-count'), con = 0;
+        if (dem && dem.closest('table')) {
+            dem.closest('table').querySelectorAll('tbody tr').forEach(function (tr) { if (tr.style.display !== 'none') con++; });
+            dem.textContent = con;
+        }
+        return con;
+    })()
+    """
+    c = Cdp(w=1280, h=640)
+    try:
+        c.lenh("Network.enable")
+        c.lenh("Network.setCookie", name="pma_lang", value="en", domain="localhost", path="/phpmyadmin/")
+        c.mo(pma + "index.php?route=/server/databases", cho=4)
+        print("   an", c.js(js_an % (an, '"cipher"')), "muc; con", c.js(js_dien), "CSDL trong bang")
+        c.chup("pma_tao_csdl")
+        c.mo(pma + "index.php?route=/database/import&db=cipher_dev", cho=4)
+        c.js(js_an % ([x for x in an if x != "cipher_dev"], "null"))
+        c.chup("pma_import")
+    finally:
+        c.dong()
 
 
 def landing():

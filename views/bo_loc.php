@@ -51,27 +51,29 @@ $soLocTrongPhanGon = count(array_intersect_key($locDangDung, array_flip(['het_ha
             <?php endif; ?>
         </div>
         <div class="collapse <?= $soLocTrongPhanGon > 0 ? 'show' : '' ?>" id="bo-loc-them">
-            <?php // Lưới ô lọc (rà 15/11/2026): sáu ô một hàng chỉ từ 1400px; hẹp hơn thì ba ô một hàng, vì chia sáu ở
-                  // 1024–1366px ô ngày chỉ còn "dd/m", ô chọn còn "Tấ". Điện thoại: hai ô ngày một hàng, mỗi ô chọn một hàng. ?>
+            <?php // Lưới ô lọc (rà 15/11/2026): sáu ô một hàng chỉ từ 1400px, vì chia sáu ở 1024–1366px ô ngày chỉ còn "dd/m",
+                  // ô chọn còn "Tấ". 1200–1399px ba ô một hàng; 576–1199px hai ô một hàng (ba ô thì ô Sắp xếp theo chỉ rộng
+                  // 208px, "Hết hạn gần nhất trước" cần 217px nên bị che chữ cuối). Điện thoại: hai ô ngày một hàng, mỗi ô
+                  // chọn một hàng. ?>
             <div class="row mt-3">
-                <div class="col-6 col-md-4 col-xxl">
+                <div class="col-6 col-xl-4 col-xxl">
                     <?= oNhap('het_han_tu', 'Hết hạn từ ngày', $loc['het_han_tu'], [], 'type="date"') ?>
                 </div>
-                <div class="col-6 col-md-4 col-xxl">
+                <div class="col-6 col-xl-4 col-xxl">
                     <?= oNhap('het_han_den', 'Đến ngày', $loc['het_han_den'], [], 'type="date"') ?>
                 </div>
-                <div class="col-12 col-sm-6 col-md-4 col-xxl">
+                <div class="col-12 col-sm-6 col-xl-4 col-xxl">
                     <?= oChon('ca_id', 'Tổ chức cấp', $cacToChuc, $loc['ca_id'], [], '', false) ?>
                 </div>
-                <div class="col-12 col-sm-6 col-md-4 col-xxl">
+                <div class="col-12 col-sm-6 col-xl-4 col-xxl">
                     <?= oChon('domain_id', 'Tên miền', $cacTenMien, $loc['domain_id'], [], '', false) ?>
                 </div>
-                <div class="col-12 col-sm-6 col-md-4 col-xxl">
+                <div class="col-12 col-sm-6 col-xl-4 col-xxl">
                     <?= oChon('server_id', 'Máy chủ', $cacMayChu, $loc['server_id'], [], '', false) ?>
                 </div>
                 <?php if ($coChonSapXep): ?>
                     <?php // Rộng hơn các ô khác ở màn lớn: nhãn dài nhất ("Hết hạn gần nhất trước") bị cắt khi chia đều sáu ô. ?>
-                    <div class="col-12 col-sm-6 col-md-4 col-xxl-3">
+                    <div class="col-12 col-sm-6 col-xl-4 col-xxl-3">
                         <label class="form-label" for="xep">Sắp xếp theo</label>
                         <select class="form-select" id="xep" name="xep">
                             <?php foreach ($cacCachXep as $giaTri => $nhan): ?>

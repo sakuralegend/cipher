@@ -142,8 +142,13 @@ def thanh_html(than: str) -> str:
 
     def the_hinh(so_hinh: int, duong: Path, chu: str) -> str:
         rong, cao = Image.open(duong).size
-        # Ảnh khổ điện thoại (hẹp và cao) để nhỏ; còn lại rộng hết trang, trừ khi quá cao.
-        rong_cm = 6.5 if rong / cao < 0.6 and rong < 900 else min(RONG_TRANG_CM, CAO_HINH_CM * rong / cao)
+        # Ảnh khổ điện thoại (hẹp và cao) để nhỏ; ảnh cửa sổ nhỏ (XAMPP Control Panel, thư mục giải nén: dưới 900 điểm
+        # ảnh) in theo cỡ thật khoảng 11 cm, kéo hết trang thì chữ to gấp rưỡi chữ báo cáo và mờ; còn lại rộng hết
+        # trang, trừ khi quá cao.
+        if rong < 900:
+            rong_cm = 6.5 if rong / cao < 0.6 else min(RONG_TRANG_CM, rong / 60)
+        else:
+            rong_cm = min(RONG_TRANG_CM, CAO_HINH_CM * rong / cao)
         diem = rong_cm / 2.54 * 72
         return (f'\n\n<p class="hinh"><img src="{duong.as_uri()}" width="{diem * 96 / 72:.0f}" height="{diem * cao / rong * 96 / 72:.0f}"></p>\n'
                 f'<p class="chu-thich">Hình {so_hinh}. {html.escape(chu)}</p>\n\n')

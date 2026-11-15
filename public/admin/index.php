@@ -57,7 +57,7 @@ require __DIR__ . '/../../views/tieu_de_trang.php';
                         </div>
                     </div>
                     <div class="table-responsive">
-                        <table class="table table-vcenter card-table bang-keo-ngang">
+                        <table class="table table-vcenter card-table bang-keo-ngang bang-cot-sat">
                             <thead>
                                 <tr>
                                     <th>Mã</th>

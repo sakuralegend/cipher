@@ -375,9 +375,17 @@ dùng bản chạy thật tại <https://cert.cipher.id.vn>.
 2. Bấm đúp **`CHAY.bat`**. Không cần mở XAMPP Control Panel trước.
 3. Trình duyệt tự mở trang giới thiệu. Bấm **Đăng nhập**, dùng tài khoản ở mục 3.
 
+![Thư mục sau khi giải nén: bấm đúp CHAY, file có biểu tượng bánh răng (Windows thường ẩn đuôi .bat)](anh/thu_muc_giai_nen.jpg)
+
 Cửa sổ đen làm thay người dùng 4 bước, mỗi bước in một dòng `[1/4]` … `[4/4]`: tìm XAMPP, bật MySQL nếu chưa bật,
 lần đầu tự tạo CSDL `cipher_dev` và nạp dữ liệu mẫu (50 chứng chỉ, 2 tài khoản), rồi chạy web ở
 <http://localhost:8000> (cổng bận thì dùng 8001, 8002...). **Đóng cửa sổ đen là tắt web.**
+
+![Cửa sổ của CHAY.bat: bốn bước từ 1/4 đến 4/4, địa chỉ web, hai tài khoản, rồi nhật ký từng trang được mở. Ảnh chụp ở lần bấm thứ hai nên bước 3/4 hỏi có nạp lại dữ liệu mẫu không](anh/chay_bat.jpg)
+
+Lần bấm đầu tiên, bước `[3/4]` không hỏi mà ghi `Dang tao CSDL cipher_dev va nap du lieu mau...`, kèm tên ba file
+được nạp và dòng `Xong: 50 chung chi mau, 2 tai khoan.` Chữ `admin`, `khach` ở cuối mỗi dòng nhật ký là người mở trang
+(`khach` là chưa đăng nhập).
 
 - **Lần bấm sau:** cửa sổ hỏi có nạp lại dữ liệu mẫu không. Bấm `K` hoặc chờ 10 giây là giữ nguyên dữ liệu
   đang có; bấm `C` là xoá hết và nạp lại từ đầu.
@@ -398,11 +406,15 @@ tiếng Việt có dấu.
 **Bước 1. Bật Apache và MySQL.** Mở **XAMPP Control Panel**, bấm **Start** ở dòng **Apache** và dòng
 **MySQL**. Cả hai chuyển sang nền xanh là được.
 
+![XAMPP Control Panel: tên Apache và MySQL có nền xanh, cột PID(s) và Port(s) có số (80, 443 và 3306) là hai dịch vụ đã chạy](anh/xampp_control.jpg)
+
 **Bước 2. Chép bài vào `htdocs`.** Chép cả thư mục bài vào `C:\xampp\htdocs` và đặt tên thư mục là
 `cipher` (chữ thường, không dấu cách). Kiểm tra: phải có file `C:\xampp\htdocs\cipher\public\index.php`.
 
 **Bước 3. Tạo CSDL.** Mở <http://localhost/phpmyadmin>. Bấm **New** (Mới) ở cột trái. Ô tên gõ `cipher_dev`,
 ô bên cạnh chọn `utf8mb4_unicode_ci`, bấm **Create** (Tạo).
+
+![phpMyAdmin, mục New ở đầu cột trái: gõ tên cipher_dev, chọn utf8mb4_unicode_ci rồi bấm Create](anh/pma_tao_csdl.jpg)
 
 **Bước 4. Nạp dữ liệu, đúng thứ tự 3 file.** Ở cột trái bấm vào `cipher_dev`, chọn tab **Import** (Nhập),
 bấm **Choose File** (Chọn tệp), chọn file, kéo xuống cuối bấm **Import** (Nhập). Làm lần lượt:
@@ -413,8 +425,11 @@ bấm **Choose File** (Chọn tệp), chọn file, kéo xuống cuối bấm **I
 | 2 | `database\seed.sql` | 2 tài khoản, danh mục, 9 chứng chỉ đủ mọi trạng thái và mốc cảnh báo |
 | 3 | `database\seed_demo.sql` | Thêm 41 chứng chỉ cho đủ 50, để biểu đồ và phân trang có số liệu |
 
+![Tab Import của cipher_dev: bấm Choose File để chọn từng file .sql, rồi kéo xuống cuối trang bấm Import. Ảnh chụp sau khi đã nạp nên cột trái đã có 9 bảng](anh/pma_import.jpg)
+
 Mỗi file nạp xong, phpMyAdmin báo một dòng xanh: "Import has been successfully finished" (giao diện tiếng
-Việt: "Việc nhập vào đã được thực hiện thành công"). Lỡ nạp sai thứ tự thì nạp lại từ file 1.
+Việt: "Việc nhập vào đã được thực hiện thành công"). Lỡ nạp sai thứ tự thì nạp lại từ file 1. phpMyAdmin hiện tiếng
+Anh hay tiếng Việt là theo ngôn ngữ của trình duyệt; vị trí các nút như nhau.
 
 **Bước 5. Mở web.** Vào <http://localhost/cipher/public/>. Nhớ có `/public/` ở cuối: các trang web nằm trong
 thư mục này, còn cấu hình và mã xử lý để ngoài (trên máy chủ thật, chúng không mở được từ trình duyệt).

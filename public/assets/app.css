@@ -359,6 +359,23 @@
     line-height: 1.2;
 }
 
+/* Dashboard ở 1200–1399px (màn 1280 và 1366 hay gặp): sáu thẻ số một hàng, bảng Cần xử lý ngay chỉ rộng 7/12 phần nội
+   dung. Thu lề ngang của thẻ số và của ô bảng (.bang-cot-sat), để "Tổng chứng chỉ" không gãy hai dòng và nút Gia hạn
+   không bị đẩy ra ngoài khung. Đo 15/11/2026 ở 1265px, là bề rộng thật của màn 1280px sau khi trừ thanh cuộn: trước
+   khi thu, nút Gia hạn bị che một nửa vì tên chính không còn xuống dòng. */
+@media (min-width: 1200px) and (max-width: 1399.98px) {
+    .the-so .card-body {
+        padding-left: 1rem;
+        padding-right: 1rem;
+    }
+
+    .bang-cot-sat > * > tr > td,
+    .bang-cot-sat > * > tr > th {
+        padding-left: 0.5rem;
+        padding-right: 0.5rem;
+    }
+}
+
 /* Chấm "Còn hiệu lực": vòng sáng lan ra rồi tan, 2 giây một lần, như đèn "đang chạy" (user chốt 07/11/2026).
    Vẽ bằng box-shadow nên không đẩy chữ bên cạnh; màu là màu xanh trạng thái. */
 .cham-song {

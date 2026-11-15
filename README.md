@@ -22,7 +22,7 @@ Có hai cách chạy trên máy Windows đã cài [XAMPP](https://www.apachefrie
 
 Cửa sổ đen làm thay bạn: tìm XAMPP, bật MySQL nếu chưa bật, lần đầu tự tạo CSDL `cipher_dev` và nạp dữ liệu
 mẫu (50 chứng chỉ, 2 tài khoản), rồi chạy web ở <http://localhost:8000> (cổng bận thì dùng 8001, 8002...).
-**Đóng cửa sổ đen là tắt web.**
+**Đóng cửa sổ đen là tắt web.** Ảnh từng bước của cả hai cách có trong file báo cáo nộp kèm, Phần VI.
 
 - **Lần bấm sau:** cửa sổ hỏi có nạp lại dữ liệu mẫu không. Bấm `K` hoặc chờ 10 giây là giữ nguyên dữ liệu
   đang có; bấm `C` là xoá hết và nạp lại từ đầu.
