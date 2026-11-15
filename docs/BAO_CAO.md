@@ -133,6 +133,7 @@ cipher/
 ├── DU_LIEU_NHAP_TAY.xlsx   Dữ liệu mẫu để tự nhập tay, có dòng đúng và dòng sai
 ├── config/db.php           Cửa duy nhất tới CSDL: ketNoiCsdl(), múi giờ, chế độ strict
 ├── database/               schema.sql (bảng, view, trigger), seed.sql, seed_demo.sql
+├── tests/chay.php          Bộ test tự động: 135 test, lệnh --erd sinh sơ đồ ERD
 ├── src/                    Toàn bộ quy tắc nghiệp vụ, không in HTML
 │   ├── khoi_dong.php       Mọi trang gọi đầu tiên: nạp CSDL, phiên, nhật ký; hàm e(), ô form
 │   ├── auth.php            Đăng nhập, đăng xuất, phiên, phân quyền, mã CSRF
@@ -149,7 +150,7 @@ cipher/
 └── views/                  Mảnh giao diện dùng chung: đầu trang và menu, bộ lọc...
 ```
 
-Ngoài gói nộp, nhóm còn giữ bộ test tự động (`tests/chay.php`, 135 test) và các tài liệu gốc của báo cáo này.
+Ngoài gói nộp, nhóm còn giữ các tài liệu gốc của báo cáo này và cấu hình máy chủ thật.
 
 **Quy ước để đọc code nhanh:**
 

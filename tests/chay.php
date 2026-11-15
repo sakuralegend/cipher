@@ -2368,7 +2368,7 @@ function test_nhap_hang_loat_chi_luu_du_lieu_doc_trong_phien(PDO $pdo): void
     kiem(str_contains($trang, '$daDoc = $_SESSION[\'nhap_hang_loat\'];'), 'Bước Lưu phải lấy kết quả đọc từ phiên');
 }
 
-// Luật: CSP trong deploy/caddy-cipher.conf chỉ cho chạy script là file của chính web và đúng một đoạn script nhúng (views/dau_trang.php), nhận theo mã băm.
+// Luật: CSP của web trên máy chủ thật chỉ cho chạy script là file của chính web và đúng một đoạn script nhúng (views/dau_trang.php), nhận theo mã băm.
 // Vì sao: 12/11/2026 bật CSP và HSTS (user cho phép) để chặn script lạ nếu một lỗi XSS lọt qua e(). Script nhúng chỉ chạy khi mã băm của nó có trong CSP.
 // Đỏ nghĩa là: đoạn script nhúng đã sửa (kể cả một dấu cách) mà CSP chưa cập nhật mã băm, hoặc có thêm script nhúng, thuộc tính onclick=: trên VPS trình duyệt sẽ chặn chúng.
 // Đừng: thêm 'unsafe-inline' vào script-src cho đỡ cập nhật mã băm; làm vậy CSP hết tác dụng chống XSS. Đổi mã băm xong chạy lại bước caddy của deploy/dung_vps.sh.
@@ -2379,10 +2379,13 @@ function test_csp_chi_cho_script_cua_web_va_dung_ma_bam_script_nhung(PDO $pdo): 
     kiem(count($nhung[1]) === 1, 'dau_trang.php phải có đúng một đoạn script nhúng');
     $maBam = "'sha256-" . base64_encode(hash('sha256', $nhung[1][0], true)) . "'";
 
-    preg_match('~Content-Security-Policy "([^"]+)"~', file_get_contents(__DIR__ . '/../deploy/caddy-cipher.conf'), $csp);
-    kiem(isset($csp[1]), 'Khối Caddy phải có Content-Security-Policy');
-    preg_match('~script-src ([^;]+)~', $csp[1], $script);
-    kiem(trim($script[1] ?? '') === "'self' $maBam", "script-src phải là 'self' $maBam, đang là: " . ($script[1] ?? 'không có'));
+    $caddy = __DIR__ . '/../deploy/caddy-cipher.conf'; // CSP đặt ở Caddy trên VPS; gói nộp không có deploy/ thì chỉ kiểm phần trang.
+    if (is_file($caddy)) {
+        preg_match('~Content-Security-Policy "([^"]+)"~', file_get_contents($caddy), $csp);
+        kiem(isset($csp[1]), 'Khối Caddy phải có Content-Security-Policy');
+        preg_match('~script-src ([^;]+)~', $csp[1] ?? '', $script);
+        kiem(trim($script[1] ?? '') === "'self' $maBam", "script-src phải là 'self' $maBam, đang là: " . ($script[1] ?? 'không có'));
+    }
 
     $tep = [...glob(__DIR__ . '/../public/*.php'), ...glob(__DIR__ . '/../public/admin/*.php'), ...glob(__DIR__ . '/../views/*.php')];
     foreach ($tep as $duong) {
@@ -2728,7 +2731,7 @@ function test_nhat_ky_hien_ip_o_moi_do_rong_man_hinh(PDO $pdo): void
     kiem(str_contains($trang, 'o-xuong-dong'), 'Ô mô tả dài phải được xuống dòng (o-xuong-dong)');
 }
 
-// Luật: CHAY.bat, hướng dẫn cài tay trong README và bước nap_mau của VPS nạp đúng mọi file SQL có thật, theo thứ tự schema → seed → seed_demo.
+// Luật: CHAY.bat, hướng dẫn cài tay trong README và bước nạp dữ liệu mẫu trên máy chủ thật nạp đúng mọi file SQL có thật, theo thứ tự schema → seed → seed_demo.
 // Vì sao: User 13/11/2026 chốt hai đường chạy cho người chấm: bấm CHAY.bat, hoặc làm tay theo README (bảng Bước 4);
 //         14/11/2026 chốt web thật có dữ liệu y như bản nộp (bước nap_mau trong deploy/dung_vps.sh).
 //         Sai thứ tự là hỏng: seed cần bảng của schema, seed_demo cần danh mục và tài khoản của seed.
@@ -2746,8 +2749,10 @@ function test_chay_bat_va_readme_nap_du_file_sql_dung_thu_tu(PDO $pdo): void
     $thuTuReadme = $m[1];
     kiem($thuTuBat === ['schema', 'seed', 'seed_demo'], 'CHAY.bat nạp theo thứ tự ' . implode(', ', $thuTuBat) . ', phải là schema, seed, seed_demo');
     kiem($thuTuReadme === $thuTuBat, 'README Bước 4 ghi ' . implode(', ', $thuTuReadme) . ', khác CHAY.bat');
-    kiem(preg_match('/for tep in ([\w ]+); do/', file_get_contents("$goc/deploy/dung_vps.sh"), $m) === 1
-        && preg_split('/\s+/', trim($m[1])) === $thuTuBat, 'Bước nap_mau trong deploy/dung_vps.sh phải nạp đúng thứ tự như CHAY.bat');
+    if (is_file("$goc/deploy/dung_vps.sh")) { // Gói nộp không có deploy/.
+        kiem(preg_match('/for tep in ([\w ]+); do/', file_get_contents("$goc/deploy/dung_vps.sh"), $m) === 1
+            && preg_split('/\s+/', trim($m[1])) === $thuTuBat, 'Bước nap_mau trong deploy/dung_vps.sh phải nạp đúng thứ tự như CHAY.bat');
+    }
     $thieu = array_diff($coThat, $thuTuBat);
     kiem($thieu === [], 'database/ có file không được nạp: ' . implode(', ', $thieu));
 }

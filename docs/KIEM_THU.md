@@ -37,7 +37,7 @@ Hệ thống được kiểm ở 4 lớp:
    được chụp màn hình ở khổ máy tính và khổ điện thoại 390px trước khi giao.
 
 **Chạy lại bộ test:** cần MySQL đang bật và CSDL `cipher_test` đã tạo, rồi chạy `C:\xampp\php\php.exe tests\chay.php`
-từ thư mục mã nguồn đầy đủ của nhóm (gói nộp để chạy web không kèm bộ test). Mỗi test in ✅ hoặc ❌ kèm lý do; dòng
+từ thư mục đã giải nén của gói nộp. Mỗi test in ✅ hoặc ❌ kèm lý do; dòng
 cuối là `XANH: 135 test` hoặc `ĐỎ: số test đỏ/135 test`.
 
 ## 3. Danh sách test theo chức năng
@@ -109,7 +109,7 @@ Cột phải là câu Luật của test. Cả 135 test đều **đạt** ngày 1
 | `o_form_sai_ma_hoa_hoac_la_mang_duoc_coi_la_trong` | Ô form không phải chuỗi UTF-8 hợp lệ được coi là trống, nên báo lỗi đúng ô thay vì làm chết trang. |
 | `du_lieu_demo_du_50_chung_chi_du_trang_thai_va_khong_nap_trung` | seed_demo.sql nạp được sau seed.sql, đủ 50 chứng chỉ, đủ mọi trạng thái và ba mốc cảnh báo; chạy lần hai không thêm gì. |
 | `du_lieu_mau_chi_chung_chi_co_y_moi_ra_hang_c_hoac_f` | Trong 50 chứng chỉ mẫu, chỉ những chứng chỉ cố ý làm ví dụ mới ra hạng C hoặc F. |
-| `chay_bat_va_readme_nap_du_file_sql_dung_thu_tu` | CHAY.bat, hướng dẫn cài tay trong README và bước nap_mau của VPS nạp đúng mọi file SQL có thật, theo thứ tự schema → seed → seed_demo. |
+| `chay_bat_va_readme_nap_du_file_sql_dung_thu_tu` | CHAY.bat, hướng dẫn cài tay trong README và bước nạp dữ liệu mẫu trên máy chủ thật nạp đúng mọi file SQL có thật, theo thứ tự schema → seed → seed_demo. |
 | `chay_bat_dung_khi_chay_trong_file_nen_hoac_nap_hong` | CHAY.bat dừng và bảo giải nén khi không thấy database\ và public\ cạnh nó, và dừng khi một file SQL nạp hỏng. |
 
 ### Nhật ký hoạt động (mở rộng 1) (7 test, Nguyễn Đức Trung)
@@ -258,7 +258,7 @@ Cột phải là câu Luật của test. Cả 135 test đều **đạt** ngày 1
 | `tab_trinh_duyet_ghi_ten_trang_roi_ten_thuong_hieu` | Tab trình duyệt ghi "Tên trang | Cipher Cert"; tên thương hiệu khai báo một chỗ (TEN_THUONG_HIEU). |
 | `ten_mien_chi_xuong_dong_o_dau_cham` | Tên miền trong bảng chỉ được xuống dòng ngay sau dấu chấm, và vẫn được thoát ký tự HTML. |
 | `web_co_dia_chi_khong_duoi_cong` | Web có địa chỉ không đuôi cổng: cổng 80, Alt-Svc và cả địa chỉ gõ kèm :8443 đều dẫn về địa chỉ không đuôi, dữ liệu mẫu ghi cổng 443. |
-| `csp_chi_cho_script_cua_web_va_dung_ma_bam_script_nhung` | CSP trong deploy/caddy-cipher.conf chỉ cho chạy script là file của chính web và đúng một đoạn script nhúng (views/dau_trang.php), nhận theo mã băm. |
+| `csp_chi_cho_script_cua_web_va_dung_ma_bam_script_nhung` | CSP của web trên máy chủ thật chỉ cho chạy script là file của chính web và đúng một đoạn script nhúng (views/dau_trang.php), nhận theo mã băm. |
 | `vach_thanh_thoi_gian_dung_ti_le_so_ngay` | Vạch 30, 15, 7 và "Hết hạn" trên thanh thời gian của thẻ minh hoạ nằm đúng tỉ lệ số ngày; HTML và app.js dùng chung một thang (data-ld-ngay-dau). |
 | `o_ngay_nhan_chu_dan_tu_excel` | Mọi ô ngày (date, datetime-local) nhận chữ dán dạng ngày/tháng/năm như ô ngày trong file Excel dữ liệu mẫu. |
 | `nhat_ky_man_hinh_chi_in_khi_chay_bang_php_s` | Nhật ký ra màn hình chỉ in khi web chạy bằng php -S (CHAY.bat), mỗi lần một dòng có giờ, chữ bỏ dấu; CHAY.bat chạy php -S với -q. |
