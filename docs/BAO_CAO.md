@@ -4,14 +4,16 @@
      (các dòng "chen:") thành một file Word và một file PDF. Khối "bia" là trang bìa; "muc-luc" là chỗ đặt mục lục. -->
 
 <!-- bia: chữ trên trang bìa. Khung hoa văn và logo lấy từ docs/mau_bia.docx (mẫu bìa của Học viện), trang 2 của mẫu
-     là trang Số phách. Bìa không ghi tên thành viên vì bài chấm qua số phách (user chốt 15/11/2026). " / " là xuống dòng.
+     là trang Số phách. Bìa ghi lớp và tên thành viên (user thêm 16/11/2026), dòng cuối chỉ ghi "Hà Nội, 2026".
+     " / " là xuống dòng.
 truong: HỌC VIỆN AN NINH NHÂN DÂN
 loai: BÀI TẬP LỚN
 mon: MÔN: LẬP TRÌNH MÁY TÍNH
 nhan: TÊN ĐỀ TÀI:
 ten: XÂY DỰNG HỆ THỐNG QUẢN LÝ CHỨNG CHỈ SỐ / VÀ THỜI HẠN SỬ DỤNG
 phu: Đề tài số 69 · Sản phẩm: Cipher Cert
-noi: Hà Nội, tháng 11 năm 2026
+nhom: Lớp: B12D57 / Tên thành viên: / 1. Nguyễn Đức Trung / 2. Nguyễn Chí Kiên / 3. Phan Tuấn Anh
+noi: Hà Nội, 2026
 -->
 
 <!-- muc-luc -->

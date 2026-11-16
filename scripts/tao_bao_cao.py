@@ -120,7 +120,7 @@ def ghep() -> tuple[dict, str]:
     khoi = re.search(r"<!-- bia(.*?)\n-->", than, re.S)
     # Dòng "khoá: chữ" ở đầu dòng là một dòng trên bìa; dòng thụt vào là chú thích cho người sửa.
     bia = dict(re.findall(r"^(\w+): (.+)$", khoi.group(1), re.M))
-    thieu = {"truong", "loai", "mon", "nhan", "ten", "phu", "noi"} - bia.keys()
+    thieu = {"truong", "loai", "mon", "nhan", "ten", "phu", "nhom", "noi"} - bia.keys()
     assert not thieu, f"Khối bìa trong BAO_CAO.md thiếu {thieu}"
     than = than[:khoi.start()] + than[khoi.end():]
     than = re.sub(r"^# Báo cáo bài tập lớn.*\n", "", than, count=1)  # Tên báo cáo đã nằm trên bìa.
@@ -280,20 +280,22 @@ try {
     # hoa văn nên không đụng vào.
     $b.Range($p.Item(7).Range.Start, $b.Sections.Item(1).Range.End - 1).Delete()
     $p.Item(2).Range.Delete()
-    $dong = @($cfg.loai, $cfg.mon, $cfg.nhan, $cfg.ten, $cfg.phu, $cfg.noi)
+    $dong = @($cfg.loai, $cfg.mon, $cfg.nhan, $cfg.ten, $cfg.phu, $cfg.nhom, $cfg.noi)
     $dau = $b.Sections.Item(1).Range.Paragraphs.Last.Range.Start
     $b.Range($dau, $dau).InsertBefore((($dong | ForEach-Object { $_.Replace(' / ', [string][char]11) }) -join "`r"))
     # Mỗi dòng: cỡ chữ, đậm, nghiêng, khoảng cách phía trên (pt). Chữ màu và lề trái phải theo mẫu.
-    $kieu = @(@(24, 1, 0, 40), @(15, 1, 0, 8), @(14, 1, 0, 36), @(18, 1, 0, 8), @(13, 0, 1, 14), @(14, 1, 0, 0))
+    $kieu = @(@(24, 1, 0, 40), @(15, 1, 0, 8), @(14, 1, 0, 36), @(18, 1, 0, 8), @(13, 0, 1, 14), @(14, 0, 0, 30), @(14, 1, 0, 0))
     $ds = $b.Sections.Item(1).Range.Paragraphs
     $n = $ds.Count
-    for ($i = 0; $i -lt 6; $i++) {
-        $q = $ds.Item($n - 5 + $i)
+    for ($i = 0; $i -lt 7; $i++) {
+        $q = $ds.Item($n - 6 + $i)
         $q.Alignment = 1; $q.SpaceBefore = $kieu[$i][3]; $q.SpaceAfter = 0; $q.LineSpacingRule = 0
         $f = $q.Range.Font
         $f.Name = 'Times New Roman'; $f.Size = $kieu[$i][0]; $f.Bold = $kieu[$i][1]; $f.Italic = $kieu[$i][2]
     }
-    $q = $ds.Item($n - 2); $q.LineSpacingRule = 1   # Tên đề tài hai dòng: giãn dòng 1,5 cho thoáng.
+    $q = $ds.Item($n - 3); $q.LineSpacingRule = 1   # Tên đề tài hai dòng: giãn dòng 1,5 cho thoáng.
+    # Lớp và tên thành viên: một đoạn nhiều dòng, căn trái và thụt vào để cả khối nằm giữa trang, số thứ tự thẳng cột.
+    $q = $ds.Item($n - 1); $q.Alignment = 0; $q.LeftIndent = 150; $q.LineSpacingRule = 1
     # Dòng "Hà Nội" đặt ở đáy khung như mẫu (cách mép trên trang 712 pt), dù tên đề tài dài một hay hai dòng.
     $b.Repaginate()
     $noi = $ds.Item($n)
