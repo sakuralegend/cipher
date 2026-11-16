@@ -45,17 +45,20 @@ Mục tiêu nhóm đặt ra:
 
 ## 2. Các sản phẩm bàn giao
 
+Bài nộp là một file nén `Nhom10.zip`, giải nén ra thư mục `Nhom10` gồm ba thư mục con: `1_CoSoDuLieu` (file cơ sở
+dữ liệu `cipher_dev.sql`), `2_Web` (mã nguồn web, nằm trong `2_Web\cipher`) và `3_BaoCao` (báo cáo này, bản Word và PDF).
+
 | Yêu cầu bàn giao của đề | Nằm ở đâu |
 |---|---|
-| a) Mã nguồn | File nén `cipher.zip`: thư mục `public/`, `src/`, `views/`, `config/` |
-| b) File SQL tạo CSDL và dữ liệu mẫu | `database/schema.sql`, `database/seed.sql`, `database/seed_demo.sql` trong file nén |
+| a) Mã nguồn | Thư mục `2_Web\cipher`: thư mục `public/`, `src/`, `views/`, `config/` |
+| b) File SQL tạo CSDL và dữ liệu mẫu | Thư mục `1_CoSoDuLieu`: một file `cipher_dev.sql` tạo CSDL, bảng và dữ liệu mẫu, nhập một lần. File này gộp ba file `schema.sql`, `seed.sql`, `seed_demo.sql` trong `2_Web\cipher\database\` (`CHAY_WEB.bat` nạp ba file đó) |
 | c) Tài liệu phân tích yêu cầu, mô tả chức năng | Phần II của báo cáo này |
 | d) Sơ đồ ERD | Phần III |
 | e) Sơ đồ Use Case | Phần IV, kèm đặc tả 14 use case và 4 sơ đồ trình tự |
-| f) Hướng dẫn cài đặt, cấu hình, sử dụng | Phần VI; bản rút gọn là file `README.md` trong file nén |
+| f) Hướng dẫn cài đặt, cấu hình, sử dụng | Phần VI; bản rút gọn là file `README.md` trong `2_Web\cipher` |
 | g) Báo cáo kết quả kiểm thử | Phần VII |
-| Dữ liệu để người chấm tự nhập thử | `DU_LIEU_NHAP_TAY.xlsx` trong file nén: 7 trang tính, 34 dòng đúng và sai |
-| Bản chạy thật trên mạng | <https://cert.cipher.id.vn>, cùng dữ liệu mẫu và tài khoản như file nén trong thời gian chấm |
+| Dữ liệu để người chấm tự nhập thử | `DU_LIEU_NHAP_TAY.xlsx` trong `2_Web\cipher`: 7 trang tính, 34 dòng đúng và sai |
+| Bản chạy thật trên mạng | <https://cert.cipher.id.vn>, cùng dữ liệu mẫu và tài khoản như bài nộp trong thời gian chấm |
 
 ## 3. Công nghệ và công cụ phát triển
 
@@ -370,13 +373,13 @@ dùng bản chạy thật tại <https://cert.cipher.id.vn>.
 
 ## 1. Cài đặt tự động bằng tệp CHAY_WEB.bat
 
-1. **Giải nén** file nén ra một thư mục bất kỳ: bấm chuột phải vào file nén → **Extract All** (Giải nén).
+1. **Giải nén** `Nhom10.zip` ra một thư mục bất kỳ: bấm chuột phải vào file nén → **Extract All** (Giải nén).
    Không cần chép vào `htdocs`. Bấm `CHAY_WEB.bat` ngay bên trong file nén sẽ không chạy, vì chương trình nén
    chỉ bung riêng file đó ra thư mục tạm; khi đó file tự dừng và nhắc giải nén.
-2. Bấm đúp **`CHAY_WEB.bat`**. Không cần mở XAMPP Control Panel trước.
+2. Mở thư mục **`Nhom10\2_Web\cipher`**, bấm đúp **`CHAY_WEB.bat`**. Không cần mở XAMPP Control Panel trước.
 3. Trình duyệt tự mở trang giới thiệu. Bấm **Đăng nhập**, dùng tài khoản ở mục 3.
 
-![Thư mục sau khi giải nén: bấm đúp CHAY_WEB để chạy web, CHAY_TEST để chạy bộ test; hai file có biểu tượng bánh răng (Windows thường ẩn đuôi .bat)](anh/thu_muc_giai_nen.jpg)
+![Thư mục Nhom10\2_Web\cipher sau khi giải nén: bấm đúp CHAY_WEB để chạy web, CHAY_TEST để chạy bộ test; hai file có biểu tượng bánh răng (Windows thường ẩn đuôi .bat)](anh/thu_muc_giai_nen.jpg)
 
 Cửa sổ đen làm thay người dùng 4 bước, mỗi bước in một dòng `[1/4]` … `[4/4]`: tìm XAMPP, bật MySQL nếu chưa bật,
 lần đầu tự tạo CSDL `cipher_dev` và nạp dữ liệu mẫu (50 chứng chỉ, 2 tài khoản), rồi chạy web ở
@@ -413,8 +416,12 @@ bấm phím. Dòng cuối `XANH: 136 test` là mọi test đều đạt; kết q
 
 ![XAMPP Control Panel: tên Apache và MySQL có nền xanh, cột PID(s) và Port(s) có số (80, 443 và 3306) là hai dịch vụ đã chạy](anh/xampp_control.jpg)
 
-**Bước 2. Chép bài vào `htdocs`.** Chép cả thư mục bài vào `C:\xampp\htdocs` và đặt tên thư mục là
+**Bước 2. Chép bài vào `htdocs`.** Chép thư mục `Nhom10\2_Web\cipher` vào `C:\xampp\htdocs`, giữ tên thư mục là
 `cipher` (chữ thường, không dấu cách). Kiểm tra: phải có file `C:\xampp\htdocs\cipher\public\index.php`.
+
+**Cách nhanh cho Bước 3 và 4:** mở <http://localhost/phpmyadmin>, bấm tab **Import** (Nhập) ngay ở trang chủ (chưa
+bấm vào CSDL nào), chọn file `Nhom10\1_CoSoDuLieu\cipher_dev.sql`, kéo xuống cuối bấm **Import**. File tự tạo CSDL
+`cipher_dev` và nạp đủ dữ liệu mẫu; xong thì sang thẳng Bước 5. Muốn làm từng bước thì theo Bước 3 và 4 dưới đây.
 
 **Bước 3. Tạo CSDL.** Mở <http://localhost/phpmyadmin>. Bấm **New** (Mới) ở cột trái. Ô tên gõ `cipher_dev`,
 ô bên cạnh chọn `utf8mb4_unicode_ci`, bấm **Create** (Tạo).
@@ -422,7 +429,8 @@ bấm phím. Dòng cuối `XANH: 136 test` là mọi test đều đạt; kết q
 ![phpMyAdmin, mục New ở đầu cột trái: gõ tên cipher_dev, chọn utf8mb4_unicode_ci rồi bấm Create](anh/pma_tao_csdl.jpg)
 
 **Bước 4. Nạp dữ liệu, đúng thứ tự 3 file.** Ở cột trái bấm vào `cipher_dev`, chọn tab **Import** (Nhập),
-bấm **Choose File** (Chọn tệp), chọn file, kéo xuống cuối bấm **Import** (Nhập). Làm lần lượt:
+bấm **Choose File** (Chọn tệp), chọn file, kéo xuống cuối bấm **Import** (Nhập). Ba file nằm trong thư mục
+`database` của bài. Làm lần lượt:
 
 | Thứ tự | File | Nội dung |
 |---|---|---|

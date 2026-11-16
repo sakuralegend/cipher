@@ -36,7 +36,7 @@ Hệ thống được kiểm ở 4 lớp:
 4. **Kiểm trên bản chạy thật** qua internet (mục 5, 6), và xem giao diện bằng mắt: mọi thay đổi giao diện đều
    được chụp màn hình ở khổ máy tính và khổ điện thoại 390px trước khi giao.
 
-**Chạy lại bộ test:** trong thư mục đã giải nén của gói nộp, bấm đúp **`CHAY_TEST.bat`**. File này tìm XAMPP,
+**Chạy lại bộ test:** trong thư mục `Nhom10\2_Web\cipher` của bài nộp (cạnh `CHAY_WEB.bat`), bấm đúp **`CHAY_TEST.bat`**. File này tìm XAMPP,
 bật MySQL nếu chưa bật, tạo CSDL `cipher_test` nếu chưa có, chạy `tests\chay.php`, rồi dừng chờ bấm phím để kịp
 đọc kết quả. Mỗi test in ✅ hoặc ❌ kèm lý do; dòng cuối là `XANH: 136 test` hoặc `ĐỎ: số test đỏ/136 test`.
 

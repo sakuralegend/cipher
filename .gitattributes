@@ -5,7 +5,8 @@ scripts/hook-commit-msg text eol=lf
 
 # Gói nộp cho giảng viên (git archive) chỉ gồm thứ để chạy: public, src, views, config, database, CHAY_WEB.bat, CHAY_TEST.bat,
 # README, bộ test tests/ (user cho vào gói 15/11/2026: báo cáo dẫn tới nó ở ERD và Phần VII). Tài liệu nội bộ, sổ làm việc, cấu hình VPS không vào gói (user chốt 13/11/2026; test đọc deploy/ tự bỏ qua khi thiếu); tài liệu
-# nộp là file báo cáo riêng. Lệnh đóng gói: git archive --format=zip --prefix=cipher/ -o <file>.zip HEAD
+# nộp là file báo cáo riêng. Đóng gói: python scripts/dong_goi_nop.py (từ 16/11/2026: Nhom10.zip gồm 1_CoSoDuLieu,
+# 2_Web là git archive của HEAD, 3_BaoCao; xem đầu script).
 /.claude export-ignore
 /CLAUDE.md export-ignore
 /QUYETDINH.md export-ignore
