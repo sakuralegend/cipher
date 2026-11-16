@@ -294,13 +294,13 @@ try {
         $f.Name = 'Times New Roman'; $f.Size = $kieu[$i][0]; $f.Bold = $kieu[$i][1]; $f.Italic = $kieu[$i][2]
     }
     $q = $ds.Item($n - 3); $q.LineSpacingRule = 1   # Tên đề tài hai dòng: giãn dòng 1,5 cho thoáng.
-    # Lớp và tên thành viên: một đoạn nhiều dòng, căn trái và thụt vào để cả khối nằm giữa trang, số thứ tự thẳng cột.
-    $q = $ds.Item($n - 1); $q.Alignment = 0; $q.LeftIndent = 150; $q.LineSpacingRule = 1
-    # Dòng "Hà Nội" đặt ở đáy khung như mẫu (cách mép trên trang 712 pt), dù tên đề tài dài một hay hai dòng.
+    # Lớp và tên thành viên: một đoạn nhiều dòng, căn trái, số thứ tự thẳng cột. Thụt 165 pt theo chỗ user tự căn trong Word (16/11/2026).
+    $q = $ds.Item($n - 1); $q.Alignment = 0; $q.LeftIndent = 165; $q.LineSpacingRule = 1
+    # Dòng "Hà Nội" đặt sát đáy khung (cách mép trên trang 755 pt, chỗ user tự kéo xuống trong Word 16/11/2026), dù tên đề tài dài một hay hai dòng.
     $b.Repaginate()
     $noi = $ds.Item($n)
     $y = [double]$noi.Range.Information(6)                # wdVerticalPositionRelativeToPage
-    if ($y -lt 712) { $noi.SpaceBefore = [single](712 - $y) }
+    if ($y -lt 755) { $noi.SpaceBefore = [single](755 - $y) }
     $b.Repaginate()
     if ($b.Sections.Item(1).Range.Information(3) -ne 1) { throw 'Chữ trên bìa tràn sang trang thứ hai' }   # wdActiveEndPageNumber
     $b.Save()
