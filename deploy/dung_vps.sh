@@ -3,7 +3,7 @@
 # Mọi thứ đều THÊM MỚI, không sửa dịch vụ có sẵn; riêng Caddyfile được nối thêm một khối.
 #
 # Chạy từ máy Windows, trong Git Bash, từng bước theo thứ tự:
-#   ssh root@161.248.146.56 'bash -s -- <bước>' < deploy/dung_vps.sh
+#   ssh root@45.117.166.231 'bash -s -- <bước>' < deploy/dung_vps.sh
 #
 # Các bước:
 #   kiem       Đo RAM, cổng, kiểm tra các dịch vụ có sẵn. Chỉ đọc, chạy lúc nào cũng được.
